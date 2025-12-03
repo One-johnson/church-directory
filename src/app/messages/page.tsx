@@ -9,7 +9,6 @@ import { usePresence } from "@/hooks/use-presence";
 import { AppNavbar } from "@/components/layout/app-navbar";
 import { MessageList } from "@/components/messaging/message-list";
 import { MessageInput } from "@/components/messaging/message-input";
-import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +24,9 @@ export default function MessagesPage(): React.JSX.Element {
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
     searchParams.get("to")
   );
+  const [editingMessage, setEditingMessage] = React.useState<{ id: Id<"messages">; content: string } | null>(null);
 
-  usePresence((user?._id as Id<"users">) || null);
+  usePresence(user?._id as Id<"users"> || null);
 
   const conversations = useQuery(
     api.messages.getInbox,
@@ -35,8 +35,10 @@ export default function MessagesPage(): React.JSX.Element {
 
   const selectedUser = React.useMemo(() => {
     if (!selectedUserId || !conversations) return null;
-    const conv = conversations.find((c) => c.otherUser?._id === selectedUserId);
-    return conv?.otherUser || null;
+    const conv = conversations.find(
+      (c) => (c.otherUser as { _id?: string })._id === selectedUserId
+    );
+    return conv && "otherUser" in conv ? conv.otherUser : null;
   }, [selectedUserId, conversations]);
 
   const markAsRead = useMutation(api.messages.markConversationAsRead);
@@ -56,6 +58,14 @@ export default function MessagesPage(): React.JSX.Element {
     }
   }, [selectedUserId, user, markAsRead]);
 
+  const handleEditMessage = (messageId: Id<"messages">, content: string) => {
+    setEditingMessage({ id: messageId, content });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
+  };
+
   if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -67,7 +77,7 @@ export default function MessagesPage(): React.JSX.Element {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <AppNavbar />
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* Conversations List */}
         <div
           className={cn(
@@ -75,13 +85,15 @@ export default function MessagesPage(): React.JSX.Element {
             selectedUserId && "hidden md:flex"
           )}
         >
-          <div className="p-4 border-b">
+          {/* Fixed Header */}
+          <div className="p-4 border-b bg-background flex-shrink-0">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <MessageSquare className="h-6 w-6" />
               Messages
             </h2>
           </div>
 
+          {/* Scrollable Conversation List */}
           <div className="flex-1 overflow-y-auto">
             {!conversations && (
               <div className="flex items-center justify-center py-12">
@@ -97,16 +109,21 @@ export default function MessagesPage(): React.JSX.Element {
               </div>
             )}
 
-            {conversations?.map((conv) => {
-              const isSelected = conv.otherUser?._id === selectedUserId;
-              const isOnline = conv.otherUser && 'isOnline' in conv.otherUser 
-                ? (conv.otherUser as { isOnline?: boolean }).isOnline 
-                : false;
+             {conversations?.map((conv) => {
+              const otherUserId =
+                conv.otherUser && "_id" in conv.otherUser
+                  ? (conv.otherUser as { _id: string })._id
+                  : undefined;
+              const isSelected = otherUserId === selectedUserId;
+              const isOnline =
+                conv.otherUser && "isOnline" in conv.otherUser
+                  ? (conv.otherUser as { isOnline?: boolean }).isOnline
+                  : false;
 
               return (
                 <button
-                  key={conv.otherUser?._id || conv.lastMessage?.createdAt}
-                  onClick={() => conv.otherUser?._id && setSelectedUserId(conv.otherUser._id)}
+                  key={otherUserId || conv.lastMessage?.createdAt}
+                  onClick={() => otherUserId && setSelectedUserId(otherUserId)}
                   className={cn(
                     "w-full p-4 border-b hover:bg-accent transition-colors text-left",
                     isSelected && "bg-accent"
@@ -165,26 +182,19 @@ export default function MessagesPage(): React.JSX.Element {
         </div>
 
         {/* Conversation View */}
-        <div
-          className={cn(
-            "flex-1 flex flex-col",
-            !selectedUserId && "hidden md:flex"
-          )}
-        >
+        <div className={cn("flex-1 flex flex-col", !selectedUserId && "hidden md:flex")}>
           {!selectedUserId ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">Select a conversation</p>
-                <p className="text-sm">
-                  Choose a conversation to start messaging
-                </p>
+                <p className="text-sm">Choose a conversation to start messaging</p>
               </div>
             </div>
           ) : (
             <>
-              {/* Conversation Header */}
-              <div className="border-b p-4 flex items-center gap-3">
+              {/* Fixed Conversation Header */}
+              <div className="border-b p-4 flex items-center gap-3 bg-background flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -193,8 +203,7 @@ export default function MessagesPage(): React.JSX.Element {
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-
-                <div className="relative">
+ <div className="relative">
                   <Avatar>
                     <AvatarImage
                       src={
@@ -217,7 +226,7 @@ export default function MessagesPage(): React.JSX.Element {
                   )}
                 </div>
 
-                <div>
+                 <div>
                   <h3 className="font-semibold">
                     {selectedUser && typeof selectedUser === "object" && "name" in selectedUser && typeof selectedUser.name === "string"
                       ? selectedUser.name
@@ -231,17 +240,20 @@ export default function MessagesPage(): React.JSX.Element {
                 </div>
               </div>
 
-              {/* Messages */}
+              {/* Scrollable Messages */}
               <MessageList
                 currentUserId={user._id as Id<"users">}
                 otherUserId={selectedUserId as Id<"users">}
                 otherUser={selectedUser}
+                onEditMessage={handleEditMessage}
               />
 
-              {/* Input */}
+              {/* Fixed Input */}
               <MessageInput
                 fromUserId={user._id as Id<"users">}
                 toUserId={selectedUserId as Id<"users">}
+                editingMessage={editingMessage}
+                onCancelEdit={handleCancelEdit}
               />
             </>
           )}

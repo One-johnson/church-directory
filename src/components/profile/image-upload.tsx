@@ -4,8 +4,9 @@ import * as React from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { imgbbUploadFile } from "@/imgbb-api";
 import { toast } from "sonner";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 interface ImageUploadProps {
   value?: string;
@@ -13,17 +14,14 @@ interface ImageUploadProps {
   disabled?: boolean;
 }
 
-export function ImageUpload({
-  value,
-  onChange,
-  disabled,
-}: ImageUploadProps): React.JSX.Element {
+export function ImageUpload({ value, onChange, disabled }: ImageUploadProps): React.JSX.Element {
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+  const getUrl = useMutation(api.files.getUrl);
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ): Promise<void> => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -41,13 +39,27 @@ export function ImageUpload({
 
     setIsUploading(true);
     try {
-      const response = await imgbbUploadFile({
-        file,
-        name: file.name,
+      // Get upload URL from Convex
+      const uploadUrl = await generateUploadUrl();
+      
+      // Upload file to Convex storage
+      const result = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
       });
-
-      onChange(response.data.url);
-      toast.success("Image uploaded successfully");
+      
+      const { storageId } = await result.json();
+      
+      // Get the URL for the uploaded file
+      const fileUrl = await getUrl({ storageId });
+      
+      if (fileUrl) {
+        onChange(fileUrl);
+        toast.success("Image uploaded successfully");
+      } else {
+        throw new Error("Failed to get file URL");
+      }
     } catch (error) {
       console.error("Upload failed:", error);
       toast.error("Failed to upload image. Please try again.");
@@ -71,7 +83,7 @@ export function ImageUpload({
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Avatar className="h-24 w-24">
-          <AvatarImage src={value} alt="Profile" />
+          <AvatarImage src={value || undefined} alt="Profile" />
           <AvatarFallback>
             <Upload className="h-8 w-8 text-muted-foreground" />
           </AvatarFallback>
@@ -126,8 +138,7 @@ export function ImageUpload({
         </div>
       </div>
       <p className="text-xs text-muted-foreground">
-        Upload a profile photo. Max file size: 5MB. Supported formats: JPG, PNG,
-        GIF
+        Upload a profile photo. Max file size: 5MB. Supported formats: JPG, PNG, GIF
       </p>
     </div>
   );

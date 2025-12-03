@@ -8,14 +8,17 @@
  * @module
  */
 
+import type * as adminBootstrap from "../adminBootstrap.js";
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
+import type * as files from "../files.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as presence from "../presence.js";
 import type * as profiles from "../profiles.js";
 import type * as search from "../search.js";
 import type * as users from "../users.js";
+import type * as verifications from "../verifications.js";
 
 import type {
   ApiFromModules,
@@ -24,14 +27,17 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  adminBootstrap: typeof adminBootstrap;
   analytics: typeof analytics;
   auth: typeof auth;
+  files: typeof files;
   messages: typeof messages;
   notifications: typeof notifications;
   presence: typeof presence;
   profiles: typeof profiles;
   search: typeof search;
   users: typeof users;
+  verifications: typeof verifications;
 }>;
 
 /**

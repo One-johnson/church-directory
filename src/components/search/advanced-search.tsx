@@ -28,6 +28,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
   const [category, setCategory] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [country, setCountry] = useState<string>("");
+  const [verifiedOnly, setVerifiedOnly] = useState<boolean>(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [showHistory, setShowHistory] = useState(false);
 
@@ -39,6 +40,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
           category: category || undefined,
           location: location || undefined,
           country: country || undefined,
+          verifiedOnly: verifiedOnly || undefined,
         }
       : "skip"
   );
@@ -81,6 +83,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
     setCategory("");
     setLocation("");
     setCountry("");
+    setVerifiedOnly(false);
   };
 
   const handleClearHistory = async () => {
@@ -89,9 +92,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
     }
   };
 
-  const activeFiltersCount = [category, location, country].filter(
-    Boolean
-  ).length;
+  const activeFiltersCount = [category, location, country, verifiedOnly].filter(Boolean).length;
 
   return (
     <div className="space-y-4">
@@ -150,27 +151,24 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
             </Card>
           )}
 
-          {suggestions &&
-            suggestions.length > 0 &&
-            query.length >= 2 &&
-            !showHistory && (
-              <Card className="absolute top-full mt-2 w-full z-50">
-                <CardContent className="p-2">
-                  <div className="text-sm font-medium mb-2">Suggestions</div>
-                  <div className="space-y-1">
-                    {suggestions.map((suggestion, index) => (
-                      <button
-                        key={index}
-                        className="w-full text-left text-sm p-2 hover:bg-accent rounded-md"
-                        onClick={() => setQuery(suggestion)}
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          {suggestions && suggestions.length > 0 && query.length >= 2 && !showHistory && (
+            <Card className="absolute top-full mt-2 w-full z-50">
+              <CardContent className="p-2">
+                <div className="text-sm font-medium mb-2">Suggestions</div>
+                <div className="space-y-1">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      className="w-full text-left text-sm p-2 hover:bg-accent rounded-md"
+                      onClick={() => setQuery(suggestion)}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <Button variant="outline" size="icon" className="relative">
@@ -186,7 +184,19 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+        <div className="flex items-center space-x-2 border rounded-md px-3 py-2">
+          <input
+            type="checkbox"
+            id="verified"
+            checked={verifiedOnly}
+            onChange={(e) => setVerifiedOnly(e.target.checked)}
+            className="rounded"
+          />
+          <label htmlFor="verified" className="text-sm cursor-pointer">
+            Verified Only
+          </label>
+        </div>
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger>
             <SelectValue placeholder="Category" />
@@ -248,6 +258,15 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
               />
             </Badge>
           )}
+          {verifiedOnly && (
+            <Badge variant="secondary" className="gap-1">
+              Verified Only
+              <X
+                className="h-3 w-3 cursor-pointer"
+                onClick={() => setVerifiedOnly(false)}
+              />
+            </Badge>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -261,8 +280,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
 
       {searchResults && (
         <div className="text-sm text-muted-foreground">
-          Found {searchResults.length}{" "}
-          {searchResults.length === 1 ? "result" : "results"}
+          Found {searchResults.length} {searchResults.length === 1 ? "result" : "results"}
         </div>
       )}
     </div>

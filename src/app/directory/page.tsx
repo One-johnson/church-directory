@@ -8,17 +8,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePresence } from "@/hooks/use-presence";
 import { AppNavbar } from "@/components/layout/app-navbar";
 import { AdvancedSearch } from "@/components/search/advanced-search";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Mail, Loader2, Users, Download } from "lucide-react";
+import { VerificationBadges } from "@/components/profile/verification-badges";
 import { exportTableData } from "@/lib/export-utils";
 import { toast } from "sonner";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -28,7 +23,7 @@ export default function DirectoryPage(): React.JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
   const [searchResults, setSearchResults] = React.useState<any[]>([]);
 
-  usePresence((user?._id as Id<"users">) || null);
+  usePresence(user?._id as Id<"users"> || null);
 
   const allProfiles = useQuery(api.profiles.getApprovedProfiles);
 
@@ -39,10 +34,10 @@ export default function DirectoryPage(): React.JSX.Element {
   }, [user, authLoading, router]);
 
   React.useEffect(() => {
-    if (allProfiles && searchResults.length === 0) {
+    if (allProfiles && searchResults.length === 0 && !authLoading) {
       setSearchResults(allProfiles);
     }
-  }, [allProfiles, searchResults.length]);
+  }, [allProfiles, searchResults.length, authLoading]);
 
   if (authLoading || !user) {
     return (
@@ -71,9 +66,7 @@ export default function DirectoryPage(): React.JSX.Element {
       ],
       data: searchResults,
     });
-    toast.success(
-      `Exported ${searchResults.length} profiles to ${format.toUpperCase()}`
-    );
+    toast.success(`Exported ${searchResults.length} profiles to ${format.toUpperCase()}`);
   };
 
   return (
@@ -87,8 +80,7 @@ export default function DirectoryPage(): React.JSX.Element {
               Professional Directory
             </h1>
             <p className="text-muted-foreground">
-              Browse and connect with verified professionals in our church
-              community
+              Browse and connect with verified professionals in our church community
             </p>
           </div>
 
@@ -135,20 +127,14 @@ export default function DirectoryPage(): React.JSX.Element {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {searchResults.map((profile) => {
             const userPresence = profile.user?.isOnline;
-
+            
             return (
-              <Card
-                key={profile._id}
-                className="hover:shadow-lg transition-shadow"
-              >
+              <Card key={profile._id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-4">
                   <div className="flex items-start gap-4">
                     <div className="relative">
                       <Avatar className="h-16 w-16">
-                        <AvatarImage
-                          src={profile.profilePicture}
-                          alt={profile.name}
-                        />
+                        <AvatarImage src={profile.profilePicture} alt={profile.name} />
                         <AvatarFallback>
                           {profile.name
                             .split(" ")
@@ -170,6 +156,13 @@ export default function DirectoryPage(): React.JSX.Element {
                       <Badge variant="secondary" className="text-xs">
                         {profile.category}
                       </Badge>
+                      <VerificationBadges
+                        emailVerified={profile.emailVerified}
+                        phoneVerified={profile.phoneVerified}
+                        pastorEndorsed={profile.pastorEndorsed}
+                        backgroundCheck={profile.backgroundCheck}
+                        size="sm"
+                      />
                     </div>
                   </div>
                 </CardHeader>
@@ -177,9 +170,7 @@ export default function DirectoryPage(): React.JSX.Element {
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="font-medium">Skills:</span>
-                      <p className="text-muted-foreground line-clamp-2">
-                        {profile.skills}
-                      </p>
+                      <p className="text-muted-foreground line-clamp-2">{profile.skills}</p>
                     </div>
                     <div>
                       <span className="font-medium">Location:</span>
@@ -189,9 +180,7 @@ export default function DirectoryPage(): React.JSX.Element {
                     </div>
                     <div>
                       <span className="font-medium">Experience:</span>
-                      <p className="text-muted-foreground line-clamp-2">
-                        {profile.experience}
-                      </p>
+                      <p className="text-muted-foreground line-clamp-2">{profile.experience}</p>
                     </div>
                   </div>
 

@@ -6,13 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { AppNavbar } from "@/components/layout/app-navbar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,15 +22,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  Loader2,
-  AlertCircle,
-  BarChart3,
-  Download,
-} from "lucide-react";
+import { CheckCircle, XCircle, Clock, Loader2, AlertCircle, BarChart3, Download, Shield } from "lucide-react";
+import { VerificationManager } from "@/components/admin/verification-manager";
+import { VerificationBadges } from "@/components/profile/verification-badges";
+import { VerificationAnalytics } from "@/components/analytics/verification-analytics";
 import { toast } from "sonner";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { ProfileAnalytics } from "@/components/analytics/profile-analytics";
@@ -45,9 +34,7 @@ import { exportTableData } from "@/lib/export-utils";
 export default function ApprovalsPage(): React.JSX.Element {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const [selectedProfiles, setSelectedProfiles] = React.useState<
-    Set<Id<"profiles">>
-  >(new Set());
+  const [selectedProfiles, setSelectedProfiles] = React.useState<Set<Id<"profiles">>>(new Set());
   const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
   const [rejectReason, setRejectReason] = React.useState("");
   const [actionLoading, setActionLoading] = React.useState(false);
@@ -63,10 +50,7 @@ export default function ApprovalsPage(): React.JSX.Element {
   const bulkReject = useMutation(api.profiles.bulkRejectProfiles);
 
   React.useEffect(() => {
-    if (
-      !authLoading &&
-      (!user || (user.role !== "admin" && user.role !== "pastor"))
-    ) {
+    if (!authLoading && (!user || (user.role !== "admin" && user.role !== "pastor"))) {
       router.push("/dashboard");
     }
   }, [user, authLoading, router]);
@@ -119,7 +103,6 @@ export default function ApprovalsPage(): React.JSX.Element {
     try {
       await approveProfile({ requesterId: user._id, profileId });
       toast.success("Profile approved successfully");
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to approve profile");
     } finally {
@@ -127,15 +110,11 @@ export default function ApprovalsPage(): React.JSX.Element {
     }
   };
 
-  const handleReject = async (
-    profileId: Id<"profiles">,
-    reason?: string
-  ): Promise<void> => {
+  const handleReject = async (profileId: Id<"profiles">, reason?: string): Promise<void> => {
     setActionLoading(true);
     try {
       await rejectProfile({ requesterId: user._id, profileId, reason });
       toast.success("Profile rejected");
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to reject profile");
     } finally {
@@ -154,7 +133,6 @@ export default function ApprovalsPage(): React.JSX.Element {
       const successCount = results.filter((r) => r.success).length;
       toast.success(`Approved ${successCount} profile(s)`);
       setSelectedProfiles(new Set());
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to approve profiles");
     } finally {
@@ -176,7 +154,6 @@ export default function ApprovalsPage(): React.JSX.Element {
       setSelectedProfiles(new Set());
       setRejectDialogOpen(false);
       setRejectReason("");
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to reject profiles");
     } finally {
@@ -219,9 +196,7 @@ export default function ApprovalsPage(): React.JSX.Element {
                       ],
                       data: pendingProfiles,
                     });
-                    toast.success(
-                      `Exported ${pendingProfiles.length} profiles to CSV`
-                    );
+                    toast.success(`Exported ${pendingProfiles.length} profiles to CSV`);
                   }}
                 >
                   <Download className="mr-2 h-4 w-4" />
@@ -244,9 +219,7 @@ export default function ApprovalsPage(): React.JSX.Element {
                       ],
                       data: pendingProfiles,
                     });
-                    toast.success(
-                      `Exported ${pendingProfiles.length} profiles to PDF`
-                    );
+                    toast.success(`Exported ${pendingProfiles.length} profiles to PDF`);
                   }}
                 >
                   <Download className="mr-2 h-4 w-4" />
@@ -281,9 +254,12 @@ export default function ApprovalsPage(): React.JSX.Element {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            <h2 className="text-2xl font-bold">Profile Analytics</h2>
+            <h2 className="text-2xl font-bold">Analytics</h2>
           </div>
-          <ProfileAnalytics userId={user._id} />
+          <div className="grid gap-6 md:grid-cols-2">
+            <ProfileAnalytics userId={user._id} />
+            <VerificationAnalytics userId={user._id} />
+          </div>
         </div>
 
         {!pendingProfiles && (
@@ -324,10 +300,7 @@ export default function ApprovalsPage(): React.JSX.Element {
                     onCheckedChange={() => handleToggleProfile(profile._id)}
                   />
                   <Avatar className="h-16 w-16">
-                    <AvatarImage
-                      src={profile.profilePicture}
-                      alt={profile.name}
-                    />
+                    <AvatarImage src={profile.profilePicture} alt={profile.name} />
                     <AvatarFallback>
                       {profile.name
                         .split(" ")
@@ -348,7 +321,16 @@ export default function ApprovalsPage(): React.JSX.Element {
                     <CardDescription>
                       {profile.profession} • {profile.userEmail}
                     </CardDescription>
-                    <Badge variant="outline">{profile.category}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{profile.category}</Badge>
+                      <VerificationBadges
+                        emailVerified={profile.emailVerified}
+                        phoneVerified={profile.phoneVerified}
+                        pastorEndorsed={profile.pastorEndorsed}
+                        backgroundCheck={profile.backgroundCheck}
+                        size="sm"
+                      />
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -356,9 +338,7 @@ export default function ApprovalsPage(): React.JSX.Element {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <span className="text-sm font-medium">Skills:</span>
-                    <p className="text-sm text-muted-foreground">
-                      {profile.skills}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{profile.skills}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium">Location:</span>
@@ -368,15 +348,11 @@ export default function ApprovalsPage(): React.JSX.Element {
                   </div>
                   <div>
                     <span className="text-sm font-medium">Experience:</span>
-                    <p className="text-sm text-muted-foreground">
-                      {profile.experience}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{profile.experience}</p>
                   </div>
                   <div>
                     <span className="text-sm font-medium">Services:</span>
-                    <p className="text-sm text-muted-foreground">
-                      {profile.servicesOffered}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{profile.servicesOffered}</p>
                   </div>
                 </div>
 
@@ -397,6 +373,16 @@ export default function ApprovalsPage(): React.JSX.Element {
                     <XCircle className="mr-2 h-4 w-4" />
                     Reject
                   </Button>
+                  <VerificationManager
+                    profile={profile}
+                    requesterId={user._id}
+                    trigger={
+                      <Button variant="outline" size="sm">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Manage Badges
+                      </Button>
+                    }
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -410,8 +396,7 @@ export default function ApprovalsPage(): React.JSX.Element {
           <DialogHeader>
             <DialogTitle>Reject Selected Profiles</DialogTitle>
             <DialogDescription>
-              Optionally provide a reason for rejection. This will be sent to
-              the users.
+              Optionally provide a reason for rejection. This will be sent to the users.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -425,10 +410,7 @@ export default function ApprovalsPage(): React.JSX.Element {
             />
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setRejectDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
               Cancel
             </Button>
             <Button

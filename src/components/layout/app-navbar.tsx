@@ -3,16 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  Bell,
-  Menu,
-  User,
-  LogOut,
-  Settings,
-  Sun,
-  Moon,
-  Laptop,
-} from "lucide-react";
+import { Bell, Menu, User, LogOut, Settings, Sun, Moon, Laptop } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,16 +88,14 @@ export function AppNavbar(): React.JSX.Element {
   if (!user) return <></>;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center space-x-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <span className="text-lg font-bold">CP</span>
           </div>
-          <span className="hidden font-bold sm:inline-block">
-            Church Professionals
-          </span>
+          <span className="hidden font-bold sm:inline-block">Church Professionals</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -135,10 +124,7 @@ export function AppNavbar(): React.JSX.Element {
           <div className="hidden md:block">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-10 w-10 rounded-full"
-                >
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar>
                     <AvatarImage src={undefined} alt={user.name} />
                     <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
@@ -148,9 +134,7 @@ export function AppNavbar(): React.JSX.Element {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user.name}
-                    </p>
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>
@@ -190,12 +174,8 @@ export function AppNavbar(): React.JSX.Element {
                     <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {user.email}
-                    </p>
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
                     <Badge variant="outline" className="text-xs">
                       {user.role}
                     </Badge>

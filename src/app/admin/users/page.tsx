@@ -24,14 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Users,
-  Loader2,
-  AlertCircle,
-  Shield,
-  BarChart3,
-  Download,
-} from "lucide-react";
+import { Users, Loader2, AlertCircle, Shield, BarChart3, Download } from "lucide-react";
 import { toast } from "sonner";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { UsersTable } from "@/components/tables/users-table";
@@ -55,9 +48,7 @@ export default function UsersPage(): React.JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
   const [selectedUsers, setSelectedUsers] = React.useState<Id<"users">[]>([]);
   const [bulkRoleDialogOpen, setBulkRoleDialogOpen] = React.useState(false);
-  const [selectedRole, setSelectedRole] = React.useState<
-    "admin" | "pastor" | "member"
-  >("member");
+  const [selectedRole, setSelectedRole] = React.useState<"admin" | "pastor" | "member">("member");
   const [actionLoading, setActionLoading] = React.useState(false);
 
   const users = useQuery(
@@ -99,19 +90,11 @@ export default function UsersPage(): React.JSX.Element {
     );
   }
 
-  const handleUpdateRole = async (
-    userId: Id<"users">,
-    newRole: "admin" | "pastor" | "member"
-  ): Promise<void> => {
+  const handleUpdateRole = async (userId: Id<"users">, newRole: "admin" | "pastor" | "member"): Promise<void> => {
     setActionLoading(true);
     try {
-      await updateUserRole({
-        requesterId: user._id,
-        targetUserId: userId,
-        newRole,
-      });
+      await updateUserRole({ requesterId: user._id, targetUserId: userId, newRole });
       toast.success("User role updated successfully");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to update user role");
     } finally {
@@ -132,7 +115,6 @@ export default function UsersPage(): React.JSX.Element {
       toast.success(`Updated ${successCount} user role(s)`);
       setSelectedUsers([]);
       setBulkRoleDialogOpen(false);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to update user roles");
     } finally {
@@ -141,11 +123,7 @@ export default function UsersPage(): React.JSX.Element {
   };
 
   const handleDeleteUser = async (userId: Id<"users">): Promise<void> => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this user? This action cannot be undone."
-      )
-    ) {
+    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
       return;
     }
     setActionLoading(true);
@@ -153,9 +131,7 @@ export default function UsersPage(): React.JSX.Element {
       await deleteUser({ requesterId: user._id, targetUserId: userId });
       toast.success("User deleted successfully");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete user"
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to delete user");
     } finally {
       setActionLoading(false);
     }
@@ -226,10 +202,7 @@ export default function UsersPage(): React.JSX.Element {
               </>
             )}
             {selectedUsers.length > 0 && (
-              <Button
-                onClick={() => setBulkRoleDialogOpen(true)}
-                disabled={actionLoading}
-              >
+              <Button onClick={() => setBulkRoleDialogOpen(true)} disabled={actionLoading}>
                 <Shield className="mr-2 h-4 w-4" />
                 Update Roles ({selectedUsers.length})
               </Button>
@@ -280,12 +253,7 @@ export default function UsersPage(): React.JSX.Element {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Select
-              value={selectedRole}
-              onValueChange={(value) =>
-                setSelectedRole(value as "admin" | "pastor" | "member")
-              }
-            >
+            <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as "admin" | "pastor" | "member")}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -297,10 +265,7 @@ export default function UsersPage(): React.JSX.Element {
             </Select>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setBulkRoleDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setBulkRoleDialogOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleBulkUpdateRoles} disabled={actionLoading}>

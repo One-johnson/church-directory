@@ -106,12 +106,12 @@ export const getUserProfile = query({
   },
 });
 
-// Get all approved profiles
+// Get all approved profiles (including those once approved but now rejected)
 export const getApprovedProfiles = query({
   handler: async (ctx) => {
     const profiles = await ctx.db
       .query("profiles")
-      .withIndex("by_status", (q) => q.eq("status", "approved"))
+      .filter((q) => q.eq(q.field("everApproved"), true))
       .collect();
 
     return profiles;
@@ -124,10 +124,7 @@ export const getPendingProfiles = query({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (
-      !requester ||
-      (requester.role !== "pastor" && requester.role !== "admin")
-    ) {
+    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
       throw new Error("Unauthorized: Pastor or Admin access required");
     }
 
@@ -160,10 +157,7 @@ export const approveProfile = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (
-      !requester ||
-      (requester.role !== "pastor" && requester.role !== "admin")
-    ) {
+    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
       throw new Error("Unauthorized: Pastor or Admin access required");
     }
 
@@ -174,6 +168,7 @@ export const approveProfile = mutation({
 
     await ctx.db.patch(args.profileId, {
       status: "approved",
+      everApproved: true, // Mark as ever approved - will stay in directory
       rejectionReason: undefined,
       updatedAt: Date.now(),
     });
@@ -182,8 +177,7 @@ export const approveProfile = mutation({
     await ctx.db.insert("notifications", {
       userId: profile.userId,
       title: "Profile Approved",
-      message:
-        "Your professional profile has been approved and is now visible in the directory",
+      message: "Your professional profile has been approved and is now visible in the directory",
       type: "profile_approved",
       read: false,
       metadata: { profileId: args.profileId },
@@ -204,10 +198,7 @@ export const rejectProfile = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (
-      !requester ||
-      (requester.role !== "pastor" && requester.role !== "admin")
-    ) {
+    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
       throw new Error("Unauthorized: Pastor or Admin access required");
     }
 
@@ -246,10 +237,7 @@ export const bulkApproveProfiles = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (
-      !requester ||
-      (requester.role !== "pastor" && requester.role !== "admin")
-    ) {
+    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
       throw new Error("Unauthorized: Pastor or Admin access required");
     }
 
@@ -257,11 +245,11 @@ export const bulkApproveProfiles = mutation({
       args.profileIds.map(async (profileId) => {
         try {
           const profile = await ctx.db.get(profileId);
-          if (!profile)
-            return { profileId, success: false, error: "Not found" };
+          if (!profile) return { profileId, success: false, error: "Not found" };
 
           await ctx.db.patch(profileId, {
             status: "approved",
+            everApproved: true, // Mark as ever approved - will stay in directory
             rejectionReason: undefined,
             updatedAt: Date.now(),
           });
@@ -270,8 +258,7 @@ export const bulkApproveProfiles = mutation({
           await ctx.db.insert("notifications", {
             userId: profile.userId,
             title: "Profile Approved",
-            message:
-              "Your professional profile has been approved and is now visible in the directory",
+            message: "Your professional profile has been approved and is now visible in the directory",
             type: "profile_approved",
             read: false,
             metadata: { profileId },
@@ -299,10 +286,7 @@ export const bulkRejectProfiles = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (
-      !requester ||
-      (requester.role !== "pastor" && requester.role !== "admin")
-    ) {
+    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
       throw new Error("Unauthorized: Pastor or Admin access required");
     }
 
@@ -310,8 +294,7 @@ export const bulkRejectProfiles = mutation({
       args.profileIds.map(async (profileId) => {
         try {
           const profile = await ctx.db.get(profileId);
-          if (!profile)
-            return { profileId, success: false, error: "Not found" };
+          if (!profile) return { profileId, success: false, error: "Not found" };
 
           await ctx.db.patch(profileId, {
             status: "rejected",
@@ -323,8 +306,7 @@ export const bulkRejectProfiles = mutation({
           await ctx.db.insert("notifications", {
             userId: profile.userId,
             title: "Profile Rejected",
-            message:
-              args.reason || "Your professional profile was not approved",
+            message: args.reason || "Your professional profile was not approved",
             type: "profile_rejected",
             read: false,
             metadata: { profileId },
