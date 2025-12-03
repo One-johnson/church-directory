@@ -25,20 +25,26 @@ export default defineSchema({
     location: v.string(),
     profilePicture: v.optional(v.string()),
     country: v.string(),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("approved"),
-      v.literal("rejected")
-    ),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    everApproved: v.optional(v.boolean()), // Track if ever approved - once true, always visible
     rejectionReason: v.optional(v.string()),
+    // Verification badges
+    emailVerified: v.optional(v.boolean()),
+    phoneVerified: v.optional(v.boolean()),
+    pastorEndorsed: v.optional(v.boolean()),
+    backgroundCheck: v.optional(v.boolean()),
+    verificationNotes: v.optional(v.string()),
+    verifiedAt: v.optional(v.number()),
+    verifiedBy: v.optional(v.id("users")),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
+    .index("by_ever_approved", ["everApproved"])
     .searchIndex("search_profiles", {
       searchField: "skills",
-      filterFields: ["status", "category", "location", "country"],
+      filterFields: ["status", "category", "location", "country", "everApproved"],
     }),
 
   messages: defineTable({
@@ -49,14 +55,13 @@ export default defineSchema({
     createdAt: v.number(),
     attachmentUrl: v.optional(v.string()),
     attachmentType: v.optional(v.string()),
-    reactions: v.optional(
-      v.array(
-        v.object({
-          userId: v.id("users"),
-          emoji: v.string(),
-        })
-      )
-    ),
+    reactions: v.optional(v.array(v.object({
+      userId: v.id("users"),
+      emoji: v.string(),
+    }))),
+    deletedFor: v.optional(v.array(v.id("users"))), // Track who deleted the message
+    deletedForEveryone: v.optional(v.boolean()), // True if deleted for everyone
+    editedAt: v.optional(v.number()), // Track if message was edited
   })
     .index("by_from", ["fromUserId"])
     .index("by_to", ["toUserId"])

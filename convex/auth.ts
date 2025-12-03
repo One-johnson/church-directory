@@ -5,11 +5,9 @@ import { v } from "convex/values";
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   return hashHex;
 }
 
@@ -35,16 +33,25 @@ export const register = mutation({
     // Hash password
     const passwordHash = await hashPassword(args.password);
 
+    // Check if this is the first user (auto-admin)
+    const userCount = await ctx.db.query("users").collect();
+    const isFirstUser = userCount.length === 0;
+
     // Create user
     const userId = await ctx.db.insert("users", {
       email: args.email,
       phone: args.phone,
       passwordHash,
       name: args.name,
-      role: "member",
+      role: isFirstUser ? "admin" : "member", // First user becomes admin
       emailVerified: true, // Auto-verify for now
       createdAt: Date.now(),
     });
+
+    // Notify if first user
+    if (isFirstUser) {
+      console.log(`🎉 First user registered with admin privileges: ${args.email}`);
+    }
 
     return { userId, message: "Registration successful" };
   },
@@ -107,11 +114,7 @@ export const updateUserRole = mutation({
   args: {
     userId: v.id("users"),
     targetUserId: v.id("users"),
-    newRole: v.union(
-      v.literal("admin"),
-      v.literal("pastor"),
-      v.literal("member")
-    ),
+    newRole: v.union(v.literal("admin"), v.literal("pastor"), v.literal("member")),
   },
   handler: async (ctx, args) => {
     // Check if requester is admin

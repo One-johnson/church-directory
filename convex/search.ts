@@ -7,35 +7,74 @@ export const searchProfiles = query({
     category: v.optional(v.string()),
     location: v.optional(v.string()),
     country: v.optional(v.string()),
+    verifiedOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    let results = await ctx.db
+    // Get all ever-approved profiles
+    let profiles = await ctx.db
       .query("profiles")
-      .withSearchIndex("search_profiles", (q) => {
-        let search = q.search("skills", args.query);
+      .filter((q) => q.eq(q.field("everApproved"), true))
+      .collect();
 
-        if (args.category) {
-          search = search.eq("category", args.category);
-        }
-        if (args.location) {
-          search = search.eq("location", args.location);
-        }
-        if (args.country) {
-          search = search.eq("country", args.country);
-        }
+    // Apply text search filter
+    if (args.query && args.query.length >= 2) {
+      const lowerQuery = args.query.toLowerCase();
+      profiles = profiles.filter((profile) => {
+        const searchableText = [
+          profile.name,
+          profile.profession,
+          profile.skills,
+          profile.category,
+          profile.location,
+          profile.country,
+        ].join(" ").toLowerCase();
+        
+        return searchableText.includes(lowerQuery);
+      });
+    }
 
-        return search.eq("status", "approved");
-      })
-      .take(50);
+    // Apply category filter - exact match required
+    if (args.category) {
+      profiles = profiles.filter((profile) => 
+        profile.category === args.category
+      );
+    }
 
+    // Apply location filter
+    if (args.location) {
+      const lowerLocation = args.location.toLowerCase();
+      profiles = profiles.filter((profile) => 
+        profile.location.toLowerCase().includes(lowerLocation)
+      );
+    }
+
+    // Apply country filter
+    if (args.country) {
+      const lowerCountry = args.country.toLowerCase();
+      profiles = profiles.filter((profile) => 
+        profile.country.toLowerCase().includes(lowerCountry)
+      );
+    }
+
+    // Apply verified filter
+    if (args.verifiedOnly) {
+      profiles = profiles.filter((profile) => 
+        profile.emailVerified || 
+        profile.phoneVerified || 
+        profile.pastorEndorsed || 
+        profile.backgroundCheck
+      );
+    }
+
+    // Get user details for each profile
     const profilesWithUsers = await Promise.all(
-      results.map(async (profile) => {
+      profiles.map(async (profile) => {
         const user = await ctx.db.get(profile.userId);
         return { ...profile, user };
       })
     );
 
-    return profilesWithUsers;
+    return profilesWithUsers.slice(0, 50);
   },
 });
 
@@ -46,6 +85,9 @@ export const saveSearchHistory = mutation({
     filters: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
+    // Don't save empty searches
+    if (!args.query || args.query.trim().length === 0) return;
+
     await ctx.db.insert("searchHistory", {
       userId: args.userId,
       query: args.query,
@@ -62,7 +104,7 @@ export const getSearchHistory = query({
   },
   handler: async (ctx, args) => {
     const limit = args.limit || 10;
-
+    
     const history = await ctx.db
       .query("searchHistory")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -83,7 +125,9 @@ export const clearSearchHistory = mutation({
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
-    await Promise.all(history.map((entry) => ctx.db.delete(entry._id)));
+    await Promise.all(
+      history.map((entry) => ctx.db.delete(entry._id))
+    );
   },
 });
 
@@ -98,11 +142,11 @@ export const getSearchSuggestions = query({
 
     const profiles = await ctx.db
       .query("profiles")
-      .filter((q) => q.eq(q.field("status"), "approved"))
+      .filter((q) => q.eq(q.field("everApproved"), true))
       .collect();
 
     const suggestions = new Set<string>();
-
+    
     profiles.forEach((profile) => {
       const fields = [
         profile.profession,
@@ -110,11 +154,11 @@ export const getSearchSuggestions = query({
         profile.category,
         profile.location,
       ];
-
+      
       fields.forEach((field) => {
         const lowerField = field.toLowerCase();
         const lowerQuery = args.query.toLowerCase();
-
+        
         if (lowerField.includes(lowerQuery)) {
           suggestions.add(field);
         }

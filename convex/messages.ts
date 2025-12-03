@@ -19,6 +19,8 @@ export const send = mutation({
       attachmentUrl: args.attachmentUrl,
       attachmentType: args.attachmentType,
       reactions: [],
+      deletedFor: [],
+      deletedForEveryone: false,
     });
 
     await ctx.db.insert("notifications", {
@@ -32,6 +34,55 @@ export const send = mutation({
     });
 
     return messageId;
+  },
+});
+
+export const editMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+    userId: v.id("users"),
+    newContent: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    if (!message) throw new Error("Message not found");
+    
+    // Only sender can edit
+    if (message.fromUserId !== args.userId) {
+      throw new Error("Unauthorized: You can only edit your own messages");
+    }
+
+    await ctx.db.patch(args.messageId, {
+      content: args.newContent,
+      editedAt: Date.now(),
+    });
+  },
+});
+
+export const deleteMessage = mutation({
+  args: {
+    messageId: v.id("messages"),
+    userId: v.id("users"),
+    forEveryone: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    if (!message) throw new Error("Message not found");
+
+    if (args.forEveryone) {
+      // Only sender can delete for everyone
+      if (message.fromUserId !== args.userId) {
+        throw new Error("Unauthorized: You can only delete your own messages for everyone");
+      }
+      await ctx.db.patch(args.messageId, { deletedForEveryone: true });
+    } else {
+      // Delete for self only
+      const deletedFor = message.deletedFor || [];
+      if (!deletedFor.includes(args.userId)) {
+        deletedFor.push(args.userId);
+      }
+      await ctx.db.patch(args.messageId, { deletedFor });
+    }
   },
 });
 
@@ -67,9 +118,7 @@ export const removeReaction = mutation({
     const message = await ctx.db.get(args.messageId);
     if (!message) throw new Error("Message not found");
 
-    const reactions = (message.reactions || []).filter(
-      (r) => r.userId !== args.userId
-    );
+    const reactions = (message.reactions || []).filter((r) => r.userId !== args.userId);
     await ctx.db.patch(args.messageId, { reactions });
   },
 });
@@ -84,9 +133,7 @@ export const setTyping = mutation({
     const existing = await ctx.db
       .query("typingIndicators")
       .withIndex("by_conversation", (q) =>
-        q
-          .eq("userId", args.userId)
-          .eq("conversationWith", args.conversationWith)
+        q.eq("userId", args.userId).eq("conversationWith", args.conversationWith)
       )
       .first();
 
@@ -115,14 +162,13 @@ export const getTypingStatus = query({
     const typing = await ctx.db
       .query("typingIndicators")
       .withIndex("by_conversation", (q) =>
-        q
-          .eq("userId", args.conversationWith)
-          .eq("conversationWith", args.userId)
+        q.eq("userId", args.conversationWith).eq("conversationWith", args.userId)
       )
       .first();
 
-    const isRecentlyTyping =
-      typing && typing.isTyping && Date.now() - typing.lastUpdated < 5000;
+    const isRecentlyTyping = typing && 
+      typing.isTyping && 
+      Date.now() - typing.lastUpdated < 5000;
 
     return isRecentlyTyping;
   },
@@ -148,9 +194,15 @@ export const getConversation = query({
       )
       .collect();
 
-    const allMessages = [...messages1, ...messages2].sort(
-      (a, b) => a.createdAt - b.createdAt
-    );
+    const allMessages = [...messages1, ...messages2]
+      .filter((msg) => {
+        // Filter out messages deleted for everyone
+        if (msg.deletedForEveryone) return false;
+        // Filter out messages deleted for this user
+        if (msg.deletedFor?.includes(args.userId1)) return false;
+        return true;
+      })
+      .sort((a, b) => a.createdAt - b.createdAt);
 
     return allMessages;
   },
@@ -169,7 +221,13 @@ export const getInbox = query({
       .withIndex("by_from", (q) => q.eq("fromUserId", args.userId))
       .collect();
 
-    const allMessages = [...received, ...sent];
+    const allMessages = [...received, ...sent].filter((msg) => {
+      // Filter out messages deleted for everyone
+      if (msg.deletedForEveryone) return false;
+      // Filter out messages deleted for this user
+      if (msg.deletedFor?.includes(args.userId)) return false;
+      return true;
+    });
 
     const conversationsMap = new Map<string, typeof allMessages>();
 
@@ -184,23 +242,30 @@ export const getInbox = query({
     }
 
     const conversations = await Promise.all(
-      Array.from(conversationsMap.entries()).map(
-        async ([otherUserId, msgs]) => {
-          const otherUser = await ctx.db.get(otherUserId as any);
-          const sortedMsgs = msgs.sort((a, b) => b.createdAt - a.createdAt);
-          const lastMessage = sortedMsgs[0];
-          const unreadCount = msgs.filter(
-            (m) => m.toUserId === args.userId && !m.read
-          ).length;
+      Array.from(conversationsMap.entries()).map(async ([otherUserId, msgs]) => {
+        const otherUser = await ctx.db.get(otherUserId as any);
+        const sortedMsgs = msgs.sort((a, b) => b.createdAt - a.createdAt);
+        const lastMessage = sortedMsgs[0];
+        const unreadCount = msgs.filter(
+          (m) => m.toUserId === args.userId && !m.read
+        ).length;
 
-          return {
-            otherUser,
-            lastMessage,
-            unreadCount,
-            messages: sortedMsgs,
-          };
-        }
-      )
+        // Get profile for profile picture
+        const profile = await ctx.db
+          .query("profiles")
+          .withIndex("by_user", (q) => q.eq("userId", otherUserId as any))
+          .first();
+
+        return {
+          otherUser: {
+            ...otherUser,
+            profilePicture: profile?.profilePicture,
+          },
+          lastMessage,
+          unreadCount,
+          messages: sortedMsgs,
+        };
+      })
     );
 
     return conversations.sort(

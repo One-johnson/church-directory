@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, X } from "lucide-react";
+import { Send, Paperclip, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Id } from "../../../convex/_generated/dataModel";
 
@@ -13,12 +13,16 @@ interface MessageInputProps {
   fromUserId: Id<"users">;
   toUserId: Id<"users">;
   onMessageSent?: () => void;
+  editingMessage?: { id: Id<"messages">; content: string } | null;
+  onCancelEdit?: () => void;
 }
 
-export function MessageInput({
-  fromUserId,
-  toUserId,
+export function MessageInput({ 
+  fromUserId, 
+  toUserId, 
   onMessageSent,
+  editingMessage,
+  onCancelEdit,
 }: MessageInputProps) {
   const [content, setContent] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -29,27 +33,30 @@ export function MessageInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sendMessage = useMutation(api.messages.send);
+  const editMessage = useMutation(api.messages.editMessage);
   const setTyping = useMutation(api.messages.setTyping);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+  const getUrl = useMutation(api.files.getUrl);
+
+  // Set content when editing
+  useEffect(() => {
+    if (editingMessage) {
+      setContent(editingMessage.content);
+      textareaRef.current?.focus();
+    }
+  }, [editingMessage]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (content) {
-        setTyping({
-          userId: fromUserId,
-          conversationWith: toUserId,
-          isTyping: true,
-        });
+      if (content && !editingMessage) {
+        setTyping({ userId: fromUserId, conversationWith: toUserId, isTyping: true });
       } else {
-        setTyping({
-          userId: fromUserId,
-          conversationWith: toUserId,
-          isTyping: false,
-        });
+        setTyping({ userId: fromUserId, conversationWith: toUserId, isTyping: false });
       }
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [content, fromUserId, toUserId, setTyping]);
+  }, [content, fromUserId, toUserId, setTyping, editingMessage]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,8 +67,13 @@ export function MessageInput({
       return;
     }
 
-    setAttachment(file);
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only image files are supported");
+      return;
+    }
 
+    setAttachment(file);
+    
     const reader = new FileReader();
     reader.onloadend = () => {
       setAttachmentPreview(reader.result as string);
@@ -78,6 +90,33 @@ export function MessageInput({
   };
 
   const handleSend = async () => {
+    if (editingMessage) {
+      // Edit existing message
+      if (!content.trim()) {
+        toast.error("Message cannot be empty");
+        return;
+      }
+
+      setIsSending(true);
+      try {
+        await editMessage({
+          messageId: editingMessage.id,
+          userId: fromUserId,
+          newContent: content.trim(),
+        });
+        setContent("");
+        if (onCancelEdit) onCancelEdit();
+        toast.success("Message updated");
+      } catch (error) {
+        console.error("Error editing message:", error);
+        toast.error("Failed to edit message");
+      } finally {
+        setIsSending(false);
+      }
+      return;
+    }
+
+    // Send new message
     if ((!content.trim() && !attachment) || isSending) return;
 
     setIsSending(true);
@@ -88,13 +127,23 @@ export function MessageInput({
 
       if (attachment) {
         setIsUploading(true);
-        const url = uploadImage(attachment);
-        if (typeof url === "string") {
-          attachmentUrl = url;
-        } else {
-          throw new Error("uploadImage did not return a URL string");
+        
+        // Upload to Convex storage
+        const uploadUrl = await generateUploadUrl();
+        const result = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": attachment.type },
+          body: attachment,
+        });
+        
+        const { storageId } = await result.json();
+        const fileUrl = await getUrl({ storageId });
+        
+        if (fileUrl) {
+          attachmentUrl = fileUrl;
+          attachmentType = attachment.type;
         }
-        attachmentType = attachment.type;
+        
         setIsUploading(false);
       }
 
@@ -108,16 +157,12 @@ export function MessageInput({
 
       setContent("");
       handleRemoveAttachment();
-      setTyping({
-        userId: fromUserId,
-        conversationWith: toUserId,
-        isTyping: false,
-      });
-
+      setTyping({ userId: fromUserId, conversationWith: toUserId, isTyping: false });
+      
       if (onMessageSent) {
         onMessageSent();
       }
-
+      
       toast.success("Message sent");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -134,8 +179,26 @@ export function MessageInput({
     }
   };
 
+  const handleCancelEdit = () => {
+    setContent("");
+    if (onCancelEdit) onCancelEdit();
+  };
+
   return (
     <div className="border-t p-4 space-y-2">
+      {editingMessage && (
+        <div className="flex items-center justify-between bg-muted p-2 rounded text-sm">
+          <span className="text-muted-foreground">Editing message</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCancelEdit}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
+
       {attachmentPreview && (
         <div className="relative inline-block">
           <img
@@ -155,21 +218,25 @@ export function MessageInput({
       )}
 
       <div className="flex gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading || isSending}
-        >
-          <Paperclip className="h-4 w-4" />
-        </Button>
+        {!editingMessage && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading || isSending}
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+          </>
+        )}
 
         <Textarea
           ref={textareaRef}
@@ -183,12 +250,14 @@ export function MessageInput({
 
         <Button
           onClick={handleSend}
-          disabled={
-            (!content.trim() && !attachment) || isUploading || isSending
-          }
+          disabled={(!content.trim() && !attachment) || isUploading || isSending}
           size="icon"
         >
-          <Send className="h-4 w-4" />
+          {isSending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
@@ -198,7 +267,3 @@ export function MessageInput({
     </div>
   );
 }
-function uploadImage(attachment: File) {
-  throw new Error("Function not implemented.");
-}
-

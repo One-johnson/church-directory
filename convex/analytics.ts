@@ -30,9 +30,7 @@ export const getDashboardAnalytics = query({
     // Get notification counts
     const notifications = await ctx.db
       .query("notifications")
-      .withIndex("by_user_read", (q) =>
-        q.eq("userId", args.userId).eq("read", false)
-      )
+      .withIndex("by_user_read", (q) => q.eq("userId", args.userId).eq("read", false))
       .collect();
 
     // Get total approved professionals
@@ -73,15 +71,9 @@ export const getAdminAnalytics = query({
     // Get all profiles
     const allProfiles = await ctx.db.query("profiles").collect();
     const totalProfiles = allProfiles.length;
-    const pendingProfiles = allProfiles.filter(
-      (p) => p.status === "pending"
-    ).length;
-    const approvedProfiles = allProfiles.filter(
-      (p) => p.status === "approved"
-    ).length;
-    const rejectedProfiles = allProfiles.filter(
-      (p) => p.status === "rejected"
-    ).length;
+    const pendingProfiles = allProfiles.filter((p) => p.status === "pending").length;
+    const approvedProfiles = allProfiles.filter((p) => p.status === "approved").length;
+    const rejectedProfiles = allProfiles.filter((p) => p.status === "rejected").length;
 
     // Get all messages
     const allMessages = await ctx.db.query("messages").collect();
@@ -98,12 +90,10 @@ export const getAdminAnalytics = query({
       const count = categoryMap.get(profile.category) || 0;
       categoryMap.set(profile.category, count + 1);
     });
-    const categoryDistribution = Array.from(categoryMap.entries()).map(
-      ([category, count]) => ({
-        category,
-        count,
-      })
-    );
+    const categoryDistribution = Array.from(categoryMap.entries()).map(([category, count]) => ({
+      category,
+      count,
+    }));
 
     // User growth (last 30 days)
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
@@ -111,10 +101,9 @@ export const getAdminAnalytics = query({
     const userGrowth = recentUsers.length;
 
     // Profile approval rate
-    const approvalRate =
-      totalProfiles > 0
-        ? Math.round((approvedProfiles / totalProfiles) * 100)
-        : 0;
+    const approvalRate = totalProfiles > 0 
+      ? Math.round((approvedProfiles / totalProfiles) * 100) 
+      : 0;
 
     return {
       totalUsers,
@@ -141,42 +130,28 @@ export const getProfileAnalytics = query({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (
-      !requester ||
-      (requester.role !== "admin" && requester.role !== "pastor")
-    ) {
+    if (!requester || (requester.role !== "admin" && requester.role !== "pastor")) {
       throw new Error("Unauthorized: Pastor or Admin access required");
     }
 
     const allProfiles = await ctx.db.query("profiles").collect();
     const totalProfiles = allProfiles.length;
-    const pendingProfiles = allProfiles.filter(
-      (p) => p.status === "pending"
-    ).length;
-    const approvedProfiles = allProfiles.filter(
-      (p) => p.status === "approved"
-    ).length;
-    const rejectedProfiles = allProfiles.filter(
-      (p) => p.status === "rejected"
-    ).length;
+    const pendingProfiles = allProfiles.filter((p) => p.status === "pending").length;
+    const approvedProfiles = allProfiles.filter((p) => p.status === "approved").length;
+    const rejectedProfiles = allProfiles.filter((p) => p.status === "rejected").length;
 
     // Recent submissions (last 7 days)
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recentSubmissions = allProfiles.filter(
-      (p) => p.createdAt >= sevenDaysAgo
-    ).length;
+    const recentSubmissions = allProfiles.filter((p) => p.createdAt >= sevenDaysAgo).length;
 
     // Average time to approval (for approved profiles)
     const approvedProfilesWithTime = allProfiles.filter(
       (p) => p.status === "approved" && p.updatedAt > p.createdAt
     );
-    const avgApprovalTime =
-      approvedProfilesWithTime.length > 0
-        ? approvedProfilesWithTime.reduce(
-            (sum, p) => sum + (p.updatedAt - p.createdAt),
-            0
-          ) / approvedProfilesWithTime.length
-        : 0;
+    const avgApprovalTime = approvedProfilesWithTime.length > 0
+      ? approvedProfilesWithTime.reduce((sum, p) => sum + (p.updatedAt - p.createdAt), 0) /
+        approvedProfilesWithTime.length
+      : 0;
     const avgApprovalHours = Math.round(avgApprovalTime / (1000 * 60 * 60));
 
     // Top locations
