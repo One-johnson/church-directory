@@ -17,16 +17,20 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Id } from "../../../convex/_generated/dataModel";
 
-export default function MessagesPage(): React.JSX.Element {
+/* -------------------- MAIN CLIENT COMPONENT -------------------- */
+function MessagesContent(): React.JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isLoading: authLoading } = useAuth();
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(
     searchParams.get("to")
   );
-  const [editingMessage, setEditingMessage] = React.useState<{ id: Id<"messages">; content: string } | null>(null);
+  const [editingMessage, setEditingMessage] = React.useState<{
+    id: Id<"messages">;
+    content: string;
+  } | null>(null);
 
-  usePresence(user?._id as Id<"users"> || null);
+  usePresence((user?._id as Id<"users">) || null);
 
   const conversations = useQuery(
     api.messages.getInbox,
@@ -85,7 +89,6 @@ export default function MessagesPage(): React.JSX.Element {
             selectedUserId && "hidden md:flex"
           )}
         >
-          {/* Fixed Header */}
           <div className="p-4 border-b bg-background flex-shrink-0">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <MessageSquare className="h-6 w-6" />
@@ -93,7 +96,6 @@ export default function MessagesPage(): React.JSX.Element {
             </h2>
           </div>
 
-          {/* Scrollable Conversation List */}
           <div className="flex-1 overflow-y-auto">
             {!conversations && (
               <div className="flex items-center justify-center py-12">
@@ -109,7 +111,7 @@ export default function MessagesPage(): React.JSX.Element {
               </div>
             )}
 
-             {conversations?.map((conv) => {
+            {conversations?.map((conv) => {
               const otherUserId =
                 conv.otherUser && "_id" in conv.otherUser
                   ? (conv.otherUser as { _id: string })._id
@@ -130,13 +132,21 @@ export default function MessagesPage(): React.JSX.Element {
                   )}
                   disabled={!conv.otherUser}
                 >
-                {">"}
                   <div className="flex gap-3">
                     <div className="relative">
                       <Avatar>
-                        <AvatarImage src={conv.otherUser && 'profilePicture' in conv.otherUser ? conv.otherUser.profilePicture as string : undefined} />
+                        <AvatarImage
+                          src={
+                            conv.otherUser &&
+                            "profilePicture" in conv.otherUser
+                              ? (conv.otherUser.profilePicture as string)
+                              : undefined
+                          }
+                        />
                         <AvatarFallback>
-                          {conv.otherUser && 'name' in conv.otherUser && typeof conv.otherUser.name === "string"
+                          {conv.otherUser &&
+                          "name" in conv.otherUser &&
+                          typeof conv.otherUser.name === "string"
                             ? conv.otherUser.name.charAt(0)
                             : "U"}
                         </AvatarFallback>
@@ -149,10 +159,13 @@ export default function MessagesPage(): React.JSX.Element {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium truncate">
-                          {conv.otherUser && 'name' in conv.otherUser && typeof conv.otherUser.name === "string"
+                          {conv.otherUser &&
+                          "name" in conv.otherUser &&
+                          typeof conv.otherUser.name === "string"
                             ? conv.otherUser.name
                             : "Unknown User"}
                         </span>
+
                         {conv.unreadCount > 0 && (
                           <Badge
                             variant="destructive"
@@ -162,15 +175,15 @@ export default function MessagesPage(): React.JSX.Element {
                           </Badge>
                         )}
                       </div>
+
                       <p className="text-sm text-muted-foreground truncate">
                         {conv.lastMessage.content}
                       </p>
+
                       <p className="text-xs text-muted-foreground mt-1">
                         {formatDistanceToNow(
                           new Date(conv.lastMessage.createdAt),
-                          {
-                            addSuffix: true,
-                          }
+                          { addSuffix: true }
                         )}
                       </p>
                     </div>
@@ -182,18 +195,23 @@ export default function MessagesPage(): React.JSX.Element {
         </div>
 
         {/* Conversation View */}
-        <div className={cn("flex-1 flex flex-col", !selectedUserId && "hidden md:flex")}>
+        <div
+          className={cn(
+            "flex-1 flex flex-col",
+            !selectedUserId && "hidden md:flex"
+          )}
+        >
           {!selectedUserId ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">Select a conversation</p>
-                <p className="text-sm">Choose a conversation to start messaging</p>
+                <p className="text-sm">Choose someone to start messaging</p>
               </div>
             </div>
           ) : (
             <>
-              {/* Fixed Conversation Header */}
+              {/* Header */}
               <div className="border-b p-4 flex items-center gap-3 bg-background flex-shrink-0">
                 <Button
                   variant="ghost"
@@ -203,11 +221,14 @@ export default function MessagesPage(): React.JSX.Element {
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
- <div className="relative">
+
+                <div className="relative">
                   <Avatar>
                     <AvatarImage
                       src={
-                        selectedUser && typeof selectedUser === "object" && "profilePicture" in selectedUser
+                        selectedUser &&
+                        typeof selectedUser === "object" &&
+                        "profilePicture" in selectedUser
                           ? selectedUser.profilePicture
                           : undefined
                       }
@@ -221,26 +242,28 @@ export default function MessagesPage(): React.JSX.Element {
                         : "U"}
                     </AvatarFallback>
                   </Avatar>
-                  {selectedUser && typeof selectedUser === "object" && "isOnline" in selectedUser && (selectedUser as any).isOnline && (
-                    <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-background rounded-full" />
-                  )}
+
+                  {selectedUser &&
+                    (selectedUser as any).isOnline && (
+                      <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-background rounded-full" />
+                    )}
                 </div>
 
-                 <div>
-                  <h3 className="font-semibold">
-                    {selectedUser && typeof selectedUser === "object" && "name" in selectedUser && typeof selectedUser.name === "string"
-                      ? selectedUser.name
-                      : "Unknown"}
-                  </h3>
+                <div>
+                 <h3 className="font-semibold"> {selectedUser && typeof selectedUser === "object" && "name" in selectedUser && typeof selectedUser.name === "string" ? selectedUser.name : "Unknown"} </h3>
                   <p className="text-xs text-muted-foreground">
-                    {selectedUser && typeof selectedUser === "object" && "isOnline" in selectedUser
-                      ? ((selectedUser as any).isOnline ? "Online" : "Offline")
+                    {selectedUser &&
+                    typeof selectedUser === "object" &&
+                    "isOnline" in selectedUser
+                      ? (selectedUser as any).isOnline
+                        ? "Online"
+                        : "Offline"
                       : ""}
                   </p>
                 </div>
               </div>
 
-              {/* Scrollable Messages */}
+              {/* Messages */}
               <MessageList
                 currentUserId={user._id as Id<"users">}
                 otherUserId={selectedUserId as Id<"users">}
@@ -248,7 +271,7 @@ export default function MessagesPage(): React.JSX.Element {
                 onEditMessage={handleEditMessage}
               />
 
-              {/* Fixed Input */}
+              {/* Input */}
               <MessageInput
                 fromUserId={user._id as Id<"users">}
                 toUserId={selectedUserId as Id<"users">}
@@ -260,5 +283,21 @@ export default function MessagesPage(): React.JSX.Element {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ---------------------- SUSPENSE WRAPPER (REQUIRED) ---------------------- */
+
+export default function MessagesPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <MessagesContent />
+    </React.Suspense>
   );
 }
