@@ -8,12 +8,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePresence } from "@/hooks/use-presence";
 import { AppNavbar } from "@/components/layout/app-navbar";
 import { AdvancedSearch } from "@/components/search/advanced-search";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Mail, Loader2, Users, Download } from "lucide-react";
-import { VerificationBadges } from "@/components/profile/verification-badges";
+import { Loader2, Users, Download } from "lucide-react";
+import { EnhancedProfileCard } from "@/components/directory/enhanced-profile-card";
 import { exportTableData } from "@/lib/export-utils";
 import { toast } from "sonner";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -64,7 +62,11 @@ export default function DirectoryPage(): React.JSX.Element {
         { header: "Country", key: "country" },
         { header: "Experience", key: "experience" },
       ],
-      data: searchResults,
+      data: searchResults.map(p => ({
+        ...p,
+        church: p.church || "N/A",
+        denomination: p.denomination || "N/A",
+      })),
     });
     toast.success(`Exported ${searchResults.length} profiles to ${format.toUpperCase()}`);
   };
@@ -125,78 +127,14 @@ export default function DirectoryPage(): React.JSX.Element {
         )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {searchResults.map((profile) => {
-            const userPresence = profile.user?.isOnline;
-            
-            return (
-              <Card key={profile._id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-4">
-                  <div className="flex items-start gap-4">
-                    <div className="relative">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={profile.profilePicture} alt={profile.name} />
-                        <AvatarFallback>
-                          {profile.name
-                            .split(" ")
-                            .map((n: string) => n[0])
-                            .join("")
-                            .toUpperCase()
-                            .slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      {userPresence && (
-                        <div className="absolute bottom-0 right-0 h-4 w-4 bg-green-500 border-2 border-background rounded-full" />
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <CardTitle className="text-xl">{profile.name}</CardTitle>
-                      <CardDescription className="font-medium">
-                        {profile.profession}
-                      </CardDescription>
-                      <Badge variant="secondary" className="text-xs">
-                        {profile.category}
-                      </Badge>
-                      <VerificationBadges
-                        emailVerified={profile.emailVerified}
-                        phoneVerified={profile.phoneVerified}
-                        pastorEndorsed={profile.pastorEndorsed}
-                        backgroundCheck={profile.backgroundCheck}
-                        size="sm"
-                      />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="font-medium">Skills:</span>
-                      <p className="text-muted-foreground line-clamp-2">{profile.skills}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Location:</span>
-                      <p className="text-muted-foreground">
-                        {profile.location}, {profile.country}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Experience:</span>
-                      <p className="text-muted-foreground line-clamp-2">{profile.experience}</p>
-                    </div>
-                  </div>
-
-                  {user._id !== profile.userId && (
-                    <Button
-                      className="w-full"
-                      onClick={() => handleMessage(profile.userId)}
-                    >
-                      <Mail className="mr-2 h-4 w-4" />
-                      Send Message
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+          {searchResults.map((profile) => (
+            <EnhancedProfileCard
+              key={profile._id}
+              profile={profile}
+              onMessage={handleMessage}
+              currentUserId={user._id}
+            />
+          ))}
         </div>
       </main>
     </div>

@@ -14,6 +14,8 @@ export const createProfile = mutation({
     location: v.string(),
     profilePicture: v.optional(v.string()),
     country: v.string(),
+      church: v.optional(v.string()),
+    denomination: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Check if profile already exists
@@ -40,6 +42,8 @@ export const createProfile = mutation({
       status: "pending",
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      church: args.church,
+      denomination: args.denomination,
     });
 
     // Notify admins and pastors
@@ -77,6 +81,8 @@ export const updateProfile = mutation({
     experience: v.string(),
     servicesOffered: v.string(),
     location: v.string(),
+   church: v.optional(v.string()),
+    denomination: v.optional(v.string()),
     profilePicture: v.optional(v.string()),
     country: v.string(),
   },

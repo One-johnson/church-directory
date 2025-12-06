@@ -33,6 +33,8 @@ const profileSchema = z.object({
   location: z.string().min(2, "Location is required"),
   profilePicture: z.string().optional(),
   country: z.string().min(2, "Country is required"),
+  church: z.string().optional(),
+  denomination: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -57,12 +59,7 @@ const categories = [
   "Other",
 ];
 
-export function ProfileForm({
-  userId,
-  profileId,
-  defaultValues,
-  onSuccess,
-}: ProfileFormProps): React.JSX.Element {
+export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: ProfileFormProps): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
@@ -106,8 +103,7 @@ export function ProfileForm({
       }
       onSuccess?.();
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to save profile";
+      const errorMessage = err instanceof Error ? err.message : "Failed to save profile";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -155,9 +151,7 @@ export function ProfileForm({
             disabled={isLoading}
           />
           {errors.profession && (
-            <p className="text-sm text-destructive">
-              {errors.profession.message}
-            </p>
+            <p className="text-sm text-destructive">{errors.profession.message}</p>
           )}
         </div>
       </div>
@@ -209,9 +203,7 @@ export function ProfileForm({
           rows={4}
         />
         {errors.experience && (
-          <p className="text-sm text-destructive">
-            {errors.experience.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.experience.message}</p>
         )}
       </div>
 
@@ -225,9 +217,7 @@ export function ProfileForm({
           rows={4}
         />
         {errors.servicesOffered && (
-          <p className="text-sm text-destructive">
-            {errors.servicesOffered.message}
-          </p>
+          <p className="text-sm text-destructive">{errors.servicesOffered.message}</p>
         )}
       </div>
 
@@ -241,9 +231,7 @@ export function ProfileForm({
             disabled={isLoading}
           />
           {errors.location && (
-            <p className="text-sm text-destructive">
-              {errors.location.message}
-            </p>
+            <p className="text-sm text-destructive">{errors.location.message}</p>
           )}
         </div>
 
@@ -261,16 +249,42 @@ export function ProfileForm({
         </div>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="church">Church Name (Optional)</Label>
+          <Input
+            id="church"
+            placeholder="e.g., Grace Community Church"
+            {...register("church")}
+            disabled={isLoading}
+          />
+          {errors.church && (
+            <p className="text-sm text-destructive">{errors.church.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="denomination">Denomination (Optional)</Label>
+          <Input
+            id="denomination"
+            placeholder="e.g., Baptist, Methodist, etc."
+            {...register("denomination")}
+            disabled={isLoading}
+          />
+          {errors.denomination && (
+            <p className="text-sm text-destructive">{errors.denomination.message}</p>
+          )}
+        </div>
+      </div>
+
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Saving...
           </>
-        ) : profileId ? (
-          "Update Profile"
         ) : (
-          "Submit Profile"
+          profileId ? "Update Profile" : "Submit Profile"
         )}
       </Button>
     </form>
