@@ -20,6 +20,8 @@ export default defineSchema({
     skills: v.string(),
     profession: v.string(),
     category: v.string(),
+    church: v.optional (v.string()),
+    denomination: v.optional( v.string()),
     experience: v.string(),
     servicesOffered: v.string(),
     location: v.string(),
