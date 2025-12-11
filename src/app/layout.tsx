@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Church Connect Pro",
+  title: "UD Professional Directory",
   description:
     "Connect church members with an approved professional directory. Features user profiles, pastoral approval, in-app messaging, and role-based access. Built with Next.js and Tailwind.",
 };

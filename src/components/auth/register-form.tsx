@@ -208,7 +208,7 @@ export function RegisterForm(): React.JSX.Element {
           </div>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-4">
+        <CardFooter className="flex flex-col gap-4 mt-4">
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>
@@ -223,7 +223,7 @@ export function RegisterForm(): React.JSX.Element {
           <p className="text-sm text-center text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline">
-              Sign in here
+              Login here
             </Link>
           </p>
         </CardFooter>

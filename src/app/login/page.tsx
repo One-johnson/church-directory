@@ -92,7 +92,7 @@ export default function LoginPage(): React.JSX.Element {
           </motion.div>
           <h1 className="text-4xl font-bold tracking-tight">Welcome Back</h1>
           <p className="text-muted-foreground text-lg">
-            Sign in to your Church Connect Pro account
+            Login to your UD Professional Directory Account
           </p>
         </motion.div>
 
