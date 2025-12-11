@@ -61,7 +61,7 @@ export function AuthProvider({
   const login = async (email: string, password: string): Promise<void> => {
     try {
       const result = await loginMutation({ email, password });
-      localStorage.setItem("userId", result.userId);
+      localStorage.setItem("userId", result.userId as string);
       setUserId(result.userId);
       router.push("/dashboard");
     } catch (error) {
