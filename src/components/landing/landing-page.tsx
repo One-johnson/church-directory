@@ -63,34 +63,18 @@ export function LandingPage(): React.JSX.Element {
       bgColor: "from-green-500/10 to-emerald-500/10",
     },
     {
-      icon: Verified,
-      title: "Verification Badges",
-      description: "Email, phone, pastor endorsed, and background check verification",
+      icon: Search,
+      title: "Advanced Search",
+      description: "Search by country, profession, location or different categories",
       color: "text-amber-500",
       bgColor: "from-amber-500/10 to-orange-500/10",
     },
   ];
 
-  const secondaryFeatures = [
-    {
-      icon: Search,
-      title: "Advanced Search",
-      description: "Filter by profession, location, skills, and more",
-    },
-    {
-      icon: Bell,
-      title: "Notifications",
-      description: "Stay updated with real-time alerts",
-    },
-    {
-      icon: CheckCircle,
-      title: "Profile Analytics",
-      description: "Track your profile views and engagement",
-    },
-  ];
+ 
 
   const stats = [
-    { value: "500+", label: "Church Members" },
+  
     { value: "200+", label: "Professionals" },
     { value: "1000+", label: "Connections Made" },
     { value: "98%", label: "Satisfaction Rate" },
@@ -145,7 +129,7 @@ export function LandingPage(): React.JSX.Element {
                 className="px-4 py-2 text-sm font-medium border-primary/50 bg-primary/5 backdrop-blur-sm"
               >
                 <Sparkles className="w-4 h-4 mr-2 inline" />
-                Church Connect Pro
+                UD Professionals Directory
               </Badge>
             </motion.div>
 
@@ -154,12 +138,12 @@ export function LandingPage(): React.JSX.Element {
               variants={fadeInUp}
               className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight"
             >
-              Connect with{" "}
+              Connect And Partner With{" "}
               <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent animate-gradient">
-                Trusted Professionals
+                Trusted Professionals In The UD
               </span>
               <br />
-              in Your Church
+              and Lay World Movement
             </motion.h1>
 
             {/* Subheading */}
@@ -167,9 +151,7 @@ export function LandingPage(): React.JSX.Element {
               variants={fadeInUp}
               className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto"
             >
-              A verified directory connecting church members with skilled
-              professionals. Pastor-approved profiles, real-time messaging, and
-              community trust.
+              This directory connects pastors confirmed, skilled professionals in our church across many countries for working, business and partnership opportunities.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -182,7 +164,7 @@ export function LandingPage(): React.JSX.Element {
                 onClick={() => router.push("/register")}
                 className="text-lg px-8 py-6 group shadow-lg hover:shadow-xl transition-shadow"
               >
-                Get Started Free
+                Register As A UD Professional
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button
@@ -191,7 +173,7 @@ export function LandingPage(): React.JSX.Element {
                 onClick={() => router.push("/login")}
                 className="text-lg px-8 py-6 backdrop-blur-sm"
               >
-                Sign In
+                Login
               </Button>
             </motion.div>
 
@@ -220,11 +202,10 @@ export function LandingPage(): React.JSX.Element {
               Features
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Why Church Connect Pro?
+              Why UD Professionals Directory?
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to find and connect with trusted professionals
-              in your church community
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+              Everything you need to find and connect with trusted professionals in the UD
             </p>
           </motion.div>
 
@@ -258,26 +239,7 @@ export function LandingPage(): React.JSX.Element {
             ))}
           </motion.div>
 
-          {/* Secondary Features */}
-          <motion.div
-            variants={staggerContainer}
-            className="grid sm:grid-cols-3 gap-6"
-          >
-            {secondaryFeatures.map((feature, index) => (
-              <motion.div
-                key={index}
-                variants={fadeInUp}
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-6 rounded-lg border bg-card/30 backdrop-blur-sm"
-              >
-                <feature.icon className="w-10 h-10 mx-auto mb-3 text-primary" />
-                <h4 className="font-semibold mb-2">{feature.title}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {feature.description}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
+         
         </div>
       </motion.section>
 
@@ -301,7 +263,7 @@ export function LandingPage(): React.JSX.Element {
 
           <motion.div
             variants={fadeInUp}
-            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+            className="grid grid-cols-2 md:grid-cols-3 gap-8"
           >
             {stats.map((stat, index) => (
               <motion.div
@@ -422,8 +384,8 @@ export function LandingPage(): React.JSX.Element {
           </motion.div>
           <h2 className="text-3xl md:text-5xl font-bold">Ready to Connect?</h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Join hundreds of church members finding trusted professionals in
-            their community. Create your profile in minutes.
+            Join hundreds of professionals in finding and connecting to other trusted professionals in
+            the UD. Register As A UD Professional in minutes.
           </p>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
@@ -431,7 +393,7 @@ export function LandingPage(): React.JSX.Element {
               onClick={() => router.push("/register")}
               className="text-lg px-12 py-7 group shadow-xl"
             >
-              Create Your Profile
+              Register As A UD Professional
               <TrendingUp className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </motion.div>

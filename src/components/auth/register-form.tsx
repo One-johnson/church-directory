@@ -93,7 +93,7 @@ export function RegisterForm(): React.JSX.Element {
     <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-        <CardDescription>Join the church professional directory</CardDescription>
+        <CardDescription>Join the UD professional directory</CardDescription>
       </CardHeader>
 
       <form onSubmit={handleSubmit(onSubmit)}>
