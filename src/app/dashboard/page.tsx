@@ -6,13 +6,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { AppNavbar } from "@/components/layout/app-navbar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -28,9 +22,9 @@ import {
   BarChart3,
 } from "lucide-react";
 import { DashboardAnalytics } from "@/components/analytics/dashboard-analytics";
-import { JSX } from "react";
+import { AdminDashboard } from "./admin-dashboard";
 
-export default function DashboardPage(): JSX.Element {
+export default function DashboardPage(): React.JSX.Element {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
 
@@ -53,7 +47,7 @@ export default function DashboardPage(): JSX.Element {
     );
   }
 
-  const getStatusBadge = (): JSX.Element => {
+  const getStatusBadge = (): React.JSX.Element => {
     if (!profile) return <></>;
 
     switch (profile.status) {
@@ -89,15 +83,24 @@ export default function DashboardPage(): JSX.Element {
       <main className="container mx-auto p-4 md:p-8 space-y-8">
         {/* Welcome Section */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, {user.name}!
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user.name}!</h1>
           <p className="text-muted-foreground">
             Manage your professional profile and connect with the community
           </p>
         </div>
 
-        {/* Analytics Section */}
+        {/* Admin Analytics Section (Only for Admins/Pastors) */}
+        {(user.role === "admin" || user.role === "pastor") && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              <h2 className="text-2xl font-bold">Admin Analytics</h2>
+            </div>
+            <AdminDashboard userId={user._id} />
+          </div>
+        )}
+
+        {/* User Analytics Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
@@ -129,32 +132,29 @@ export default function DashboardPage(): JSX.Element {
               <Alert>
                 <FileText className="h-4 w-4" />
                 <AlertDescription>
-                  Create your professional profile to be visible in the
-                  directory and connect with other church members.
+                  Create your professional profile to be visible in the directory and connect with
+                  other church members.
                 </AlertDescription>
               </Alert>
             ) : profile.status === "pending" ? (
               <Alert>
                 <Clock className="h-4 w-4" />
                 <AlertDescription>
-                  Your profile is under review. You&apos;ll be notified once
-                  it&apos;s approved.
+                  Your profile is under review. You&apos;ll be notified once it&apos;s approved.
                 </AlertDescription>
               </Alert>
             ) : profile.status === "rejected" ? (
               <Alert variant="destructive">
                 <XCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {profile.rejectionReason ||
-                    "Your profile was not approved. Please review and resubmit."}
+                  {profile.rejectionReason || "Your profile was not approved. Please review and resubmit."}
                 </AlertDescription>
               </Alert>
             ) : (
               <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Your profile is live in the directory! Other members can now
-                  view and contact you.
+                  Your profile is live in the directory! Other members can now view and contact you.
                 </AlertDescription>
               </Alert>
             )}
@@ -166,10 +166,7 @@ export default function DashboardPage(): JSX.Element {
                   Create Profile
                 </Button>
               ) : (
-                <Button
-                  variant="outline"
-                  onClick={() => router.push("/profile/edit")}
-                >
+                <Button variant="outline" onClick={() => router.push("/profile/edit")}>
                   <User className="mr-2 h-4 w-4" />
                   Edit Profile
                 </Button>
@@ -180,10 +177,7 @@ export default function DashboardPage(): JSX.Element {
 
         {/* Quick Actions Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => router.push("/directory")}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/directory")}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
@@ -195,10 +189,7 @@ export default function DashboardPage(): JSX.Element {
             </CardHeader>
           </Card>
 
-          <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => router.push("/messages")}
-          >
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/messages")}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
@@ -211,10 +202,7 @@ export default function DashboardPage(): JSX.Element {
           </Card>
 
           {(user.role === "admin" || user.role === "pastor") && (
-            <Card
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => router.push("/admin/approvals")}
-            >
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/admin/approvals")}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />

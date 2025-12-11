@@ -19,6 +19,7 @@ import {
   Bell,
   Verified,
 } from "lucide-react";
+import { HeroCarousel } from "./hero-carousel";
 
 const MotionCard = motion(Card);
 
@@ -192,6 +193,14 @@ export function LandingPage(): React.JSX.Element {
               >
                 Sign In
               </Button>
+            </motion.div>
+
+            {/* Hero Carousel */}
+            <motion.div
+              variants={fadeInUp}
+              className="pt-12"
+            >
+              <HeroCarousel />
             </motion.div>
           </motion.div>
         </div>

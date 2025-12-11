@@ -51,6 +51,66 @@ export const getDashboardAnalytics = query({
   },
 });
 
+
+export const getVerificationAnalytics = query({
+  args: { requesterId: v.id("users") },
+  handler: async (ctx, args) => {
+    // Ensure only admin or pastor can access
+    const requester = await ctx.db.get(args.requesterId);
+    if (!requester || (requester.role !== "admin" && requester.role !== "pastor")) {
+      throw new Error("Unauthorized: Admin or Pastor access required");
+    }
+
+    const profiles = await ctx.db.query("profiles").collect();
+    const total = profiles.length;
+
+    // Verification checks (adjust field names if needed)
+    const emailVerified = profiles.filter((p) => p.emailVerified === true).length;
+    const phoneVerified = profiles.filter((p) => p.phoneVerified === true).length;
+    const backgroundCheck = profiles.filter((p) => p.phoneVerified === true).length;
+    const pastorEndorsed = profiles.filter((p) => p.status === "approved").length;
+
+    // Fully verified (example condition)
+    const fullyVerified = profiles.filter((p) =>
+      p.emailVerified &&
+      p.phoneVerified &&
+      p.status === "approved"
+    ).length;
+
+    const pendingVerification = profiles.filter(
+      (p) => !p.emailVerified || !p.phoneVerified || p.status === "pending"
+    ).length;
+
+    // Percentage of fully verified profiles
+    const verificationRate = total > 0
+      ? Math.round((fullyVerified / total) * 100)
+      : 0;
+
+    // Last 7 days verification trend
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const recentVerifications = profiles.filter(
+      (p) =>
+        p.updatedAt >= sevenDaysAgo &&
+        p.status === "approved"
+    ).length;
+
+    return {
+      totalProfiles: total,
+      emailVerified,
+      phoneVerified,
+      pastorEndorsed,
+      fullyVerified,
+      pendingVerification,
+      verificationRate,
+      recentVerifications,
+      backgroundCheck,
+    };
+  },
+});
+
+
+
+
 // Admin analytics
 export const getAdminAnalytics = query({
   args: { requesterId: v.id("users") },
