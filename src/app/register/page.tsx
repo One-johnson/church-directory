@@ -97,18 +97,18 @@ export default function RegisterPage(): React.JSX.Element {
                 className="mb-4 px-4 py-2 text-sm font-medium border-primary/50 bg-primary/5 backdrop-blur-sm"
               >
                 <Sparkles className="w-4 h-4 mr-2 inline" />
-                Church Connect Pro
+              UD Professionals Directory
               </Badge>
 
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-                Welcome to Our{" "}
+                Welcome to UD{" "}
                 <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent animate-gradient">
-                  Community
+                  Professionals Directory
                 </span>
               </h1>
 
               <p className="text-xl text-muted-foreground mb-8">
-                Create your professional profile and connect with trusted church members.
+                Create your professional profile and connect with trusted UD Professionals.
               </p>
             </motion.div>
 
