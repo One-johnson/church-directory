@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { LoginForm } from "@/components/auth/login-form";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { LandingPage } from "@/components/landing/landing-page";
 
 export default function Home(): React.JSX.Element {
   const router = useRouter();
@@ -18,25 +18,20 @@ export default function Home(): React.JSX.Element {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading Church Connect Pro...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <main className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">
-            Church Professional Directory
-          </h1>
-          <p className="text-muted-foreground">
-            Connect with verified professionals in your church community
-          </p>
-        </div>
-        <LoginForm />
-      </div>
-    </main>
-  );
+  // Show landing page for non-authenticated users
+  if (!user) {
+    return <LandingPage />;
+  }
+
+  // This shouldn't render, but just in case, return an empty fragment to satisfy type checker
+  return <></>;
 }

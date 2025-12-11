@@ -166,7 +166,7 @@ export function RegisterForm(): React.JSX.Element {
 
           <p className="text-sm text-center text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/" className="text-primary hover:underline">
+            <Link href="/login" className="text-primary hover:underline">
               Sign in here
             </Link>
           </p>
