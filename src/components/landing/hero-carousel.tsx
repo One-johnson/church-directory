@@ -40,7 +40,7 @@ export function HeroCarousel(): React.JSX.Element {
   const slides = [
     {
       title: "Find Trusted Professionals",
-      description: "Connect with verified church members offering professional services",
+      description: "Connect and Partner with verified professional in the UD and Lay World Movement",
       image: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1200&h=600&fit=crop",
       gradient: "from-blue-500/20 to-purple-500/20",
     },
