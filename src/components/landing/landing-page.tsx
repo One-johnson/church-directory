@@ -316,9 +316,9 @@ export function LandingPage(): React.JSX.Element {
             {[
               {
                 step: "1",
-                title: "Create Profile",
+                title: "Register As A UD Professional",
                 description:
-                  "Sign up and create your professional profile with your skills and services",
+                  "Register and create your professional profile with your skills and services",
               },
               {
                 step: "2",
@@ -411,13 +411,13 @@ export function LandingPage(): React.JSX.Element {
           <div className="text-center space-y-4">
             <div className="flex justify-center items-center gap-2">
               <Church className="w-6 h-6 text-primary" />
-              <span className="text-lg font-semibold">Church Connect Pro</span>
+              <span className="text-lg font-semibold">UD Professionals Directory</span>
             </div>
             <p className="text-muted-foreground">
               Connecting communities with trust and faith.
             </p>
             <p className="text-sm text-muted-foreground">
-              © 2024 Church Connect Pro. All rights reserved.
+              © 2025 UD Professionals Directory. All rights reserved.
             </p>
           </div>
         </div>
