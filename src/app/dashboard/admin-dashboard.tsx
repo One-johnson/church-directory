@@ -27,7 +27,7 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Element {
 
-const { user } = useAuth();
+  const { user } = useAuth();
     
   const analytics = useQuery(api.analytics.getAdminAnalytics, 
     user ? {requesterId: user._id } : "skip"
@@ -37,6 +37,8 @@ const { user } = useAuth();
   api.analytics.getVerificationAnalytics,
   user ? { requesterId: user._id } : "skip" // skip until user is loaded
 );
+
+
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
@@ -98,7 +100,7 @@ const { user } = useAuth();
       title: "Total Messages",
       value: analytics.totalMessages,
       change: analytics.totalMessages > 0 ? `+${analytics.totalMessages}` : `${analytics.totalMessages}`,
-      changeLabel: "",
+      changeLabel: "this month",
       icon: MessageSquare,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",

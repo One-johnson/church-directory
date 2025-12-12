@@ -1,6 +1,6 @@
 "use client";
 
-
+import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,10 +19,10 @@ import {
   Award, 
   Building2, 
   Church as ChurchIcon,
-  User 
+  User,
+  UserCheck
 } from "lucide-react";
 import { VerificationBadges } from "@/components/profile/verification-badges";
-import React from "react";
 
 interface ProfileDetailDialogProps {
   profile: any;
@@ -88,7 +88,7 @@ export function ProfileDetailDialog({
           {/* Contact & Location Info */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <MapPin className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
                 <p className="text-sm font-medium">Location</p>
                 <p className="text-sm text-muted-foreground">
@@ -99,7 +99,7 @@ export function ProfileDetailDialog({
 
             {profile.church && (
               <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                <ChurchIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <ChurchIcon className="h-5 w-5 text-purple-600 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Church</p>
                   <p className="text-sm text-muted-foreground">{profile.church}</p>
@@ -109,7 +109,7 @@ export function ProfileDetailDialog({
 
             {profile.denomination && (
               <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <Building2 className="h-5 w-5 text-indigo-600 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Denomination</p>
                   <p className="text-sm text-muted-foreground">{profile.denomination}</p>
@@ -118,12 +118,66 @@ export function ProfileDetailDialog({
             )}
           </div>
 
+          {/* Pastor Details */}
+          {profile.user && (profile.user.pastor || profile.user.pastorEmail) && (
+            <>
+              <Separator />
+              <div>
+                <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-green-600" />
+                  Assigned Pastor
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {profile.user.pastor && (
+                    <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <User className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Pastor Name</p>
+                        <p className="text-sm text-muted-foreground">{profile.user.pastor}</p>
+                      </div>
+                    </div>
+                  )}
+                  {profile.user.pastorEmail && (
+                    <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <Mail className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Pastor Email</p>
+                        <p className="text-sm text-muted-foreground break-all">{profile.user.pastorEmail}</p>
+                      </div>
+                    </div>
+                  )}
+                  {profile.user.branchName && (
+                    <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <ChurchIcon className="h-5 w-5 text-purple-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Branch</p>
+                        <p className="text-sm text-muted-foreground">{profile.user.branchName}</p>
+                        {profile.user.branchLocation && (
+                          <p className="text-xs text-muted-foreground mt-1">{profile.user.branchLocation}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {profile.user.denominationName && (
+                    <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <Building2 className="h-5 w-5 text-indigo-600 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Denomination</p>
+                        <p className="text-sm text-muted-foreground">{profile.user.denominationName}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
           <Separator />
 
           {/* Skills */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <Briefcase className="h-5 w-5 text-primary" />
+              <Briefcase className="h-5 w-5 text-orange-600" />
               <h3 className="font-semibold text-lg">Skills & Expertise</h3>
             </div>
             <p className="text-muted-foreground leading-relaxed">{profile.skills}</p>
@@ -134,7 +188,7 @@ export function ProfileDetailDialog({
           {/* Experience */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <Award className="h-5 w-5 text-primary" />
+              <Award className="h-5 w-5 text-amber-600" />
               <h3 className="font-semibold text-lg">Work Experience</h3>
             </div>
             <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
@@ -147,7 +201,7 @@ export function ProfileDetailDialog({
           {/* Services Offered */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <User className="h-5 w-5 text-primary" />
+              <User className="h-5 w-5 text-teal-600" />
               <h3 className="font-semibold text-lg">Services Offered</h3>
             </div>
             <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">

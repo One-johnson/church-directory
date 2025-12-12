@@ -11,13 +11,33 @@ async function hashPassword(password: string): Promise<string> {
   return hashHex;
 }
 
-// Register a new user
+// Register a new user (legacy - for backward compatibility)
 export const register = mutation({
   args: {
     email: v.string(),
     phone: v.optional(v.string()),
     password: v.string(),
     name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    throw new Error("Please use the enhanced registration form with denomination and branch selection");
+  },
+});
+
+// Register with denomination and branch
+export const registerWithDenomination = mutation({
+  args: {
+    email: v.string(),
+    phone: v.optional(v.string()),
+    password: v.string(),
+    name: v.string(),
+    denomination: v.string(),
+    denominationName: v.string(),
+    branch: v.string(),
+    branchName: v.string(),
+    branchLocation: v.string(),
+    pastor: v.string(),
+    pastorEmail: v.string(),
   },
   handler: async (ctx, args) => {
     // Check if user already exists
@@ -33,7 +53,7 @@ export const register = mutation({
     // Hash password
     const passwordHash = await hashPassword(args.password);
 
-    // Check if this is the first user (auto-admin)
+    // Check if this is the first user (auto-admin and auto-approved)
     const userCount = await ctx.db.query("users").collect();
     const isFirstUser = userCount.length === 0;
 
@@ -44,13 +64,24 @@ export const register = mutation({
       passwordHash,
       name: args.name,
       role: isFirstUser ? "admin" : "member", // First user becomes admin
-      emailVerified: true, // Auto-verify for now
+      emailVerified: true,
       createdAt: Date.now(),
+      // Denomination and branch info
+      denomination: args.denomination,
+      denominationName: args.denominationName,
+      branch: args.branch,
+      branchName: args.branchName,
+      branchLocation: args.branchLocation,
+      pastor: args.pastor,
+      pastorEmail: args.pastorEmail,
+      // Account approval - first user is auto-approved
+      accountApproved: isFirstUser,
+      accountApprovedAt: isFirstUser ? Date.now() : undefined,
     });
 
     // Notify if first user
     if (isFirstUser) {
-      console.log(`🎉 First user registered with admin privileges: ${args.email}`);
+      console.log(`🎉 First user registered with admin privileges and auto-approved: ${args.email}`);
     }
 
     return { userId, message: "Registration successful" };
@@ -105,6 +136,15 @@ export const getCurrentUser = query({
       role: user.role,
       emailVerified: user.emailVerified,
       createdAt: user.createdAt,
+      denomination: user.denomination,
+      denominationName: user.denominationName,
+      branch: user.branch,
+      branchName: user.branchName,
+      branchLocation: user.branchLocation,
+      pastor: user.pastor,
+      pastorEmail: user.pastorEmail,
+      accountApproved: user.accountApproved,
+      accountRejectionReason: user.accountRejectionReason,
     };
   },
 });

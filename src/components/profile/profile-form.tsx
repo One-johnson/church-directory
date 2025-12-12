@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "./image-upload";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { getCountryOptions } from "../../data/countries";
+import { getDenominationById, getBranchById } from "@/data/denominations";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 const profileSchema = z.object({
@@ -47,15 +50,18 @@ interface ProfileFormProps {
 }
 
 const categories = [
-  "Technology & IT",
-  "Construction & Trades",
-  "Healthcare & Medical",
-  "Education & Training",
-  "Business & Finance",
-  "Creative & Design",
-  "Legal & Consulting",
-  "Hospitality & Food Service",
-  "Transportation & Logistics",
+  "Healthcare",
+"Engineering",
+"Education",
+"IT",
+"Business Finance",
+"Legal",
+"Trades Construction",
+"Creative Media",
+"Sales Marketing",
+"Hospitality Tourism",
+"Nonprofit Social work",
+"Public Service",
   "Other",
 ];
 
@@ -63,25 +69,68 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
+  const isEditing = Boolean(profileId);
+
+  // Fetch user data to pre-populate denomination and branch
+  const currentUser = useQuery(api.auth.getCurrentUser, { userId });
+
   const createProfile = useMutation(api.profiles.createProfile);
   const updateProfile = useMutation(api.profiles.updateProfile);
+
+  // Pre-populate denomination and branch from user registration data
+
+
 
   const {
     register,
     handleSubmit,
     setValue,
+    control,
     watch,
     formState: { errors },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: defaultValues || {
-      category: "",
-      profilePicture: "",
+    defaultValues: {
+      category: defaultValues?.category || "",
+      profilePicture: defaultValues?.profilePicture || "",
+      country: defaultValues?.country || "",
+     
+      ...defaultValues,
     },
   });
 
+  // Update form values when user data is loaded
+React.useEffect(() => {
+  if (!currentUser) return;
+
+  // NAME
+  if (!defaultValues?.name) {
+    setValue("name", currentUser.name || "");
+  }
+
+  // BRANCH / CHURCH
+  const branchName =
+    getBranchById(currentUser.branch)?.name ||
+    currentUser.branchName ||
+    "";
+  if (!defaultValues?.church) {
+    setValue("church", branchName);
+  }
+
+  // DENOMINATION
+  const denominationName =
+    getDenominationById(currentUser.denomination)?.name ||
+    currentUser.denominationName ||
+    "";
+  if (!defaultValues?.denomination) {
+    setValue("denomination", denominationName);
+  }
+}, [currentUser, defaultValues, setValue]);
+
+
   const category = watch("category");
   const profilePicture = watch("profilePicture");
+  const country = watch("country");
 
   const onSubmit = async (data: ProfileFormData): Promise<void> => {
     setIsLoading(true);
@@ -129,18 +178,27 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">Full Name</Label>
-          <Input
-            id="name"
-            placeholder="John Doe"
-            {...register("name")}
-            disabled={isLoading}
-          />
-          {errors.name && (
-            <p className="text-sm text-destructive">{errors.name.message}</p>
-          )}
-        </div>
+      <div className="space-y-2">
+  <Label htmlFor="name">Full Name</Label>
+  <Input
+    id="name"
+    {...register("name")}
+    readOnly={!isEditing}        // 🔒 Lock when prefilled
+    className={!isEditing ? "bg-muted/50 cursor-not-allowed" : ""}
+  />
+
+  {currentUser && !isEditing && (
+    <p className="text-xs text-muted-foreground">
+      Pre-filled from registration (read-only)
+    </p>
+  )}
+
+  {errors.name && (
+    <p className="text-sm text-destructive">{errors.name.message}</p>
+  )}
+</div>
+
+
 
         <div className="space-y-2">
           <Label htmlFor="profession">Profession/Title</Label>
@@ -236,12 +294,24 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="country">Country/Region</Label>
-          <Input
-            id="country"
-            placeholder="e.g., United States"
-            {...register("country")}
-            disabled={isLoading}
+          <Label htmlFor="country" className="flex items-center gap-2">
+            <Globe className="w-4 h-4" />
+            Country/Region
+          </Label>
+          <Controller
+            name="country"
+            control={control}
+            render={({ field }) => (
+              <SearchableSelect
+                options={getCountryOptions()}
+                value={field.value ?? ""}
+                onValueChange={field.onChange}
+                placeholder="Select your country..."
+                searchPlaceholder="Search countries..."
+                emptyText="No country found."
+                disabled={isLoading}
+              />
+            )}
           />
           {errors.country && (
             <p className="text-sm text-destructive">{errors.country.message}</p>
@@ -250,31 +320,49 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="church">Church Name (Optional)</Label>
-          <Input
-            id="church"
-            placeholder="e.g., Grace Community Church"
-            {...register("church")}
-            disabled={isLoading}
-          />
-          {errors.church && (
-            <p className="text-sm text-destructive">{errors.church.message}</p>
-          )}
-        </div>
+      <div className="space-y-2">
+  <Label htmlFor="church">Branch Name</Label>
+  <Input
+    id="church"
+    {...register("church")}
+    readOnly={!isEditing}        // 🔒 Lock when prefilled
+    className={!isEditing ? "bg-muted/50 cursor-not-allowed" : ""}
+  />
 
-        <div className="space-y-2">
-          <Label htmlFor="denomination">Denomination (Optional)</Label>
-          <Input
-            id="denomination"
-            placeholder="e.g., Baptist, Methodist, etc."
-            {...register("denomination")}
-            disabled={isLoading}
-          />
-          {errors.denomination && (
-            <p className="text-sm text-destructive">{errors.denomination.message}</p>
-          )}
-        </div>
+  {currentUser && !isEditing && (
+    <p className="text-xs text-muted-foreground">
+      Pre-filled from registration (read-only)
+    </p>
+  )}
+
+  {errors.church && (
+    <p className="text-sm text-destructive">{errors.church.message}</p>
+  )}
+</div>
+
+
+
+     <div className="space-y-2">
+  <Label htmlFor="denomination">Denomination</Label>
+  <Input
+    id="denomination"
+    {...register("denomination")}
+    readOnly={!isEditing}         // 🔒 Lock when prefilled
+    className={!isEditing ? "bg-muted/50 cursor-not-allowed" : ""}
+  />
+
+  {currentUser && !isEditing && (
+    <p className="text-xs text-muted-foreground">
+      Pre-filled from registration (read-only)
+    </p>
+  )}
+
+  {errors.denomination && (
+    <p className="text-sm text-destructive">{errors.denomination.message}</p>
+  )}
+</div>
+
+
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>

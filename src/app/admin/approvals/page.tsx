@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { AppNavbar } from "@/components/layout/app-navbar";
@@ -30,6 +31,9 @@ import { toast } from "sonner";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { ProfileAnalytics } from "@/components/analytics/profile-analytics";
 import { exportTableData } from "@/lib/export-utils";
+
+const MotionCard = motion(Card);
+const MotionDiv = motion.div;
 
 export default function ApprovalsPage(): React.JSX.Element {
   const router = useRouter();
@@ -161,12 +165,41 @@ export default function ApprovalsPage(): React.JSX.Element {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
-      <main className="container mx-auto p-4 md:p-8 space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-1">
+      <MotionDiv
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="container mx-auto p-4 md:p-8 space-y-6"
+      >
+        <MotionDiv variants={itemVariants} className="flex items-center justify-between flex-wrap gap-4">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-1"
+          >
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               <Clock className="h-8 w-8" />
               Pending Approvals
@@ -174,84 +207,111 @@ export default function ApprovalsPage(): React.JSX.Element {
             <p className="text-muted-foreground">
               Review and approve professional profiles
             </p>
-          </div>
+          </motion.div>
 
-          <div className="flex gap-2">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="flex gap-2"
+          >
             {pendingProfiles && pendingProfiles.length > 0 && (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    exportTableData("csv", {
-                      filename: `pending-approvals-${new Date().toISOString().split("T")[0]}`,
-                      title: "Pending Approvals Report",
-                      columns: [
-                        { header: "Name", key: "name" },
-                        { header: "Profession", key: "profession" },
-                        { header: "Category", key: "category" },
-                        { header: "Location", key: "location" },
-                        { header: "Country", key: "country" },
-                        { header: "Email", key: "userEmail" },
-                      ],
-                      data: pendingProfiles,
-                    });
-                    toast.success(`Exported ${pendingProfiles.length} profiles to CSV`);
-                  }}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  CSV
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    exportTableData("pdf", {
-                      filename: `pending-approvals-${new Date().toISOString().split("T")[0]}`,
-                      title: "Pending Approvals Report",
-                      columns: [
-                        { header: "Name", key: "name" },
-                        { header: "Profession", key: "profession" },
-                        { header: "Category", key: "category" },
-                        { header: "Location", key: "location" },
-                        { header: "Country", key: "country" },
-                        { header: "Email", key: "userEmail" },
-                      ],
-                      data: pendingProfiles,
-                    });
-                    toast.success(`Exported ${pendingProfiles.length} profiles to PDF`);
-                  }}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  PDF
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      exportTableData("csv", {
+                        filename: `pending-approvals-${new Date().toISOString().split("T")[0]}`,
+                        title: "Pending Approvals Report",
+                        columns: [
+                          { header: "Name", key: "name" },
+                          { header: "Profession", key: "profession" },
+                          { header: "Category", key: "category" },
+                          { header: "Location", key: "location" },
+                          { header: "Country", key: "country" },
+                          { header: "Email", key: "userEmail" },
+                        ],
+                        data: pendingProfiles,
+                      });
+                      toast.success(`Exported ${pendingProfiles.length} profiles to CSV`);
+                    }}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    CSV
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      exportTableData("pdf", {
+                        filename: `pending-approvals-${new Date().toISOString().split("T")[0]}`,
+                        title: "Pending Approvals Report",
+                        columns: [
+                          { header: "Name", key: "name" },
+                          { header: "Profession", key: "profession" },
+                          { header: "Category", key: "category" },
+                          { header: "Location", key: "location" },
+                          { header: "Country", key: "country" },
+                          { header: "Email", key: "userEmail" },
+                        ],
+                        data: pendingProfiles,
+                      });
+                      toast.success(`Exported ${pendingProfiles.length} profiles to PDF`);
+                    }}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    PDF
+                  </Button>
+                </motion.div>
               </>
             )}
-            {selectedProfiles.size > 0 && (
-              <>
-                <Button
-                  variant="default"
-                  onClick={handleBulkApprove}
-                  disabled={actionLoading}
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Approve Selected ({selectedProfiles.size})
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => setRejectDialogOpen(true)}
-                  disabled={actionLoading}
-                >
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Reject Selected ({selectedProfiles.size})
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+            <AnimatePresence>
+              {selectedProfiles.size > 0 && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      variant="default"
+                      onClick={handleBulkApprove}
+                      disabled={actionLoading}
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Approve Selected ({selectedProfiles.size})
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      variant="destructive"
+                      onClick={() => setRejectDialogOpen(true)}
+                      disabled={actionLoading}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Reject Selected ({selectedProfiles.size})
+                    </Button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </MotionDiv>
 
         {/* Analytics Section */}
-        <div className="space-y-4">
+        <MotionDiv variants={itemVariants} className="space-y-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
             <h2 className="text-2xl font-bold">Analytics</h2>
@@ -260,7 +320,7 @@ export default function ApprovalsPage(): React.JSX.Element {
             <ProfileAnalytics userId={user._id} />
             <VerificationAnalytics userId={user._id} />
           </div>
-        </div>
+        </MotionDiv>
 
         {!pendingProfiles && (
           <div className="flex items-center justify-center py-12">
@@ -269,7 +329,11 @@ export default function ApprovalsPage(): React.JSX.Element {
         )}
 
         {pendingProfiles && pendingProfiles.length === 0 && (
-          <Card>
+          <MotionCard
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <CardContent className="flex flex-col items-center justify-center py-12">
               <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
               <p className="text-lg font-medium">All caught up!</p>
@@ -277,118 +341,134 @@ export default function ApprovalsPage(): React.JSX.Element {
                 No pending profiles to review
               </p>
             </CardContent>
-          </Card>
+          </MotionCard>
         )}
 
         {pendingProfiles && pendingProfiles.length > 0 && (
-          <div className="flex items-center gap-2 p-4 border rounded-md bg-muted/50">
+          <MotionDiv
+            variants={itemVariants}
+            className="flex items-center gap-2 p-4 border rounded-md bg-muted/50"
+          >
             <Checkbox
               checked={selectedProfiles.size === pendingProfiles.length}
               onCheckedChange={handleSelectAll}
             />
             <span className="text-sm font-medium">Select All</span>
-          </div>
+          </MotionDiv>
         )}
 
-        <div className="space-y-4">
-          {pendingProfiles?.map((profile) => (
-            <Card key={profile._id}>
-              <CardHeader>
-                <div className="flex items-start gap-4">
-                  <Checkbox
-                    checked={selectedProfiles.has(profile._id)}
-                    onCheckedChange={() => handleToggleProfile(profile._id)}
-                  />
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={profile.profilePicture} alt={profile.name} />
-                    <AvatarFallback>
-                      {profile.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                        .slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl">{profile.name}</CardTitle>
-                      <Badge variant="secondary">
-                        <Clock className="mr-1 h-3 w-3" />
-                        Pending
-                      </Badge>
+        <AnimatePresence>
+          <MotionDiv variants={containerVariants} className="space-y-4">
+            {pendingProfiles?.map((profile, index) => (
+              <MotionCard
+                key={profile._id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={{ scale: 1.01, y: -2 }}
+              >
+                <CardHeader>
+                  <div className="flex items-start gap-4">
+                    <Checkbox
+                      checked={selectedProfiles.has(profile._id)}
+                      onCheckedChange={() => handleToggleProfile(profile._id)}
+                    />
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={profile.profilePicture} alt={profile.name} />
+                      <AvatarFallback>
+                        {profile.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-xl">{profile.name}</CardTitle>
+                        <Badge variant="secondary">
+                          <Clock className="mr-1 h-3 w-3" />
+                          Pending
+                        </Badge>
+                      </div>
+                      <CardDescription>
+                        {profile.profession} • {profile.userEmail}
+                      </CardDescription>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{profile.category}</Badge>
+                        <VerificationBadges
+                          emailVerified={profile.emailVerified}
+                          phoneVerified={profile.phoneVerified}
+                          pastorEndorsed={profile.pastorEndorsed}
+                          backgroundCheck={profile.backgroundCheck}
+                          size="sm"
+                        />
+                      </div>
                     </div>
-                    <CardDescription>
-                      {profile.profession} • {profile.userEmail}
-                    </CardDescription>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{profile.category}</Badge>
-                      <VerificationBadges
-                        emailVerified={profile.emailVerified}
-                        phoneVerified={profile.phoneVerified}
-                        pastorEndorsed={profile.pastorEndorsed}
-                        backgroundCheck={profile.backgroundCheck}
-                        size="sm"
-                      />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4 pl-20">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <span className="text-sm font-medium">Skills:</span>
+                      <p className="text-sm text-muted-foreground">{profile.skills}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium">Location:</span>
+                      <p className="text-sm text-muted-foreground">
+                        {profile.location}, {profile.country}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium">Experience:</span>
+                      <p className="text-sm text-muted-foreground">{profile.experience}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium">Services:</span>
+                      <p className="text-sm text-muted-foreground">{profile.servicesOffered}</p>
                     </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 pl-20">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <span className="text-sm font-medium">Skills:</span>
-                    <p className="text-sm text-muted-foreground">{profile.skills}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium">Location:</span>
-                    <p className="text-sm text-muted-foreground">
-                      {profile.location}, {profile.country}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium">Experience:</span>
-                    <p className="text-sm text-muted-foreground">{profile.experience}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium">Services:</span>
-                    <p className="text-sm text-muted-foreground">{profile.servicesOffered}</p>
-                  </div>
-                </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="default"
-                    onClick={() => handleApprove(profile._id)}
-                    disabled={actionLoading}
-                  >
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Approve
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleReject(profile._id)}
-                    disabled={actionLoading}
-                  >
-                    <XCircle className="mr-2 h-4 w-4" />
-                    Reject
-                  </Button>
-                  <VerificationManager
-                    profile={profile}
-                    requesterId={user._id}
-                    trigger={
-                      <Button variant="outline" size="sm">
-                        <Shield className="mr-2 h-4 w-4" />
-                        Manage Badges
+                  <div className="flex gap-2">
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="default"
+                        onClick={() => handleApprove(profile._id)}
+                        disabled={actionLoading}
+                      >
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Approve
                       </Button>
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </main>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleReject(profile._id)}
+                        disabled={actionLoading}
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Reject
+                      </Button>
+                    </motion.div>
+                    <VerificationManager
+                      profile={profile}
+                      requesterId={user._id}
+                      trigger={
+                        <Button variant="outline" size="sm">
+                          <Shield className="mr-2 h-4 w-4" />
+                          Manage Badges
+                        </Button>
+                      }
+                    />
+                  </div>
+                </CardContent>
+              </MotionCard>
+            ))}
+          </MotionDiv>
+        </AnimatePresence>
+      </MotionDiv>
 
       {/* Bulk Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>

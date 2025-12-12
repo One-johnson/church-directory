@@ -3,7 +3,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { RegisterForm } from "@/components/auth/register-form";
+import { EnhancedRegisterForm } from "@/components/auth/enhanced-register-form";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2, ArrowLeft, Church, Users, Shield, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -97,18 +97,18 @@ export default function RegisterPage(): React.JSX.Element {
                 className="mb-4 px-4 py-2 text-sm font-medium border-primary/50 bg-primary/5 backdrop-blur-sm"
               >
                 <Sparkles className="w-4 h-4 mr-2 inline" />
-              UD Professionals Directory
+                UD Professionals Directory
               </Badge>
 
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-                Welcome to UD{" "}
+                Welcome to the UD{" "}
                 <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent animate-gradient">
                   Professionals Directory
                 </span>
               </h1>
 
               <p className="text-xl text-muted-foreground mb-8">
-                Create your professional profile and connect with trusted UD Professionals.
+                Create your professional profile and connect with other trusted UD Professionals.
               </p>
             </motion.div>
 
@@ -177,9 +177,9 @@ export default function RegisterPage(): React.JSX.Element {
                 </p>
               </div>
 
-              <RegisterForm />
+              <EnhancedRegisterForm />
 
-             
+            
             </motion.div>
           </motion.div>
         </div>

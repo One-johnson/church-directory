@@ -51,6 +51,14 @@ export const createInitialAdmin = mutation({
       role: "admin",
       emailVerified: true,
       createdAt: Date.now(),
+      pastor: "",
+      denomination: "",
+      denominationName: "",
+      branch: "",
+      branchName: "",
+      branchLocation: "",
+      pastorEmail: "",
+      accountApproved: false
     });
 
     console.log(`✅ Admin user created successfully: ${args.email}`);

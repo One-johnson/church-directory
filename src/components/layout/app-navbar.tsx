@@ -92,10 +92,10 @@ export function AppNavbar(): React.JSX.Element {
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center space-x-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <span className="text-lg font-bold">CP</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <span className="text-lg font-bold">UD</span>
           </div>
-          <span className="hidden font-bold sm:inline-block">Church Professionals</span>
+          <span className="hidden font-bold sm:inline-block">Professionals Directory</span>
         </Link>
 
         {/* Desktop Navigation */}

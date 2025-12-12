@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
+import { motion } from "framer-motion";
 import { api } from "../../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { AppNavbar } from "@/components/layout/app-navbar";
@@ -30,6 +31,9 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 import { UsersTable } from "@/components/tables/users-table";
 import { AdminAnalytics } from "@/components/analytics/admin-analytics";
 import { exportTableData } from "@/lib/export-utils";
+
+const MotionCard = motion(Card);
+const MotionDiv = motion.div;
 
 interface UserWithProfile {
   _id: Id<"users">;
@@ -137,12 +141,41 @@ export default function UsersPage(): React.JSX.Element {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
-      <main className="container mx-auto p-4 md:p-8 space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-1">
+      <MotionDiv
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="container mx-auto p-4 md:p-8 space-y-6"
+      >
+        <MotionDiv variants={itemVariants} className="flex items-center justify-between flex-wrap gap-4">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-1"
+          >
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               <Users className="h-8 w-8" />
               User Management
@@ -150,74 +183,90 @@ export default function UsersPage(): React.JSX.Element {
             <p className="text-muted-foreground">
               Manage users, roles, and permissions
             </p>
-          </div>
+          </motion.div>
 
-          <div className="flex gap-2">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="flex gap-2"
+          >
             {users && users.length > 0 && (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    exportTableData("csv", {
-                      filename: `users-${new Date().toISOString().split("T")[0]}`,
-                      title: "User Management Report",
-                      columns: [
-                        { header: "Name", key: "name" },
-                        { header: "Email", key: "email" },
-                        { header: "Role", key: "role" },
-                        { header: "Profile Status", key: "profileStatus" },
-                        { header: "Verified", key: "emailVerified" },
-                      ],
-                      data: users,
-                    });
-                    toast.success(`Exported ${users.length} users to CSV`);
-                  }}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  CSV
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    exportTableData("pdf", {
-                      filename: `users-${new Date().toISOString().split("T")[0]}`,
-                      title: "User Management Report",
-                      columns: [
-                        { header: "Name", key: "name" },
-                        { header: "Email", key: "email" },
-                        { header: "Role", key: "role" },
-                        { header: "Profile Status", key: "profileStatus" },
-                        { header: "Verified", key: "emailVerified" },
-                      ],
-                      data: users,
-                    });
-                    toast.success(`Exported ${users.length} users to PDF`);
-                  }}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  PDF
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      exportTableData("csv", {
+                        filename: `users-${new Date().toISOString().split("T")[0]}`,
+                        title: "User Management Report",
+                        columns: [
+                          { header: "Name", key: "name" },
+                          { header: "Email", key: "email" },
+                          { header: "Role", key: "role" },
+                          { header: "Profile Status", key: "profileStatus" },
+                          { header: "Verified", key: "emailVerified" },
+                        ],
+                        data: users,
+                      });
+                      toast.success(`Exported ${users.length} users to CSV`);
+                    }}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    CSV
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      exportTableData("pdf", {
+                        filename: `users-${new Date().toISOString().split("T")[0]}`,
+                        title: "User Management Report",
+                        columns: [
+                          { header: "Name", key: "name" },
+                          { header: "Email", key: "email" },
+                          { header: "Role", key: "role" },
+                          { header: "Profile Status", key: "profileStatus" },
+                          { header: "Verified", key: "emailVerified" },
+                        ],
+                        data: users,
+                      });
+                      toast.success(`Exported ${users.length} users to PDF`);
+                    }}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    PDF
+                  </Button>
+                </motion.div>
               </>
             )}
             {selectedUsers.length > 0 && (
-              <Button onClick={() => setBulkRoleDialogOpen(true)} disabled={actionLoading}>
-                <Shield className="mr-2 h-4 w-4" />
-                Update Roles ({selectedUsers.length})
-              </Button>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button onClick={() => setBulkRoleDialogOpen(true)} disabled={actionLoading}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  Update Roles ({selectedUsers.length})
+                </Button>
+              </motion.div>
             )}
-          </div>
-        </div>
+          </motion.div>
+        </MotionDiv>
 
         {/* Analytics Section */}
-        <div className="space-y-4">
+        <MotionDiv variants={itemVariants} className="space-y-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
             <h2 className="text-2xl font-bold">Platform Analytics</h2>
           </div>
           <AdminAnalytics userId={user._id} />
-        </div>
+        </MotionDiv>
 
         {/* Users Table */}
         {!users && (
@@ -227,7 +276,11 @@ export default function UsersPage(): React.JSX.Element {
         )}
 
         {users && (
-          <Card className="p-6">
+          <MotionCard
+            variants={itemVariants}
+            whileHover={{ scale: 1.005 }}
+            className="p-6"
+          >
             <div className="space-y-4">
               <h3 className="text-xl font-bold">All Users</h3>
               <UsersTable
@@ -239,9 +292,9 @@ export default function UsersPage(): React.JSX.Element {
                 loading={actionLoading}
               />
             </div>
-          </Card>
+          </MotionCard>
         )}
-      </main>
+      </MotionDiv>
 
       {/* Bulk Role Update Dialog */}
       <Dialog open={bulkRoleDialogOpen} onOpenChange={setBulkRoleDialogOpen}>
