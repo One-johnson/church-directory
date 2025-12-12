@@ -58,7 +58,7 @@ export function Navbar() {
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-8">
               <Link href="/dashboard" className="text-xl font-bold">
-                Church Connect Pro
+                UD Professionals Directory
               </Link>
 
               <div className="hidden md:flex space-x-4">

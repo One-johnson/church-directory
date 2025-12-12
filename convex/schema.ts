@@ -12,7 +12,24 @@ export default defineSchema({
     createdAt: v.number(),
     lastSeen: v.optional(v.number()),
     isOnline: v.optional(v.boolean()),
-  }).index("by_email", ["email"]),
+    // Denomination and Branch info
+    denomination: v.string(),
+    denominationName: v.string(),
+    branch: v.string(),
+    branchName: v.string(),
+    branchLocation: v.string(),
+    pastor: v.string(),
+    pastorEmail: v.string(),
+    // Account approval status
+    accountApproved: v.boolean(),
+    accountApprovedBy: v.optional(v.id("users")),
+    accountApprovedAt: v.optional(v.number()),
+    accountRejectionReason: v.optional(v.string()),
+  })
+    .index("by_email", ["email"])
+    .index("by_account_approval", ["accountApproved"])
+    .index("by_denomination", ["denomination"])
+    .index("by_branch", ["branch"]),
 
   profiles: defineTable({
     userId: v.id("users"),
@@ -20,13 +37,13 @@ export default defineSchema({
     skills: v.string(),
     profession: v.string(),
     category: v.string(),
-    church: v.optional (v.string()),
-    denomination: v.optional( v.string()),
     experience: v.string(),
     servicesOffered: v.string(),
     location: v.string(),
     profilePicture: v.optional(v.string()),
     country: v.string(),
+    church: v.optional(v.string()),
+    denomination: v.optional(v.string()),
     status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
     everApproved: v.optional(v.boolean()), // Track if ever approved - once true, always visible
     rejectionReason: v.optional(v.string()),

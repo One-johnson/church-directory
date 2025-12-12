@@ -105,7 +105,7 @@ export function EnhancedProfileCard({
         <CardContent className="space-y-3">
           {/* Always show location */}
           <div className="flex items-start gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
             <span className="text-muted-foreground line-clamp-1">
               {profile.location}, {profile.country}
             </span>
@@ -113,20 +113,20 @@ export function EnhancedProfileCard({
 
           {/* Show skills */}
           <div className="flex items-start gap-2 text-sm">
-            <Briefcase className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <Briefcase className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
             <span className="text-muted-foreground line-clamp-2">{profile.skills}</span>
           </div>
 
           {/* Show experience preview */}
           <div className="flex items-start gap-2 text-sm">
-            <Award className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <Award className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
             <span className="text-muted-foreground line-clamp-1">{profile.experience}</span>
           </div>
 
           {/* Show church if available */}
           {hasChurch && (
             <div className="flex items-start gap-2 text-sm">
-              <ChurchIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <ChurchIcon className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
               <span className="text-muted-foreground line-clamp-1">{profile.church}</span>
             </div>
           )}
@@ -134,7 +134,7 @@ export function EnhancedProfileCard({
           {/* Show denomination if available */}
           {hasDenomination && (
             <div className="flex items-start gap-2 text-sm">
-              <Building2 className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <Building2 className="h-4 w-4 text-indigo-600 mt-0.5 flex-shrink-0" />
               <span className="text-muted-foreground line-clamp-1">{profile.denomination}</span>
             </div>
           )}
@@ -170,7 +170,7 @@ export function EnhancedProfileCard({
         onOpenChange={setShowDetailDialog}
         onMessage={canMessage ? () => {
           setShowDetailDialog(false);
-          onMessage?.(profile.userId);
+          onMessage(profile.userId);
         } : undefined}
         showMessageButton={!!canMessage}
       />

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
+import { motion } from "framer-motion";
 import { api } from "../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { AppNavbar } from "@/components/layout/app-navbar";
@@ -23,6 +24,10 @@ import {
 } from "lucide-react";
 import { DashboardAnalytics } from "@/components/analytics/dashboard-analytics";
 import { AdminDashboard } from "./admin-dashboard";
+import { AccountStatusCard } from "@/components/dashboard/account-status-card";
+
+const MotionCard = motion(Card);
+const MotionDiv = motion.div;
 
 export default function DashboardPage(): React.JSX.Element {
   const router = useRouter();
@@ -77,42 +82,87 @@ export default function DashboardPage(): React.JSX.Element {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <AppNavbar />
-      <main className="container mx-auto p-4 md:p-8 space-y-8">
+      <MotionDiv
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="container mx-auto p-4 md:p-8 space-y-8"
+      >
         {/* Welcome Section */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user.name}!</h1>
-          <p className="text-muted-foreground">
+        <MotionDiv variants={itemVariants} className="space-y-2">
+          <motion.h1
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-3xl font-bold tracking-tight"
+          >
+            Welcome back, {user.name}!
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-muted-foreground"
+          >
             Manage your professional profile and connect with the community
-          </p>
-        </div>
+          </motion.p>
+        </MotionDiv>
+
+        {/* Account Status Card */}
+        <MotionDiv variants={itemVariants}>
+          <AccountStatusCard user={user as any} />
+        </MotionDiv>
 
         {/* Admin Analytics Section (Only for Admins/Pastors) */}
         {(user.role === "admin" || user.role === "pastor") && (
-          <div className="space-y-4">
+          <MotionDiv variants={itemVariants} className="space-y-4">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
               <h2 className="text-2xl font-bold">Admin Analytics</h2>
             </div>
             <AdminDashboard userId={user._id} />
-          </div>
+          </MotionDiv>
         )}
 
         {/* User Analytics Section */}
-        <div className="space-y-4">
+        <MotionDiv variants={itemVariants} className="space-y-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
             <h2 className="text-2xl font-bold">Your Dashboard Analytics</h2>
           </div>
           <DashboardAnalytics userId={user._id} />
-        </div>
+        </MotionDiv>
 
         {/* Profile Status Card */}
-        <Card>
+        <MotionCard
+          variants={itemVariants}
+          whileHover={{ scale: 1.01 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
@@ -161,23 +211,36 @@ export default function DashboardPage(): React.JSX.Element {
 
             <div className="flex flex-wrap gap-2">
               {!profile ? (
-                <Button onClick={() => router.push("/profile/create")}>
-                  <User className="mr-2 h-4 w-4" />
-                  Create Profile
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button onClick={() => router.push("/profile/create")}>
+                    <User className="mr-2 h-4 w-4" />
+                    Create Profile
+                  </Button>
+                </motion.div>
               ) : (
-                <Button variant="outline" onClick={() => router.push("/profile/edit")}>
-                  <User className="mr-2 h-4 w-4" />
-                  Edit Profile
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="outline" onClick={() => router.push("/profile/edit")}>
+                    <User className="mr-2 h-4 w-4" />
+                    Edit Profile
+                  </Button>
+                </motion.div>
               )}
             </div>
           </CardContent>
-        </Card>
+        </MotionCard>
 
         {/* Quick Actions Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/directory")}>
+        <MotionDiv
+          variants={containerVariants}
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+        >
+          <MotionCard
+            variants={itemVariants}
+            whileHover={{ scale: 1.05, y: -5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => router.push("/directory")}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
@@ -187,9 +250,15 @@ export default function DashboardPage(): React.JSX.Element {
                 Find and connect with other professionals in the church
               </CardDescription>
             </CardHeader>
-          </Card>
+          </MotionCard>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/messages")}>
+          <MotionCard
+            variants={itemVariants}
+            whileHover={{ scale: 1.05, y: -5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => router.push("/messages")}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
@@ -199,25 +268,54 @@ export default function DashboardPage(): React.JSX.Element {
                 View and send messages to other members
               </CardDescription>
             </CardHeader>
-          </Card>
+          </MotionCard>
 
           {(user.role === "admin" || user.role === "pastor") && (
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/admin/approvals")}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Pending Approvals
-                </CardTitle>
-                <CardDescription>
-                  Review and approve professional profiles
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <>
+              <MotionCard
+                variants={itemVariants}
+                whileHover={{ scale: 1.05, y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => router.push("/admin/approvals")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Profile Approvals
+                  </CardTitle>
+                  <CardDescription>
+                    Review and approve professional profiles
+                  </CardDescription>
+                </CardHeader>
+              </MotionCard>
+              <MotionCard
+                variants={itemVariants}
+                whileHover={{ scale: 1.05, y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => router.push("/admin/account-approvals")}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Account Approvals
+                  </CardTitle>
+                  <CardDescription>
+                    Review and approve new user registrations
+                  </CardDescription>
+                </CardHeader>
+              </MotionCard>
+            </>
           )}
-        </div>
+        </MotionDiv>
 
         {/* Role Badge */}
-        <Card>
+        <MotionCard
+          variants={itemVariants}
+          whileHover={{ scale: 1.01 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
           <CardHeader>
             <CardTitle>Account Information</CardTitle>
           </CardHeader>
@@ -237,8 +335,8 @@ export default function DashboardPage(): React.JSX.Element {
               <Badge variant="outline">{user.role}</Badge>
             </div>
           </CardContent>
-        </Card>
-      </main>
+        </MotionCard>
+      </MotionDiv>
     </div>
   );
 }

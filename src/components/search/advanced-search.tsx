@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, X, Clock, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { getCountryOptions } from "@/data/countries";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 interface AdvancedSearchProps {
@@ -54,6 +56,9 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
     api.search.getSearchHistory,
     user ? { userId: user._id as Id<"users">, limit: 5 } : "skip"
   );
+
+  const allLocations = useQuery(api.search.getAllLocations);
+  const allCountries = useQuery(api.search.getAllCountries);
 
   const saveSearch = useMutation(api.search.saveSearchHistory);
   const clearHistory = useMutation(api.search.clearSearchHistory);
@@ -213,18 +218,26 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
           </SelectContent>
         </Select>
 
-        <Input
-          type="text"
-          placeholder="Location"
+        <SearchableSelect
+          options={[
+            { value: "", label: "All Locations" },
+            ...(allLocations || []).map((loc) => ({ value: loc, label: loc })),
+          ]}
           value={location}
-          onChange={(e) => setLocation(e.target.value)}
+          onValueChange={setLocation}
+          placeholder="Select Location"
+          searchPlaceholder="Search locations..."
         />
 
-        <Input
-          type="text"
-          placeholder="Country"
+        <SearchableSelect
+          options={[
+            { value: "", label: "All Countries" },
+            ...getCountryOptions(),
+          ]}
           value={country}
-          onChange={(e) => setCountry(e.target.value)}
+          onValueChange={setCountry}
+          placeholder="Select Country"
+          searchPlaceholder="Search countries..."
         />
       </div>
 

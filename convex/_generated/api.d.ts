@@ -17,6 +17,7 @@ import type * as notifications from "../notifications.js";
 import type * as presence from "../presence.js";
 import type * as profiles from "../profiles.js";
 import type * as search from "../search.js";
+import type * as userApprovals from "../userApprovals.js";
 import type * as users from "../users.js";
 import type * as verifications from "../verifications.js";
 
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   presence: typeof presence;
   profiles: typeof profiles;
   search: typeof search;
+  userApprovals: typeof userApprovals;
   users: typeof users;
   verifications: typeof verifications;
 }>;

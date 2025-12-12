@@ -1,30 +1,19 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Mail, MapPin, Briefcase, Award } from "lucide-react";
-import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { useAuth } from "@/hooks/use-auth";
-import { toast } from "sonner";
-import type { Id } from "../../../convex/_generated/dataModel";
+import { useState } from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Mail, MapPin, Briefcase, Award } from 'lucide-react';
+import { useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { useAuth } from '@/hooks/use-auth';
+import { toast } from 'sonner';
+import type { Id } from '../../../convex/_generated/dataModel';
 
 interface ProfileCardProps {
   profile: any;
@@ -33,39 +22,39 @@ interface ProfileCardProps {
 export function ProfileCard({ profile }: ProfileCardProps) {
   const { user } = useAuth();
   const [showMessageDialog, setShowMessageDialog] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
 
   const sendMessage = useMutation(api.messages.send);
 
   const handleSendMessage = async (): Promise<void> => {
     if (!user || !message.trim()) {
-      toast.error("Please write a message");
+      toast.error('Please write a message');
       return;
     }
 
     setIsSending(true);
     try {
       await sendMessage({
-        fromUserId: user.userId as Id<"users">,
+        fromUserId: user.userId as Id<'users'>,
         toUserId: profile.userId,
         content: message,
       });
 
-      toast.success("Message sent successfully!");
-      setMessage("");
+      toast.success('Message sent successfully!');
+      setMessage('');
       setShowMessageDialog(false);
     } catch (error: any) {
-      toast.error(error.message || "Failed to send message");
+      toast.error(error.message || 'Failed to send message');
     } finally {
       setIsSending(false);
     }
   };
 
   const initials = profile.name
-    .split(" ")
+    .split(' ')
     .map((n: string) => n[0])
-    .join("")
+    .join('')
     .toUpperCase();
 
   return (
@@ -103,9 +92,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             </span>
           </div>
           <div className="pt-2">
-            <p className="text-gray-700 line-clamp-2">
-              {profile.servicesOffered}
-            </p>
+            <p className="text-gray-700 line-clamp-2">{profile.servicesOffered}</p>
           </div>
         </CardContent>
 
@@ -148,7 +135,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                 disabled={isSending || !message.trim()}
                 className="flex-1"
               >
-                {isSending ? "Sending..." : "Send Message"}
+                {isSending ? 'Sending...' : 'Send Message'}
               </Button>
               <Button
                 variant="outline"
