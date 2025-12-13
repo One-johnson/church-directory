@@ -36,7 +36,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { AppNavbar } from "@/components/layout/app-navbar";
+
 
 const MotionCard = motion(Card);
 const MotionDiv = motion.div;
@@ -188,7 +188,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNavbar />
+   
       <MotionDiv
         initial="hidden"
         animate="visible"

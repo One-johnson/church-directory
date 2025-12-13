@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { api } from "../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { usePresence } from "@/hooks/use-presence";
-import { AppNavbar } from "@/components/layout/app-navbar";
+
 import { AdvancedSearch } from "@/components/search/advanced-search";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -96,7 +96,7 @@ export default function DirectoryPage(): React.JSX.Element {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNavbar />
+      
       <MotionDiv
         initial="hidden"
         animate="visible"

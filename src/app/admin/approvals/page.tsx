@@ -6,7 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "../../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
-import { AppNavbar } from "@/components/layout/app-navbar";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,7 +70,7 @@ export default function ApprovalsPage(): React.JSX.Element {
   if (user.role !== "admin" && user.role !== "pastor") {
     return (
       <div className="min-h-screen bg-background">
-        <AppNavbar />
+        
         <main className="container mx-auto p-4 md:p-8">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -186,7 +186,7 @@ export default function ApprovalsPage(): React.JSX.Element {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNavbar />
+      
       <MotionDiv
         initial="hidden"
         animate="visible"
