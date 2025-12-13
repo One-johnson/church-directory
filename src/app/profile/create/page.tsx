@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { AppNavbar } from "@/components/layout/app-navbar";
+
 import { ProfileForm } from "@/components/profile/profile-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, UserCircle } from "lucide-react";
@@ -35,7 +35,7 @@ export default function CreateProfilePage(): React.JSX.Element {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNavbar />
+      
       <motion.main
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
