@@ -6,7 +6,7 @@ import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "../../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
-import { AppNavbar } from "@/components/layout/app-navbar";
+
 import { ProfileForm } from "@/components/profile/profile-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -40,7 +40,7 @@ export default function EditProfilePage(): React.JSX.Element {
   if (profile === undefined) {
     return (
       <div className="min-h-screen bg-background">
-        <AppNavbar />
+        
         <main className="container mx-auto p-4 md:p-8 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </main>
@@ -51,7 +51,7 @@ export default function EditProfilePage(): React.JSX.Element {
   if (!profile) {
     return (
       <div className="min-h-screen bg-background">
-        <AppNavbar />
+        
         <motion.main
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -77,7 +77,7 @@ export default function EditProfilePage(): React.JSX.Element {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNavbar />
+      
       <motion.main
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
