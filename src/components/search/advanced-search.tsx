@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, X, Clock, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { getCountryOptions } from "@/data/countries";
+import { getCountryFlagClass, getCountryOptions } from "@/data/countries";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 interface AdvancedSearchProps {
@@ -58,11 +58,11 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
   );
 
   const allLocations = useQuery(api.search.getAllLocations);
-  const allCountries = useQuery(api.search.getAllCountries);
 
   const saveSearch = useMutation(api.search.saveSearchHistory);
   const clearHistory = useMutation(api.search.clearSearchHistory);
 
+  // Debounce query input
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query);
@@ -78,6 +78,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
     return () => clearTimeout(timer);
   }, [query, category, location, country, user, saveSearch]);
 
+  // Send results to parent
   useEffect(() => {
     if (searchResults && onResults) {
       onResults(searchResults);
@@ -101,6 +102,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
 
   return (
     <div className="space-y-4">
+      {/* Search Input */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -124,6 +126,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
             </Button>
           )}
 
+          {/* Recent Searches */}
           {showHistory && searchHistory && searchHistory.length > 0 && (
             <Card className="absolute top-full mt-2 w-full z-50">
               <CardContent className="p-2">
@@ -156,6 +159,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
             </Card>
           )}
 
+          {/* Suggestions */}
           {suggestions && suggestions.length > 0 && query.length >= 2 && !showHistory && (
             <Card className="absolute top-full mt-2 w-full z-50">
               <CardContent className="p-2">
@@ -176,6 +180,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
           )}
         </div>
 
+        {/* Filter Button */}
         <Button variant="outline" size="icon" className="relative">
           <Filter className="h-4 w-4" />
           {activeFiltersCount > 0 && (
@@ -189,7 +194,9 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
         </Button>
       </div>
 
+      {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+        {/* Verified Checkbox */}
         <div className="flex items-center space-x-2 border rounded-md px-3 py-2">
           <input
             type="checkbox"
@@ -202,22 +209,30 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
             Verified Only
           </label>
         </div>
+
+        {/* Category Select */}
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="All">All Categories</SelectItem>
-            <SelectItem value="Technology">Technology</SelectItem>
             <SelectItem value="Healthcare">Healthcare</SelectItem>
-            <SelectItem value="Education">Education</SelectItem>
-            <SelectItem value="Construction">Construction</SelectItem>
-            <SelectItem value="Finance">Finance</SelectItem>
-            <SelectItem value="Arts">Arts</SelectItem>
+            <SelectItem value="Engineering">Engineering</SelectItem>
+            <SelectItem value="IT">IT</SelectItem>
+            <SelectItem value="Business Finance">Business Finance</SelectItem>
+            <SelectItem value="Legal">Legal</SelectItem>
+            <SelectItem value="Trades Construction">Trades Construction</SelectItem>
+            <SelectItem value="Creative Media">Creative Media</SelectItem>
+            <SelectItem value="Sales Marketing">Sales Marketing</SelectItem>
+            <SelectItem value="Hospitality Tourism">Hospitality Tourism</SelectItem>
+            <SelectItem value="Nonprofit Social work">Nonprofit Social work</SelectItem>
+            <SelectItem value="Public Service">Public Service</SelectItem>
             <SelectItem value="Other">Other</SelectItem>
           </SelectContent>
         </Select>
 
+        {/* Location Select */}
         <SearchableSelect
           options={[
             { value: "", label: "All Locations" },
@@ -229,6 +244,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
           searchPlaceholder="Search locations..."
         />
 
+        {/* Country Select with Flags */}
         <SearchableSelect
           options={[
             { value: "", label: "All Countries" },
@@ -241,9 +257,11 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
         />
       </div>
 
+      {/* Active Filters Badges */}
       {activeFiltersCount > 0 && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm text-muted-foreground">Active filters:</span>
+
           {category && (
             <Badge variant="secondary" className="gap-1">
               {category}
@@ -253,6 +271,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
               />
             </Badge>
           )}
+
           {location && (
             <Badge variant="secondary" className="gap-1">
               {location}
@@ -262,8 +281,14 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
               />
             </Badge>
           )}
+
           {country && (
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1 flex items-center">
+            <span
+  className={`${getCountryFlagClass(country)} inline-block`}
+  style={{ width: "1.25rem", height: "1rem" }}
+/>
+
               {country}
               <X
                 className="h-3 w-3 cursor-pointer"
@@ -271,6 +296,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
               />
             </Badge>
           )}
+
           {verifiedOnly && (
             <Badge variant="secondary" className="gap-1">
               Verified Only
@@ -280,6 +306,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
               />
             </Badge>
           )}
+
           <Button
             variant="ghost"
             size="sm"
@@ -291,6 +318,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
         </div>
       )}
 
+      {/* Search Results Count */}
       {searchResults && (
         <div className="text-sm text-muted-foreground">
           Found {searchResults.length} {searchResults.length === 1 ? "result" : "results"}

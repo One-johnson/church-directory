@@ -21,6 +21,7 @@ import {
 export interface SearchableSelectOption {
   value: string;
   label: string;
+   flag?: string; 
 }
 
 interface SearchableSelectProps {
@@ -56,7 +57,20 @@ export function SearchableSelect({
           className="w-full justify-between"
           disabled={disabled}
         >
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption ? (
+  <span className="flex items-center gap-2">
+    {selectedOption.flag && (
+      <span
+        className={`${selectedOption.flag} inline-block`}
+        style={{ width: "1.25rem", height: "1rem" }}
+      />
+    )}
+    <span>{selectedOption.label}</span>
+  </span>
+) : (
+  placeholder
+)}
+
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -68,20 +82,30 @@ export function SearchableSelect({
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onValueChange(currentValue === value ? "" : currentValue);
-                    setOpen(false);
-                  }}
-                >
+  key={option.value}
+  value={`${option.label} ${option.value}`}
+  onSelect={() => {
+    onValueChange(option.value);
+    setOpen(false);
+  }}
+>
+
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
                       value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {option.label}
+                 <div className="flex items-center gap-2">
+  {option.flag && (
+    <span
+      className={`${option.flag} inline-block`}
+      style={{ width: "1.25rem", height: "1rem" }}
+    />
+  )}
+  <span>{option.label}</span>
+</div>
+
                 </CommandItem>
               ))}
             </CommandGroup>

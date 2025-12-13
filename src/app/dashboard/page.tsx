@@ -232,43 +232,10 @@ export default function DashboardPage(): React.JSX.Element {
         {/* Quick Actions Grid */}
         <MotionDiv
           variants={containerVariants}
-          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-2"
         >
-          <MotionCard
-            variants={itemVariants}
-            whileHover={{ scale: 1.05, y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => router.push("/directory")}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Browse Directory
-              </CardTitle>
-              <CardDescription>
-                Find and connect with other professionals in the church
-              </CardDescription>
-            </CardHeader>
-          </MotionCard>
-
-          <MotionCard
-            variants={itemVariants}
-            whileHover={{ scale: 1.05, y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => router.push("/messages")}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Messages
-              </CardTitle>
-              <CardDescription>
-                View and send messages to other members
-              </CardDescription>
-            </CardHeader>
-          </MotionCard>
+          
+      
 
           {(user.role === "admin" || user.role === "pastor") && (
             <>
