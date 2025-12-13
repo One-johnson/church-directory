@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import "flag-icons/css/flag-icons.min.css";
 import "./globals.css";
 import { ConvexClientProvider } from "@/lib/convex-client-provider";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -7,6 +8,8 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import React from "react";
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,7 +24,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "UD Professional Directory",
   description:
-    "Connect church members with an approved professional directory. Features user profiles, pastoral approval, in-app messaging, and role-based access. Built with Next.js and Tailwind.",
+    "Connect UD Professional with other approved professional directory. Features user profiles, pastoral approval, in-app messaging, and role-based access. Built with Next.js and Tailwind.",
 };
 
 export default function RootLayout({

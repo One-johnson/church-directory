@@ -61,14 +61,14 @@ export const DENOMINATIONS: Denomination[] = [
         id: "1000-micro-church-network-international-kansanga",
         name: "KANSANGA",
         location: "KANSANGA",
-        pastor: "DAWIM . AFETI",
+        pastor: "DAWIM AFETI",
         pastorEmail: "dawinafeti@gmail.com",
       },
       {
         id: "1000-micro-church-network-international-katooke",
         name: "KATOOKE",
         location: "KATOOKE",
-        pastor: "COLLINS . NIWAGABA",
+        pastor: "COLLINS NIWAGABA",
         pastorEmail: "collinsniwagaba98@gmail.com",
       },
       {

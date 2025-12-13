@@ -115,7 +115,7 @@ export default function DirectoryPage(): React.JSX.Element {
               Professional Directory
             </h1>
             <p className="text-muted-foreground">
-              Browse and connect with verified professionals in our church community
+              Browse and connect with verified UD Professionals in our church community
             </p>
           </motion.div>
 
