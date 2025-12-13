@@ -6,7 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "../../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
-import { AppNavbar } from "@/components/layout/app-navbar";
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -81,7 +81,7 @@ export default function UsersPage(): React.JSX.Element {
   if (user.role !== "admin") {
     return (
       <div className="min-h-screen bg-background">
-        <AppNavbar />
+        
         <main className="container mx-auto p-4 md:p-8">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -162,7 +162,7 @@ export default function UsersPage(): React.JSX.Element {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppNavbar />
+      
       <MotionDiv
         initial="hidden"
         animate="visible"

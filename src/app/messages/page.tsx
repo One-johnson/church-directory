@@ -6,7 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { usePresence } from "@/hooks/use-presence";
-import { AppNavbar } from "@/components/layout/app-navbar";
+
 import { MessageList } from "@/components/messaging/message-list";
 import { MessageInput } from "@/components/messaging/message-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -80,7 +80,7 @@ function MessagesContent(): React.JSX.Element {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <AppNavbar />
+      
       <div className="flex-1 flex overflow-hidden">
         {/* Conversations List */}
         <div

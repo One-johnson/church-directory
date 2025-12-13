@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Menu, User, LogOut, Settings, Sun, Moon, Laptop } from "lucide-react";
+import { Bell, Menu, User, LogOut, Settings, Sun, Moon, Laptop, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,11 +17,22 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { NotificationPopover } from "@/components/notifications/notification-popover";
+import { toast } from "sonner";
+
 
 export function AppNavbar(): React.JSX.Element {
   const pathname = usePathname();
@@ -30,10 +41,29 @@ export function AppNavbar(): React.JSX.Element {
   const { setTheme, theme } = useTheme();
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
-  const handleLogout = (): void => {
-    logout();
+  const [logoutOpen, setLogoutOpen] = React.useState(false);
+  const [loggingOut, setLoggingOut] = React.useState(false);
+
+const confirmLogout = async (): Promise<void> => {
+  try {
+    setLoggingOut(true);
+    await logout(); // ensure logout is async
+    toast.success("Successfully logged out");
+
+    // Wait a bit so the user sees the toast
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     router.push("/");
-  };
+  } catch (error) {
+    toast.error("Failed to log out. Please try again.");
+  } finally {
+    setLoggingOut(false);
+    setLogoutOpen(false);
+  }
+};
+
+
+
 
   const navItems = React.useMemo(() => {
     const items = [
@@ -89,6 +119,7 @@ export function AppNavbar(): React.JSX.Element {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center space-x-2">
@@ -150,10 +181,11 @@ export function AppNavbar(): React.JSX.Element {
                 </DropdownMenuItem>
                 <ThemeSubmenu />
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLogoutOpen(true)}>
+  <LogOut className="mr-2 h-4 w-4" />
+  Log out
+</DropdownMenuItem>
+
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -249,19 +281,57 @@ export function AppNavbar(): React.JSX.Element {
                     Profile Settings
                   </Button>
                   <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </Button>
+  variant="outline"
+  className="w-full justify-start"
+  onClick={() => setLogoutOpen(true)}
+>
+  <LogOut className="mr-2 h-4 w-4" />
+  Log out
+</Button>
+
                 </div>
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </div>
+<Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+  <DialogContent className="sm:max-w-lg">
+    <DialogHeader>
+      <DialogTitle>Confirm logout</DialogTitle>
+      <DialogDescription className="text-md font-semibold">
+        Are you sure you want to log out of your account?
+      </DialogDescription>
+    </DialogHeader>
+
+    <DialogFooter className="gap-2 sm:gap-2">
+  <Button
+    variant="outline"
+    onClick={() => setLogoutOpen(false)}
+    disabled={loggingOut}
+  >
+    Cancel
+  </Button>
+
+  <Button
+    variant="destructive"
+    onClick={confirmLogout}
+    disabled={loggingOut}
+  >
+    {loggingOut && (
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+    )}
+    Log out
+  </Button>
+</DialogFooter>
+
+  </DialogContent>
+</Dialog>
+
+
+
+
+
     </header>
   );
 }

@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
+import { SidebarLayout } from "../components/layout/sidebar-layout";
 import React from "react";
 
 
@@ -43,7 +44,7 @@ export default function RootLayout({
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
-        <meta name="apple-mobile-web-app-title" content="Church Pro" />
+        <meta name="apple-mobile-web-app-title" content="UD Professionals Directory" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body
@@ -57,7 +58,10 @@ export default function RootLayout({
         >
           <ConvexClientProvider>
             <AuthProvider>
-              {children}
+              <SidebarLayout>
+    {children}
+              </SidebarLayout>
+          
               <InstallPrompt />
               <Toaster />
             </AuthProvider>
