@@ -143,7 +143,7 @@ export function LandingPage(): React.JSX.Element {
                 Trusted Professionals In The UD
               </span>
               <br />
-              and Lay World Movement
+              Lay World Movement (UDLWM)
             </motion.h1>
 
             {/* Subheading */}
@@ -151,7 +151,7 @@ export function LandingPage(): React.JSX.Element {
               variants={fadeInUp}
               className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto"
             >
-              This directory connects pastors confirmed, skilled professionals in our church across many countries for working, business and partnership opportunities.
+              This directory connects professionals in the Dag Heward Mills Ministries (DHMM) across many countries for jobs, business and partnership opportunities.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -414,7 +414,7 @@ export function LandingPage(): React.JSX.Element {
               <span className="text-lg font-semibold">UD Professionals Directory</span>
             </div>
             <p className="text-muted-foreground">
-              Connecting communities with trust and faith.
+              Connecting professionals in the United Denominations Law World Movement (UDLWM).
             </p>
             <p className="text-sm text-muted-foreground">
               © 2025 UD Professionals Directory. All rights reserved.
