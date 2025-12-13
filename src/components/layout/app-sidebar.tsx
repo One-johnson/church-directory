@@ -339,7 +339,7 @@ export function AppSidebarLayout({
           <div className="flex flex-1 items-center gap-2">
             <span className="font-semibold text-lg">
               {navItems.find((item: NavItem) => item.href === pathname)?.label ||
-                "Church Connect Pro"}
+                "UD Professionals Directory"}
             </span>
           </div>
 
