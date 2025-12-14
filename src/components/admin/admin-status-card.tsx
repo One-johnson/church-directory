@@ -69,7 +69,7 @@ export function AdminStatusCard({ className }: AdminStatusCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-gray-500" />
-              <span className="text-sm">Members</span>
+              <span className="text-sm">Professionals</span>
             </div>
             <Badge variant="outline">{adminStatus.memberCount}</Badge>
           </div>

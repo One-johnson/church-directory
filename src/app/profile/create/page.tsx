@@ -66,7 +66,7 @@ export default function CreateProfilePage(): React.JSX.Element {
                 <CardTitle className="text-2xl">Create Professional Profile</CardTitle>
               </div>
               <CardDescription>
-                Fill out your professional information to be featured in the church directory.
+                Fill out your professional information to be featured in the UD Professional Directory.
                 Your profile will be reviewed before being published.
               </CardDescription>
             </motion.div>
