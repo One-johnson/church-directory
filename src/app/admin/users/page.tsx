@@ -6,7 +6,6 @@ import { useQuery, useMutation } from "convex/react";
 import { motion } from "framer-motion";
 import { api } from "../../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
-
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,7 +39,7 @@ interface UserWithProfile {
   email: string;
   phone?: string;
   name: string;
-  role: "admin" | "pastor" | "member";
+  role: "admin" | "member";
   emailVerified: boolean;
   createdAt: number;
   hasProfile: boolean;
@@ -52,7 +51,7 @@ export default function UsersPage(): React.JSX.Element {
   const { user, isLoading: authLoading } = useAuth();
   const [selectedUsers, setSelectedUsers] = React.useState<Id<"users">[]>([]);
   const [bulkRoleDialogOpen, setBulkRoleDialogOpen] = React.useState(false);
-  const [selectedRole, setSelectedRole] = React.useState<"admin" | "pastor" | "member">("member");
+  const [selectedRole, setSelectedRole] = React.useState<"admin" | "member">("member");
   const [actionLoading, setActionLoading] = React.useState(false);
 
   const users = useQuery(
@@ -80,8 +79,6 @@ export default function UsersPage(): React.JSX.Element {
 
   if (user.role !== "admin") {
     return (
-      <div className="min-h-screen bg-background">
-        
         <main className="container mx-auto p-4 md:p-8">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -90,11 +87,10 @@ export default function UsersPage(): React.JSX.Element {
             </AlertDescription>
           </Alert>
         </main>
-      </div>
     );
   }
 
-  const handleUpdateRole = async (userId: Id<"users">, newRole: "admin" | "pastor" | "member"): Promise<void> => {
+  const handleUpdateRole = async (userId: Id<"users">, newRole: "admin" | "member"): Promise<void> => {
     setActionLoading(true);
     try {
       await updateUserRole({ requesterId: user._id, targetUserId: userId, newRole });
@@ -161,143 +157,137 @@ export default function UsersPage(): React.JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      
-      <MotionDiv
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        className="container mx-auto p-4 md:p-8 space-y-6"
-      >
-        <MotionDiv variants={itemVariants} className="flex items-center justify-between flex-wrap gap-4">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-1"
-          >
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Users className="h-8 w-8" />
-              User Management
-            </h1>
-            <p className="text-muted-foreground">
-              Manage users, roles, and permissions
-            </p>
-          </motion.div>
+      <><MotionDiv
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="container mx-auto p-4 md:p-8 space-y-6"
+    >
+      <MotionDiv variants={itemVariants} className="flex items-center justify-between flex-wrap gap-4">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-1"
+        >
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Users className="h-8 w-8" />
+            User Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage users, roles, and permissions
+          </p>
+        </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="flex gap-2"
-          >
-            {users && users.length > 0 && (
-              <>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      exportTableData("csv", {
-                        filename: `users-${new Date().toISOString().split("T")[0]}`,
-                        title: "User Management Report",
-                        columns: [
-                          { header: "Name", key: "name" },
-                          { header: "Email", key: "email" },
-                          { header: "Role", key: "role" },
-                          { header: "Profile Status", key: "profileStatus" },
-                          { header: "Verified", key: "emailVerified" },
-                        ],
-                        data: users,
-                      });
-                      toast.success(`Exported ${users.length} users to CSV`);
-                    }}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    CSV
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      exportTableData("pdf", {
-                        filename: `users-${new Date().toISOString().split("T")[0]}`,
-                        title: "User Management Report",
-                        columns: [
-                          { header: "Name", key: "name" },
-                          { header: "Email", key: "email" },
-                          { header: "Role", key: "role" },
-                          { header: "Profile Status", key: "profileStatus" },
-                          { header: "Verified", key: "emailVerified" },
-                        ],
-                        data: users,
-                      });
-                      toast.success(`Exported ${users.length} users to PDF`);
-                    }}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    PDF
-                  </Button>
-                </motion.div>
-              </>
-            )}
-            {selectedUsers.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button onClick={() => setBulkRoleDialogOpen(true)} disabled={actionLoading}>
-                  <Shield className="mr-2 h-4 w-4" />
-                  Update Roles ({selectedUsers.length})
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex gap-2"
+        >
+          {users && users.length > 0 && (
+            <>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    exportTableData("csv", {
+                      filename: `users-${new Date().toISOString().split("T")[0]}`,
+                      title: "User Management Report",
+                      columns: [
+                        { header: "Name", key: "name" },
+                        { header: "Email", key: "email" },
+                        { header: "Role", key: "role" },
+                        { header: "Profile Status", key: "profileStatus" },
+                        { header: "Verified", key: "emailVerified" },
+                      ],
+                      data: users,
+                    });
+                    toast.success(`Exported ${users.length} users to CSV`);
+                  } }
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  CSV
                 </Button>
               </motion.div>
-            )}
-          </motion.div>
-        </MotionDiv>
-
-        {/* Analytics Section */}
-        <MotionDiv variants={itemVariants} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            <h2 className="text-2xl font-bold">Platform Analytics</h2>
-          </div>
-          <AdminAnalytics userId={user._id} />
-        </MotionDiv>
-
-        {/* Users Table */}
-        {!users && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-
-        {users && (
-          <MotionCard
-            variants={itemVariants}
-            whileHover={{ scale: 1.005 }}
-            className="p-6"
-          >
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">All Users</h3>
-              <UsersTable
-                users={users}
-                currentUserId={user._id}
-                onUpdateRole={handleUpdateRole}
-                onDeleteUser={handleDeleteUser}
-                onSelectionChange={setSelectedUsers}
-                loading={actionLoading}
-              />
-            </div>
-          </MotionCard>
-        )}
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    exportTableData("pdf", {
+                      filename: `users-${new Date().toISOString().split("T")[0]}`,
+                      title: "User Management Report",
+                      columns: [
+                        { header: "Name", key: "name" },
+                        { header: "Email", key: "email" },
+                        { header: "Role", key: "role" },
+                        { header: "Profile Status", key: "profileStatus" },
+                        { header: "Verified", key: "emailVerified" },
+                      ],
+                      data: users,
+                    });
+                    toast.success(`Exported ${users.length} users to PDF`);
+                  } }
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  PDF
+                </Button>
+              </motion.div>
+            </>
+          )}
+          {selectedUsers.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button onClick={() => setBulkRoleDialogOpen(true)} disabled={actionLoading}>
+                <Shield className="mr-2 h-4 w-4" />
+                Update Roles ({selectedUsers.length})
+              </Button>
+            </motion.div>
+          )}
+        </motion.div>
       </MotionDiv>
 
-      {/* Bulk Role Update Dialog */}
-      <Dialog open={bulkRoleDialogOpen} onOpenChange={setBulkRoleDialogOpen}>
+      {/* Analytics Section */}
+      <MotionDiv variants={itemVariants} className="space-y-4">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-5 w-5" />
+          <h2 className="text-2xl font-bold">Platform Analytics</h2>
+        </div>
+        <AdminAnalytics userId={user._id} />
+      </MotionDiv>
+
+      {/* Users Table */}
+      {!users && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
+      {users && (
+        <MotionCard
+          variants={itemVariants}
+          whileHover={{ scale: 1.005 }}
+          className="p-6"
+        >
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold">All Users</h3>
+            <UsersTable
+              users={users}
+              currentUserId={user._id}
+              onUpdateRole={handleUpdateRole}
+              onDeleteUser={handleDeleteUser}
+              onSelectionChange={setSelectedUsers}
+              loading={actionLoading} />
+          </div>
+        </MotionCard>
+      )}
+    </MotionDiv><Dialog open={bulkRoleDialogOpen} onOpenChange={setBulkRoleDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Selected User Roles</DialogTitle>
@@ -306,13 +296,13 @@ export default function UsersPage(): React.JSX.Element {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as "admin" | "pastor" | "member")}>
+            <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as "admin" | "member")}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="pastor">Pastor</SelectItem>
+
                 <SelectItem value="member">Member</SelectItem>
               </SelectContent>
             </Select>
@@ -333,7 +323,6 @@ export default function UsersPage(): React.JSX.Element {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-    </div>
+      </Dialog></>
   );
 }

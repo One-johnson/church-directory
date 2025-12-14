@@ -116,14 +116,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Eleme
       color: "text-red-500",
       bgGradient: "from-red-500/10 to-pink-500/10",
     },
-    {
-      title: "Pastors",
-      value: analytics.pastorCount,
-      icon: UserCheck,
-      percentage: ((analytics.pastorCount / analytics.totalUsers) * 100).toFixed(1),
-      color: "text-purple-500",
-      bgGradient: "from-purple-500/10 to-indigo-500/10",
-    },
+  
     {
       title: "Members",
       value: analytics.memberCount,
@@ -149,7 +142,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Eleme
             <h2 className="text-2xl font-bold">Platform Overview</h2>
           </div>
           <p className="text-muted-foreground">
-            Real-time insights into your church community platform
+            Real-time insights into the Professional Directory platform
           </p>
         </motion.div>
 
@@ -203,7 +196,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Eleme
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {roleCards.map((role, index) => (
             <MotionCard
               key={index}

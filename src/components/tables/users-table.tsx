@@ -46,7 +46,7 @@ interface UserWithProfile {
   email: string;
   phone?: string;
   name: string;
-  role: "admin" | "pastor" | "member";
+  role: "admin" | "member";
   emailVerified: boolean;
   createdAt: number;
   hasProfile: boolean;
@@ -58,7 +58,7 @@ interface UsersTableProps {
   currentUserId: Id<"users">;
   onUpdateRole: (
     userId: Id<"users">,
-    newRole: "admin" | "pastor" | "member"
+    newRole: "admin" | "member"
   ) => void;
   onDeleteUser: (userId: Id<"users">) => void;
   onSelectionChange: (selectedIds: Id<"users">[]) => void;
@@ -146,7 +146,7 @@ export function UsersTable({
           <Select
             value={user.role}
             onValueChange={(value) =>
-              onUpdateRole(user._id, value as "admin" | "pastor" | "member")
+              onUpdateRole(user._id, value as "admin" | "member")
             }
             disabled={loading || user._id === currentUserId}
           >
@@ -155,7 +155,6 @@ export function UsersTable({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="pastor">Pastor</SelectItem>
               <SelectItem value="member">Member</SelectItem>
             </SelectContent>
           </Select>

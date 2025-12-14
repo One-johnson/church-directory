@@ -58,7 +58,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
   const bulkReject = useMutation(api.userApprovals.bulkRejectUsers);
 
   React.useEffect(() => {
-    if (!authLoading && (!user || (user.role !== "admin" && user.role !== "pastor"))) {
+    if (!authLoading && (!user || (user.role !== "admin" ))) {
       router.push("/dashboard");
     }
   }, [user, authLoading, router]);
@@ -153,7 +153,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
     }
   };
 
-  if (authLoading || !user || (user.role !== "admin" && user.role !== "pastor")) {
+  if (authLoading || !user || (user.role !== "admin" )) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

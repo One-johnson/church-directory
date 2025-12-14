@@ -130,8 +130,8 @@ export const getPendingProfiles = query({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
-      throw new Error("Unauthorized: Pastor or Admin access required");
+    if (!requester || (requester.role !== "admin")) {
+      throw new Error("Unauthorized: Admin access required");
     }
 
     const profiles = await ctx.db
@@ -163,8 +163,8 @@ export const approveProfile = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
-      throw new Error("Unauthorized: Pastor or Admin access required");
+    if (!requester || (requester.role !== "admin")) {
+      throw new Error("Unauthorized: Admin access required");
     }
 
     const profile = await ctx.db.get(args.profileId);
@@ -204,8 +204,8 @@ export const rejectProfile = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
-      throw new Error("Unauthorized: Pastor or Admin access required");
+    if (!requester || (requester.role !== "admin")) {
+      throw new Error("Unauthorized: Admin access required");
     }
 
     const profile = await ctx.db.get(args.profileId);
@@ -243,8 +243,8 @@ export const bulkApproveProfiles = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
-      throw new Error("Unauthorized: Pastor or Admin access required");
+    if (!requester || (requester.role !== "admin")) {
+      throw new Error("Unauthorized: Admin access required");
     }
 
     const results = await Promise.all(
@@ -292,8 +292,8 @@ export const bulkRejectProfiles = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
-      throw new Error("Unauthorized: Pastor or Admin access required");
+    if (!requester || (requester.role !== "admin")) {
+      throw new Error("Unauthorized: Admin access required");
     }
 
     const results = await Promise.all(

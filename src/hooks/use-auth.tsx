@@ -12,7 +12,7 @@ interface User {
   email: string;
   phone?: string;
   name: string;
-  role: "admin" | "pastor" | "member";
+  role: "admin" | "member";
   emailVerified: boolean;
   createdAt: number;
 }

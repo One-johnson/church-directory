@@ -89,12 +89,7 @@ export function AdminAnalytics({ userId }: AdminAnalyticsProps): React.JSX.Eleme
       icon: Shield,
       color: "text-red-600",
     },
-    {
-      title: "Pastors",
-      value: analytics.pastorCount,
-      icon: Users,
-      color: "text-blue-600",
-    },
+ 
     {
       title: "Members",
       value: analytics.memberCount,

@@ -106,7 +106,7 @@ function AppSidebarContent(): React.JSX.Element {
       { href: "/messages", label: "Messages", icon: MessageSquare },
     ];
 
-    if (user?.role === "admin" || user?.role === "pastor") {
+    if (user?.role === "admin" ) {
       items.push({
         href: "/admin/approvals",
         label: "Approvals",

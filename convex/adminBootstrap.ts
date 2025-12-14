@@ -138,13 +138,12 @@ export const checkAdminStatus = query({
   handler: async (ctx) => {
     const allUsers = await ctx.db.query("users").collect();
     const adminUsers = allUsers.filter((u) => u.role === "admin");
-    const pastorUsers = allUsers.filter((u) => u.role === "pastor");
+  
     const memberUsers = allUsers.filter((u) => u.role === "member");
 
     return {
       totalUsers: allUsers.length,
       adminCount: adminUsers.length,
-      pastorCount: pastorUsers.length,
       memberCount: memberUsers.length,
       admins: adminUsers.map((u) => ({
         email: u.email,

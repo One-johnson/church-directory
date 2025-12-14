@@ -15,8 +15,8 @@ export const updateVerificationBadges = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
-      throw new Error("Unauthorized: Pastor or Admin access required");
+    if (!requester || (requester.role !== "admin")) {
+      throw new Error("Unauthorized: Admin access required");
     }
 
     const profile = await ctx.db.get(args.profileId);
@@ -86,8 +86,8 @@ export const bulkUpdateVerifications = mutation({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
-      throw new Error("Unauthorized: Pastor or Admin access required");
+    if (!requester || (requester.role !== "admin")) {
+      throw new Error("Unauthorized: Admin access required");
     }
 
     const results = await Promise.all(
@@ -145,8 +145,8 @@ export const getVerificationStats = query({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "pastor" && requester.role !== "admin")) {
-      throw new Error("Unauthorized: Pastor or Admin access required");
+    if (!requester || (requester.role !== "admin")) {
+      throw new Error("Unauthorized: Admin access required");
     }
 
     const allProfiles = await ctx.db

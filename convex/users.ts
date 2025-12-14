@@ -44,7 +44,7 @@ export const updateUserRole = mutation({
   args: {
     requesterId: v.id("users"),
     targetUserId: v.id("users"),
-    newRole: v.union(v.literal("admin"), v.literal("pastor"), v.literal("member")),
+    newRole: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
     // Verify requester is admin
@@ -84,7 +84,7 @@ export const bulkUpdateUserRoles = mutation({
     updates: v.array(
       v.object({
         userId: v.id("users"),
-        newRole: v.union(v.literal("admin"), v.literal("pastor"), v.literal("member")),
+        newRole: v.union(v.literal("admin"), v.literal("member")),
       })
     ),
   },

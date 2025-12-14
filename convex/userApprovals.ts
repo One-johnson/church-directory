@@ -71,8 +71,8 @@ export const approveUserAccount = mutation({
 
     // Verify approver is admin or pastor
     const approver = await ctx.db.get(approverId);
-    if (!approver || (approver.role !== "admin" && approver.role !== "pastor")) {
-      throw new Error("Only admins and pastors can approve accounts");
+    if (!approver || (approver.role !== "admin")) {
+      throw new Error("Only admins and can approve accounts");
     }
 
     // Update user account
@@ -115,8 +115,8 @@ export const rejectUserAccount = mutation({
 
     // Verify approver is admin or pastor
     const approver = await ctx.db.get(approverId);
-    if (!approver || (approver.role !== "admin" && approver.role !== "pastor")) {
-      throw new Error("Only admins and pastors can reject accounts");
+    if (!approver || (approver.role !== "admin")) {
+      throw new Error("Only admins and can reject accounts");
     }
 
     // Update user account
@@ -156,8 +156,8 @@ export const bulkApproveUsers = mutation({
 
     // Verify approver
     const approver = await ctx.db.get(approverId);
-    if (!approver || (approver.role !== "admin" && approver.role !== "pastor")) {
-      throw new Error("Only admins and pastors can approve accounts");
+    if (!approver || (approver.role !== "admin" )) {
+      throw new Error("Only admins and can approve accounts");
     }
 
     for (const userId of userIds) {
@@ -197,8 +197,8 @@ export const bulkRejectUsers = mutation({
 
     // Verify approver
     const approver = await ctx.db.get(approverId);
-    if (!approver || (approver.role !== "admin" && approver.role !== "pastor")) {
-      throw new Error("Only admins and pastors can reject accounts");
+    if (!approver || (approver.role !== "admin" )) {
+      throw new Error("Only admins and can reject accounts");
     }
 
     for (const userId of userIds) {
