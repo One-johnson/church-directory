@@ -136,7 +136,7 @@ export default function DashboardPage(): React.JSX.Element {
         </MotionDiv>
 
         {/* Admin Analytics Section (Only for Admins/Pastors) */}
-        {(user.role === "admin" || user.role === "pastor") && (
+        {(user.role === "admin" ) && (
           <MotionDiv variants={itemVariants} className="space-y-4">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
@@ -183,7 +183,7 @@ export default function DashboardPage(): React.JSX.Element {
                 <FileText className="h-4 w-4" />
                 <AlertDescription>
                   Create your professional profile to be visible in the directory and connect with
-                  other church members.
+                  other UD Professionals.
                 </AlertDescription>
               </Alert>
             ) : profile.status === "pending" ? (
@@ -204,7 +204,7 @@ export default function DashboardPage(): React.JSX.Element {
               <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Your profile is live in the directory! Other members can now view and contact you.
+                  Your profile is live in the directory! Other Prefessionals can now view and contact you.
                 </AlertDescription>
               </Alert>
             )}
@@ -237,7 +237,7 @@ export default function DashboardPage(): React.JSX.Element {
           
       
 
-          {(user.role === "admin" || user.role === "pastor") && (
+          {(user.role === "admin") && (
             <>
               <MotionCard
                 variants={itemVariants}

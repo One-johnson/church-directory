@@ -64,13 +64,7 @@ export function AdminStatusCard({ className }: AdminStatusCardProps) {
             </Badge>
           </div>
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4 text-purple-500" />
-              <span className="text-sm">Pastors</span>
-            </div>
-            <Badge variant="secondary">{adminStatus.pastorCount}</Badge>
-          </div>
+         
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

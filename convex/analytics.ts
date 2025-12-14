@@ -57,7 +57,7 @@ export const getVerificationAnalytics = query({
   handler: async (ctx, args) => {
     // Ensure only admin or pastor can access
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "admin" && requester.role !== "pastor")) {
+    if (!requester || (requester.role !== "admin")) {
       throw new Error("Unauthorized: Admin or Pastor access required");
     }
 
@@ -125,7 +125,7 @@ export const getAdminAnalytics = query({
     const allUsers = await ctx.db.query("users").collect();
     const totalUsers = allUsers.length;
     const adminCount = allUsers.filter((u) => u.role === "admin").length;
-    const pastorCount = allUsers.filter((u) => u.role === "pastor").length;
+   
     const memberCount = allUsers.filter((u) => u.role === "member").length;
 
     // Get all profiles
@@ -168,7 +168,6 @@ export const getAdminAnalytics = query({
     return {
       totalUsers,
       adminCount,
-      pastorCount,
       memberCount,
       totalProfiles,
       pendingProfiles,
@@ -190,7 +189,7 @@ export const getProfileAnalytics = query({
   handler: async (ctx, args) => {
     // Verify requester is pastor or admin
     const requester = await ctx.db.get(args.requesterId);
-    if (!requester || (requester.role !== "admin" && requester.role !== "pastor")) {
+    if (!requester || (requester.role !== "admin" )) {
       throw new Error("Unauthorized: Pastor or Admin access required");
     }
 
