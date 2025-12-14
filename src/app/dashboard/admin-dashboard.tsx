@@ -118,7 +118,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Eleme
     },
   
     {
-      title: "Members",
+      title: "Professionals",
       value: analytics.memberCount,
       icon: Users,
       percentage: ((analytics.memberCount / analytics.totalUsers) * 100).toFixed(1),

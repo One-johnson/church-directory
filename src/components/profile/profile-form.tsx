@@ -281,10 +281,10 @@ React.useEffect(() => {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="location">Location/Branch</Label>
+          <Label htmlFor="location">Location (optional)</Label>
           <Input
             id="location"
-            placeholder="e.g., Downtown Campus"
+            placeholder="e.g., Louisiana"
             {...register("location")}
             disabled={isLoading}
           />

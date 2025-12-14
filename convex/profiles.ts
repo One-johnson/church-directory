@@ -108,9 +108,26 @@ export const getUserProfile = query({
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
-    return profile;
+    if (!profile) return null;
+
+    const user = await ctx.db.get(profile.userId);
+
+    return {
+      ...profile,
+      user: user
+        ? {
+            pastor: user.pastor ?? "",
+            pastorEmail: user.pastorEmail ?? "",
+            branchName: user.branchName ?? "",
+            branchLocation: user.branchLocation ?? "",
+            denominationName: user.denominationName ?? "",
+            isOnline: user.isOnline ?? false,
+          }
+        : null,
+    };
   },
 });
+
 
 // Get all approved profiles (including those once approved but now rejected)
 export const getApprovedProfiles = query({
@@ -120,9 +137,28 @@ export const getApprovedProfiles = query({
       .filter((q) => q.eq(q.field("everApproved"), true))
       .collect();
 
-    return profiles;
+    return Promise.all(
+      profiles.map(async (profile) => {
+        const user = await ctx.db.get(profile.userId);
+
+        return {
+          ...profile,
+          user: user
+            ? {
+                pastor: user.pastor ?? "",
+                pastorEmail: user.pastorEmail ?? "",
+                branchName: user.branchName ?? "",
+                branchLocation: user.branchLocation ?? "",
+                denominationName: user.denominationName ?? "",
+                isOnline: user.isOnline ?? false,
+              }
+            : null,
+        };
+      })
+    );
   },
 });
+
 
 // Get pending profiles (Pastor/Admin)
 export const getPendingProfiles = query({

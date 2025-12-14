@@ -159,7 +159,7 @@ export function EnhancedRegisterForm(): React.JSX.Element {
         <CardContent className="space-y-4">
           <Alert>
             <AlertDescription className="text-center">
-              Your account is pending approval from an admin or pastor. You will receive a notification once approved.
+              Your account is pending approval from an admin. You will receive a notification once approved.
             </AlertDescription>
           </Alert>
           <div className="space-y-2 pt-4">

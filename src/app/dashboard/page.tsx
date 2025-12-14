@@ -135,7 +135,7 @@ export default function DashboardPage(): React.JSX.Element {
           <AccountStatusCard user={user as any} />
         </MotionDiv>
 
-        {/* Admin Analytics Section (Only for Admins/Pastors) */}
+        {/* Admin Analytics Section (Only for Admins) */}
         {(user.role === "admin" ) && (
           <MotionDiv variants={itemVariants} className="space-y-4">
             <div className="flex items-center gap-2">
@@ -291,12 +291,7 @@ export default function DashboardPage(): React.JSX.Element {
               <span className="text-sm text-muted-foreground">Email</span>
               <span className="text-sm font-medium">{user.email}</span>
             </div>
-            {user.phone && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Phone</span>
-                <span className="text-sm font-medium">{user.phone}</span>
-              </div>
-            )}
+      
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Role</span>
               <Badge variant="outline">{user.role}</Badge>

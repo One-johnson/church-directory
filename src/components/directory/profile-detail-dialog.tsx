@@ -96,36 +96,16 @@ export function ProfileDetailDialog({
                 </p>
               </div>
             </div>
-
-            {profile.church && (
-              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                <ChurchIcon className="h-5 w-5 text-purple-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Church</p>
-                  <p className="text-sm text-muted-foreground">{profile.church}</p>
-                </div>
-              </div>
-            )}
-
-            {profile.denomination && (
-              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                <Building2 className="h-5 w-5 text-indigo-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Denomination</p>
-                  <p className="text-sm text-muted-foreground">{profile.denomination}</p>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Pastor Details */}
-          {profile.user && (profile.user.pastor || profile.user.pastorEmail) && (
+          {/* Pastor & Church Details */}
+          {profile.user && (
             <>
               <Separator />
               <div>
                 <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
                   <UserCheck className="h-5 w-5 text-green-600" />
-                  Assigned Pastor
+                  Assigned Pastor & Church Info
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {profile.user.pastor && (

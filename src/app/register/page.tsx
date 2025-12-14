@@ -132,7 +132,7 @@ export default function RegisterPage(): React.JSX.Element {
               className="flex items-center gap-2 text-muted-foreground"
             >
               <Church className="w-5 h-5" />
-              <span className="text-sm">Trusted by churches everywhere</span>
+              <span className="text-sm">Trusted by Professionals in the UDLWM</span>
             </motion.div>
           </motion.div>
 
