@@ -133,7 +133,32 @@ export const registerWithDenomination = mutation({
         approvalToken, // Include token for pastor approval link
       });
     } catch (error) {
-      console.error("Failed to send registration email:", error);
+      console.error("Failed to send registration email to pastor:", error);
+      // Don't fail registration if email fails
+    }
+
+    // Send email to all admins for notification
+    try {
+      const admins = await ctx.db
+        .query("users")
+        .filter((q) => q.eq(q.field("role"), "admin"))
+        .collect();
+
+      for (const admin of admins) {
+        await ctx.scheduler.runAfter(0, "emails:sendAdminRegistrationNotificationEmail" as any, {
+          adminEmail: admin.email,
+          adminName: admin.name,
+          userName: args.name,
+          userEmail: args.email,
+          userPhone: args.phone,
+          denominationName: args.denominationName,
+          branchName: args.branchName,
+          branchLocation: args.branchLocation,
+          pastorName: args.pastor,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to send registration email to admins:", error);
       // Don't fail registration if email fails
     }
 
