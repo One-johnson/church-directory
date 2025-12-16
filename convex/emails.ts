@@ -10,9 +10,13 @@ import { v } from 'convex/values';
 
 // Get SendGrid configuration from environment variables
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '';
-const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@udprofessionals.com';
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'admin@churchmms.com';
 const FROM_NAME = process.env.SENDGRID_FROM_NAME || 'UD Professionals Directory';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+
+if (!APP_URL) {
+  throw new Error("NEXT_PUBLIC_APP_URL is not set in Convex environment variables");
+}
 
 interface EmailPayload {
   to: string;
@@ -128,9 +132,9 @@ export const sendRegistrationEmail = action({
       text: `
 Dear ${args.pastorName},
 
-A new member has registered and requires your approval:
+A new Professional has registered and requires your approval:
 
-Member Details:
+Professional's Details:
 - Name: ${args.userName}
 - Email: ${args.userEmail}
 ${args.userPhone ? `- Phone: ${args.userPhone}` : ''}
@@ -381,6 +385,226 @@ UD Professionals Directory Team
 
       <p style="text-align: center;">
         <a href="${messagesLink}" class="button">View & Reply</a>
+      </p>
+
+      <p class="footer">
+        Best regards,<br>
+        UD Professionals Directory Team
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+      `.trim(),
+    };
+
+    const success = await sendEmailViaSendGrid(email);
+    return { success };
+  },
+});
+
+/**
+ * Send admin notification email for new user registration
+ */
+export const sendAdminRegistrationNotificationEmail = action({
+  args: {
+    adminEmail: v.string(),
+    adminName: v.string(),
+    userName: v.string(),
+    userEmail: v.string(),
+    userPhone: v.optional(v.string()),
+    denominationName: v.string(),
+    branchName: v.string(),
+    branchLocation: v.string(),
+    pastorName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const adminApprovalLink = `${APP_URL}/admin/account-approvals`;
+
+    const email: EmailPayload = {
+      to: args.adminEmail,
+      toName: args.adminName,
+      subject: `🔔 New User Registration - ${args.userName}`,
+      text: `
+Dear ${args.adminName},
+
+A new member has registered and requires approval:
+
+Member Details:
+- Name: ${args.userName}
+- Email: ${args.userEmail}
+${args.userPhone ? `- Phone: ${args.userPhone}` : ''}
+- Denomination: ${args.denominationName}
+- Branch: ${args.branchName} (${args.branchLocation})
+- Assigned Pastor: ${args.pastorName}
+
+Pastor ${args.pastorName} has been notified for approval. You can also review and approve this registration in the admin panel:
+${adminApprovalLink}
+
+Best regards,
+UD Professionals Directory Team
+      `.trim(),
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #7C3AED; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .detail-row { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+    .detail-label { font-weight: bold; color: #7C3AED; }
+    .button { background: #7C3AED; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; font-weight: bold; font-size: 16px; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px; }
+    .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔔 New User Registration</h1>
+    </div>
+    <div class="content">
+      <p>Dear ${args.adminName},</p>
+      <p>A new member has registered at <strong>UD Professionals Directory</strong> and requires approval:</p>
+      
+      <div class="details">
+        <h3>Member Details</h3>
+        <div class="detail-row">
+          <span class="detail-label">Name:</span> ${args.userName}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Email:</span> ${args.userEmail}
+        </div>
+        ${args.userPhone ? `<div class="detail-row"><span class="detail-label">Phone:</span> ${args.userPhone}</div>` : ''}
+        <div class="detail-row">
+          <span class="detail-label">Denomination:</span> ${args.denominationName}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Branch:</span> ${args.branchName} (${args.branchLocation})
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Assigned Pastor:</span> ${args.pastorName}
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>Note:</strong> Pastor ${args.pastorName} has been notified and can approve directly via email. You can also review and approve this registration in the admin panel.
+      </div>
+
+      <p style="text-align: center;">
+        <a href="${adminApprovalLink}" class="button">Review in Admin Panel</a>
+      </p>
+
+      <p class="footer">
+        Best regards,<br>
+        UD Professionals Directory Team
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+      `.trim(),
+    };
+
+    const success = await sendEmailViaSendGrid(email);
+    return { success };
+  },
+});
+
+/**
+ * Send profile submission notification email to pastor and admins
+ */
+export const sendProfileSubmissionEmail = action({
+  args: {
+    recipientEmail: v.string(),
+    recipientName: v.string(),
+    recipientRole: v.union(v.literal('admin'), v.literal('pastor')),
+    userName: v.string(),
+    userEmail: v.string(),
+    profession: v.string(),
+    category: v.string(),
+    location: v.string(),
+    skills: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const approvalsLink = `${APP_URL}/admin/approvals`;
+
+    const email: EmailPayload = {
+      to: args.recipientEmail,
+      toName: args.recipientName,
+      subject: `🆕 New Professional Profile Submitted - ${args.userName}`,
+      text: `
+Dear ${args.recipientName},
+
+${args.userName} has completed their professional profile and it requires your approval:
+
+Profile Details:
+- Name: ${args.userName}
+- Email: ${args.userEmail}
+- Profession: ${args.profession}
+- Category: ${args.category}
+- Location: ${args.location}
+- Skills: ${args.skills}
+
+Please review and approve this profile at:
+${approvalsLink}
+
+Best regards,
+UD Professionals Directory Team
+      `.trim(),
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .detail-row { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+    .detail-label { font-weight: bold; color: #10b981; }
+    .button { background: #10b981; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; font-weight: bold; font-size: 16px; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px; }
+    .badge { display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 14px; margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🆕 New Professional Profile</h1>
+    </div>
+    <div class="content">
+      <p>Dear ${args.recipientName},</p>
+      <p><strong>${args.userName}</strong> has completed their professional profile and it requires your approval:</p>
+      
+      <div class="details">
+        <h3>Profile Details</h3>
+        <div class="detail-row">
+          <span class="detail-label">Name:</span> ${args.userName}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Email:</span> ${args.userEmail}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Profession:</span> ${args.profession}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Category:</span> <span class="badge">${args.category}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Location:</span> ${args.location}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Skills:</span> ${args.skills}
+        </div>
+      </div>
+
+      <p style="text-align: center;">
+        <a href="${approvalsLink}" class="button">Review & Approve Profile</a>
       </p>
 
       <p class="footer">
