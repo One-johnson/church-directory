@@ -11,6 +11,13 @@ async function hashPassword(password: string): Promise<string> {
   return hashHex;
 }
 
+// Generate secure approval token
+function generateApprovalToken(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 // Register a new user (legacy - for backward compatibility)
 export const register = mutation({
   args: {
@@ -40,7 +47,7 @@ export const registerWithDenomination = mutation({
     pastorEmail: v.string(),
   },
   handler: async (ctx, args) => {
-    // Check if user already exists
+    // Check if user already exists in users table
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", args.email))
@@ -50,6 +57,16 @@ export const registerWithDenomination = mutation({
       throw new Error("User with this email already exists");
     }
 
+    // Check if user already exists in pending users
+    const existingPending = await ctx.db
+      .query("pendingUsers")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+
+    if (existingPending) {
+      throw new Error("Registration already pending approval for this email");
+    }
+
     // Hash password
     const passwordHash = await hashPassword(args.password);
 
@@ -57,16 +74,40 @@ export const registerWithDenomination = mutation({
     const userCount = await ctx.db.query("users").collect();
     const isFirstUser = userCount.length === 0;
 
-    // Create user
-    const userId = await ctx.db.insert("users", {
+    if (isFirstUser) {
+      // First user: Add directly to users table as admin
+      const userId = await ctx.db.insert("users", {
+        email: args.email,
+        phone: args.phone,
+        passwordHash,
+        name: args.name,
+        role: "admin",
+        emailVerified: true,
+        createdAt: Date.now(),
+        denomination: args.denomination,
+        denominationName: args.denominationName,
+        branch: args.branch,
+        branchName: args.branchName,
+        branchLocation: args.branchLocation,
+        pastor: args.pastor,
+        pastorEmail: args.pastorEmail,
+        accountApprovedBy: "system",
+        accountApprovedAt: Date.now(),
+      });
+
+      console.log(`🎉 First user registered with admin privileges: ${args.email}`);
+      return { userId, message: "Registration successful - First admin account created" };
+    }
+
+    // Generate approval token for pastor email link
+    const approvalToken = generateApprovalToken();
+
+    // Add to pendingUsers table (not users table)
+    const pendingUserId = await ctx.db.insert("pendingUsers", {
       email: args.email,
       phone: args.phone,
       passwordHash,
       name: args.name,
-      role: isFirstUser ? "admin" : "member", // First user becomes admin
-      emailVerified: true,
-      createdAt: Date.now(),
-      // Denomination and branch info
       denomination: args.denomination,
       denominationName: args.denominationName,
       branch: args.branch,
@@ -74,17 +115,32 @@ export const registerWithDenomination = mutation({
       branchLocation: args.branchLocation,
       pastor: args.pastor,
       pastorEmail: args.pastorEmail,
-      // Account approval - first user is auto-approved
-      accountApproved: isFirstUser,
-      accountApprovedAt: isFirstUser ? Date.now() : undefined,
+      approvalToken,
+      createdAt: Date.now(),
     });
 
-    // Notify if first user
-    if (isFirstUser) {
-      console.log(`🎉 First user registered with admin privileges and auto-approved: ${args.email}`);
+    // Send email to pastor for approval
+    try {
+      await ctx.scheduler.runAfter(0, "emails:sendRegistrationEmail" as any, {
+        pastorEmail: args.pastorEmail,
+        pastorName: args.pastor,
+        userName: args.name,
+        userEmail: args.email,
+        userPhone: args.phone,
+        denominationName: args.denominationName,
+        branchName: args.branchName,
+        branchLocation: args.branchLocation,
+        approvalToken, // Include token for pastor approval link
+      });
+    } catch (error) {
+      console.error("Failed to send registration email:", error);
+      // Don't fail registration if email fails
     }
 
-    return { userId, message: "Registration successful" };
+    return { 
+      pendingUserId, 
+      message: "Registration submitted for approval. You'll receive an email once your account is approved." 
+    };
   },
 });
 
@@ -95,13 +151,23 @@ export const login = mutation({
     password: v.string(),
   },
   handler: async (ctx, args) => {
-    // Find user
+    // Find user in users table (must be approved to login)
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", args.email))
       .first();
 
     if (!user) {
+      // Check if user is in pending state
+      const pendingUser = await ctx.db
+        .query("pendingUsers")
+        .withIndex("by_email", (q) => q.eq("email", args.email))
+        .first();
+
+      if (pendingUser) {
+        throw new Error("Your account is pending approval. Please wait for confirmation email.");
+      }
+
       throw new Error("Invalid email or password");
     }
 
@@ -143,8 +209,8 @@ export const getCurrentUser = query({
       branchLocation: user.branchLocation,
       pastor: user.pastor,
       pastorEmail: user.pastorEmail,
-      accountApproved: user.accountApproved,
-      accountRejectionReason: user.accountRejectionReason,
+      accountApprovedBy: user.accountApprovedBy,
+      accountApprovedAt: user.accountApprovedAt,
     };
   },
 });

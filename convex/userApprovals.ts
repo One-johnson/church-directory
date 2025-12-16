@@ -14,12 +14,11 @@ import type { Id } from "./_generated/dataModel";
 export const getPendingApprovals = query({
   args: {},
   handler: async (ctx) => {
-    const users = await ctx.db
-      .query("users")
-      .withIndex("by_account_approval", (q) => q.eq("accountApproved", false))
+    const pendingUsers = await ctx.db
+      .query("pendingUsers")
       .collect();
 
-    return users.map((user) => ({
+    return pendingUsers.map((user) => ({
       _id: user._id,
       name: user.name,
       email: user.email,
@@ -32,7 +31,7 @@ export const getPendingApprovals = query({
       pastor: user.pastor,
       pastorEmail: user.pastorEmail,
       createdAt: user.createdAt,
-      accountRejectionReason: user.accountRejectionReason,
+      rejectionReason: user.rejectionReason,
     }));
   },
 });
@@ -43,14 +42,15 @@ export const getPendingApprovals = query({
 export const getApprovalStats = query({
   args: {},
   handler: async (ctx) => {
+    const pendingUsers = await ctx.db.query("pendingUsers").collect();
     const allUsers = await ctx.db.query("users").collect();
     
-    const pending = allUsers.filter((u) => !u.accountApproved && !u.accountRejectionReason).length;
-    const approved = allUsers.filter((u) => u.accountApproved).length;
-    const rejected = allUsers.filter((u) => u.accountRejectionReason).length;
+    const pending = pendingUsers.filter((u) => !u.rejectionReason).length;
+    const approved = allUsers.length;
+    const rejected = pendingUsers.filter((u) => u.rejectionReason).length;
 
     return {
-      total: allUsers.length,
+      total: pending + approved,
       pending,
       approved,
       rejected,
@@ -59,45 +59,171 @@ export const getApprovalStats = query({
 });
 
 /**
- * Approve a user account
+ * Approve a user account (Admin or Pastor)
+ * Moves user from pendingUsers to users table
  */
 export const approveUserAccount = mutation({
   args: {
-    userId: v.id("users"),
-    approverId: v.id("users"),
+    pendingUserId: v.id("pendingUsers"),
+    approverId: v.optional(v.id("users")), // Optional for pastor approvals
+    approverType: v.union(v.literal("admin"), v.literal("pastor")),
   },
   handler: async (ctx, args) => {
-    const { userId, approverId } = args;
+    const { pendingUserId, approverId, approverType } = args;
 
-    // Verify approver is admin or pastor
-    const approver = await ctx.db.get(approverId);
-    if (!approver || (approver.role !== "admin")) {
-      throw new Error("Only admins and can approve accounts");
+    // Verify admin if approverType is admin
+    if (approverType === "admin") {
+      if (!approverId) {
+        throw new Error("Approver ID required for admin approvals");
+      }
+      const approver = await ctx.db.get(approverId);
+      if (!approver || approver.role !== "admin") {
+        throw new Error("Only admins can approve accounts");
+      }
     }
 
-    // Update user account
-    await ctx.db.patch(userId, {
-      accountApproved: true,
-      accountApprovedBy: approverId,
+    // Get pending user
+    const pendingUser = await ctx.db.get(pendingUserId);
+    if (!pendingUser) {
+      throw new Error("Pending user not found");
+    }
+
+    // Check if user already exists in users table
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", pendingUser.email))
+      .first();
+
+    if (existingUser) {
+      throw new Error("User already exists in the system");
+    }
+
+    // Move user from pendingUsers to users table
+    const userId = await ctx.db.insert("users", {
+      email: pendingUser.email,
+      phone: pendingUser.phone,
+      passwordHash: pendingUser.passwordHash,
+      name: pendingUser.name,
+      role: "member",
+      emailVerified: true,
+      createdAt: Date.now(),
+      denomination: pendingUser.denomination,
+      denominationName: pendingUser.denominationName,
+      branch: pendingUser.branch,
+      branchName: pendingUser.branchName,
+      branchLocation: pendingUser.branchLocation,
+      pastor: pendingUser.pastor,
+      pastorEmail: pendingUser.pastorEmail,
+      accountApprovedBy: approverId || "pastor",
       accountApprovedAt: Date.now(),
-      accountRejectionReason: undefined, // Clear any previous rejection
     });
 
-    // Get user for notification
-    const user = await ctx.db.get(userId);
-    if (!user) throw new Error("User not found");
+    // Remove from pendingUsers table
+    await ctx.db.delete(pendingUserId);
 
     // Create notification
     await ctx.db.insert("notifications", {
       userId,
       title: "Account Approved!",
-      message: `Your account has been approved by ${approver.name}. You can now create your professional profile.`,
+      message: `Your account has been approved. You can now login and create your professional profile.`,
       type: "system",
       read: false,
       createdAt: Date.now(),
     });
 
-    return { success: true };
+    // Send approval email to user
+    try {
+      const approverName = approverId 
+        ? (await ctx.db.get(approverId))?.name || "Administrator"
+        : pendingUser.pastor;
+
+      await ctx.scheduler.runAfter(0, "emails:sendAccountApprovedEmail" as any, {
+        userEmail: pendingUser.email,
+        userName: pendingUser.name,
+        approverName,
+      });
+    } catch (error) {
+      console.error("Failed to send approval email:", error);
+      // Don't fail approval if email fails
+    }
+
+    return { success: true, userId };
+  },
+});
+
+/**
+ * Approve via token (for pastor email link)
+ */
+export const approveUserAccountByToken = mutation({
+  args: {
+    token: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Find pending user by token
+    const pendingUser = await ctx.db
+      .query("pendingUsers")
+      .withIndex("by_token", (q) => q.eq("approvalToken", args.token))
+      .first();
+
+    if (!pendingUser) {
+      throw new Error("Invalid or expired approval token");
+    }
+
+    // Check if user already exists
+    const existingUser = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", pendingUser.email))
+      .first();
+
+    if (existingUser) {
+      throw new Error("User already approved");
+    }
+
+    // Move user from pendingUsers to users table
+    const userId = await ctx.db.insert("users", {
+      email: pendingUser.email,
+      phone: pendingUser.phone,
+      passwordHash: pendingUser.passwordHash,
+      name: pendingUser.name,
+      role: "member",
+      emailVerified: true,
+      createdAt: Date.now(),
+      denomination: pendingUser.denomination,
+      denominationName: pendingUser.denominationName,
+      branch: pendingUser.branch,
+      branchName: pendingUser.branchName,
+      branchLocation: pendingUser.branchLocation,
+      pastor: pendingUser.pastor,
+      pastorEmail: pendingUser.pastorEmail,
+      accountApprovedBy: "pastor",
+      accountApprovedAt: Date.now(),
+    });
+
+    // Remove from pendingUsers table
+    await ctx.db.delete(pendingUser._id);
+
+    // Create notification
+    await ctx.db.insert("notifications", {
+      userId,
+      title: "Account Approved!",
+      message: `Your account has been approved by ${pendingUser.pastor}. You can now login and create your professional profile.`,
+      type: "system",
+      read: false,
+      createdAt: Date.now(),
+    });
+
+    // Send approval email to user
+    try {
+      await ctx.scheduler.runAfter(0, "emails:sendAccountApprovedEmail" as any, {
+        userEmail: pendingUser.email,
+        userName: pendingUser.name,
+        approverName: pendingUser.pastor,
+      });
+    } catch (error) {
+      console.error("Failed to send approval email:", error);
+    }
+
+    return { success: true, userId, userName: pendingUser.name };
   },
 });
 
@@ -106,37 +232,28 @@ export const approveUserAccount = mutation({
  */
 export const rejectUserAccount = mutation({
   args: {
-    userId: v.id("users"),
+    pendingUserId: v.id("pendingUsers"),
     approverId: v.id("users"),
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const { userId, approverId, reason } = args;
+    const { pendingUserId, approverId, reason } = args;
 
-    // Verify approver is admin or pastor
+    // Verify approver is admin
     const approver = await ctx.db.get(approverId);
-    if (!approver || (approver.role !== "admin")) {
-      throw new Error("Only admins and can reject accounts");
+    if (!approver || approver.role !== "admin") {
+      throw new Error("Only admins can reject accounts");
     }
 
-    // Update user account
-    await ctx.db.patch(userId, {
-      accountApproved: false,
-      accountRejectionReason: reason,
-    });
+    // Get pending user
+    const pendingUser = await ctx.db.get(pendingUserId);
+    if (!pendingUser) {
+      throw new Error("Pending user not found");
+    }
 
-    // Get user for notification
-    const user = await ctx.db.get(userId);
-    if (!user) throw new Error("User not found");
-
-    // Create notification
-    await ctx.db.insert("notifications", {
-      userId,
-      title: "Account Requires Attention",
-      message: `Your account registration needs review. Reason: ${reason}. Please contact your church admin for assistance.`,
-      type: "system",
-      read: false,
-      createdAt: Date.now(),
+    // Mark as rejected (keep in pending for admin record)
+    await ctx.db.patch(pendingUserId, {
+      rejectionReason: reason,
     });
 
     return { success: true };
@@ -148,25 +265,44 @@ export const rejectUserAccount = mutation({
  */
 export const bulkApproveUsers = mutation({
   args: {
-    userIds: v.array(v.id("users")),
+    pendingUserIds: v.array(v.id("pendingUsers")),
     approverId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const { userIds, approverId } = args;
+    const { pendingUserIds, approverId } = args;
 
     // Verify approver
     const approver = await ctx.db.get(approverId);
-    if (!approver || (approver.role !== "admin" )) {
-      throw new Error("Only admins and can approve accounts");
+    if (!approver || approver.role !== "admin") {
+      throw new Error("Only admins can approve accounts");
     }
 
-    for (const userId of userIds) {
-      await ctx.db.patch(userId, {
-        accountApproved: true,
+    for (const pendingUserId of pendingUserIds) {
+      const pendingUser = await ctx.db.get(pendingUserId);
+      if (!pendingUser) continue;
+
+      // Move to users table
+      const userId = await ctx.db.insert("users", {
+        email: pendingUser.email,
+        phone: pendingUser.phone,
+        passwordHash: pendingUser.passwordHash,
+        name: pendingUser.name,
+        role: "member",
+        emailVerified: true,
+        createdAt: Date.now(),
+        denomination: pendingUser.denomination,
+        denominationName: pendingUser.denominationName,
+        branch: pendingUser.branch,
+        branchName: pendingUser.branchName,
+        branchLocation: pendingUser.branchLocation,
+        pastor: pendingUser.pastor,
+        pastorEmail: pendingUser.pastorEmail,
         accountApprovedBy: approverId,
         accountApprovedAt: Date.now(),
-        accountRejectionReason: undefined,
       });
+
+      // Remove from pending
+      await ctx.db.delete(pendingUserId);
 
       // Create notification
       await ctx.db.insert("notifications", {
@@ -177,9 +313,20 @@ export const bulkApproveUsers = mutation({
         read: false,
         createdAt: Date.now(),
       });
+
+      // Send approval email
+      try {
+        await ctx.scheduler.runAfter(0, "emails:sendAccountApprovedEmail" as any, {
+          userEmail: pendingUser.email,
+          userName: pendingUser.name,
+          approverName: approver.name,
+        });
+      } catch (error) {
+        console.error("Failed to send approval email:", error);
+      }
     }
 
-    return { success: true, count: userIds.length };
+    return { success: true, count: pendingUserIds.length };
   },
 });
 
@@ -188,36 +335,25 @@ export const bulkApproveUsers = mutation({
  */
 export const bulkRejectUsers = mutation({
   args: {
-    userIds: v.array(v.id("users")),
+    pendingUserIds: v.array(v.id("pendingUsers")),
     approverId: v.id("users"),
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    const { userIds, approverId, reason } = args;
+    const { pendingUserIds, approverId, reason } = args;
 
     // Verify approver
     const approver = await ctx.db.get(approverId);
-    if (!approver || (approver.role !== "admin" )) {
-      throw new Error("Only admins and can reject accounts");
+    if (!approver || approver.role !== "admin") {
+      throw new Error("Only admins can reject accounts");
     }
 
-    for (const userId of userIds) {
-      await ctx.db.patch(userId, {
-        accountApproved: false,
-        accountRejectionReason: reason,
-      });
-
-      // Create notification
-      await ctx.db.insert("notifications", {
-        userId,
-        title: "Account Requires Attention",
-        message: `Your account registration needs review. Reason: ${reason}. Please contact your church admin for assistance.`,
-        type: "system",
-        read: false,
-        createdAt: Date.now(),
+    for (const pendingUserId of pendingUserIds) {
+      await ctx.db.patch(pendingUserId, {
+        rejectionReason: reason,
       });
     }
 
-    return { success: true, count: userIds.length };
+    return { success: true, count: pendingUserIds.length };
   },
 });
