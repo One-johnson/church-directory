@@ -22,8 +22,9 @@ import { Loader2, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "./image-upload";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { getCountryOptions } from "../../data/countries";
+import { getCountryOptions } from "@/data/countries";
 import { getDenominationById, getBranchById } from "@/data/denominations";
+import { getCategories } from "../../data/catetories";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 const profileSchema = z.object({
@@ -49,27 +50,11 @@ interface ProfileFormProps {
   onSuccess?: () => void;
 }
 
-const categories = [
-  "Healthcare",
-"Engineering",
-"Education",
-"IT",
-"Business Finance",
-"Legal",
-"Trades Construction",
-"Creative Media",
-"Sales Marketing",
-"Hospitality Tourism",
-"Nonprofit Social work",
-"Public Service",
-  "Other",
-];
+const categories = getCategories();
 
 export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: ProfileFormProps): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
-
-  const isEditing = Boolean(profileId);
 
   // Fetch user data to pre-populate denomination and branch
   const currentUser = useQuery(api.auth.getCurrentUser, { userId });
@@ -78,8 +63,17 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
   const updateProfile = useMutation(api.profiles.updateProfile);
 
   // Pre-populate denomination and branch from user registration data
+  const userDenominationName = React.useMemo(() => {
+    if (!currentUser) return "";
+    const denom = getDenominationById(currentUser.denomination);
+    return denom?.name || currentUser.denominationName || "";
+  }, [currentUser]);
 
-
+  const userBranchName = React.useMemo(() => {
+    if (!currentUser) return "";
+    const branch = getBranchById(currentUser.branch);
+    return branch?.name || currentUser.branchName || "";
+  }, [currentUser]);
 
   const {
     register,
@@ -94,39 +88,21 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
       category: defaultValues?.category || "",
       profilePicture: defaultValues?.profilePicture || "",
       country: defaultValues?.country || "",
-     
+      denomination: defaultValues?.denomination || userDenominationName,
+      church: defaultValues?.church || userBranchName,
       ...defaultValues,
     },
   });
 
   // Update form values when user data is loaded
-React.useEffect(() => {
-  if (!currentUser) return;
-
-  // NAME
-  if (!defaultValues?.name) {
-    setValue("name", currentUser.name || "");
-  }
-
-  // BRANCH / CHURCH
-  const branchName =
-    getBranchById(currentUser.branch)?.name ||
-    currentUser.branchName ||
-    "";
-  if (!defaultValues?.church) {
-    setValue("church", branchName);
-  }
-
-  // DENOMINATION
-  const denominationName =
-    getDenominationById(currentUser.denomination)?.name ||
-    currentUser.denominationName ||
-    "";
-  if (!defaultValues?.denomination) {
-    setValue("denomination", denominationName);
-  }
-}, [currentUser, defaultValues, setValue]);
-
+  React.useEffect(() => {
+    if (currentUser && !defaultValues?.denomination) {
+      setValue("denomination", userDenominationName);
+    }
+    if (currentUser && !defaultValues?.church) {
+      setValue("church", userBranchName);
+    }
+  }, [currentUser, userDenominationName, userBranchName, defaultValues, setValue]);
 
   const category = watch("category");
   const profilePicture = watch("profilePicture");
@@ -178,27 +154,18 @@ React.useEffect(() => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-      <div className="space-y-2">
-  <Label htmlFor="name">Full Name</Label>
-  <Input
-    id="name"
-    {...register("name")}
-    readOnly={!isEditing}        // 🔒 Lock when prefilled
-    className={!isEditing ? "bg-muted/50 cursor-not-allowed" : ""}
-  />
-
-  {currentUser && !isEditing && (
-    <p className="text-xs text-muted-foreground">
-      Pre-filled from registration (read-only)
-    </p>
-  )}
-
-  {errors.name && (
-    <p className="text-sm text-destructive">{errors.name.message}</p>
-  )}
-</div>
-
-
+        <div className="space-y-2">
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            placeholder="John Doe"
+            {...register("name")}
+            disabled={isLoading}
+          />
+          {errors.name && (
+            <p className="text-sm text-destructive">{errors.name.message}</p>
+          )}
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="profession">Profession/Title</Label>
@@ -281,10 +248,10 @@ React.useEffect(() => {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="location">Location (optional)</Label>
+          <Label htmlFor="location">Location/Branch</Label>
           <Input
             id="location"
-            placeholder="e.g., Louisiana"
+            placeholder="e.g., Downtown Campus"
             {...register("location")}
             disabled={isLoading}
           />
@@ -320,49 +287,41 @@ React.useEffect(() => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-      <div className="space-y-2">
-  <Label htmlFor="church">Branch Name</Label>
-  <Input
-    id="church"
-    {...register("church")}
-    readOnly={!isEditing}        // 🔒 Lock when prefilled
-    className={!isEditing ? "bg-muted/50 cursor-not-allowed" : ""}
-  />
+        <div className="space-y-2">
+          <Label htmlFor="church">Church/Branch Name</Label>
+          <Input
+            id="church"
+            placeholder={userBranchName || "e.g., Grace Community Church"}
+            {...register("church")}
+            disabled={isLoading}
+          />
+          {currentUser && userBranchName && (
+            <p className="text-xs text-muted-foreground">
+              Pre-filled from registration: {userBranchName}
+            </p>
+          )}
+          {errors.church && (
+            <p className="text-sm text-destructive">{errors.church.message}</p>
+          )}
+        </div>
 
-  {currentUser && !isEditing && (
-    <p className="text-xs text-muted-foreground">
-      Pre-filled from registration (read-only)
-    </p>
-  )}
-
-  {errors.church && (
-    <p className="text-sm text-destructive">{errors.church.message}</p>
-  )}
-</div>
-
-
-
-     <div className="space-y-2">
-  <Label htmlFor="denomination">Denomination</Label>
-  <Input
-    id="denomination"
-    {...register("denomination")}
-    readOnly={!isEditing}         // 🔒 Lock when prefilled
-    className={!isEditing ? "bg-muted/50 cursor-not-allowed" : ""}
-  />
-
-  {currentUser && !isEditing && (
-    <p className="text-xs text-muted-foreground">
-      Pre-filled from registration (read-only)
-    </p>
-  )}
-
-  {errors.denomination && (
-    <p className="text-sm text-destructive">{errors.denomination.message}</p>
-  )}
-</div>
-
-
+        <div className="space-y-2">
+          <Label htmlFor="denomination">Denomination</Label>
+          <Input
+            id="denomination"
+            placeholder={userDenominationName || "e.g., Baptist, Methodist, etc."}
+            {...register("denomination")}
+            disabled={isLoading}
+          />
+          {currentUser && userDenominationName && (
+            <p className="text-xs text-muted-foreground">
+              Pre-filled from registration: {userDenominationName}
+            </p>
+          )}
+          {errors.denomination && (
+            <p className="text-sm text-destructive">{errors.denomination.message}</p>
+          )}
+        </div>
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>

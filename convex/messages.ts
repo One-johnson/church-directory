@@ -33,6 +33,24 @@ export const send = mutation({
       createdAt: Date.now(),
     });
 
+    // Send email notification to recipient
+    try {
+      const fromUser = await ctx.db.get(args.fromUserId);
+      const toUser = await ctx.db.get(args.toUserId);
+      
+      if (fromUser && toUser) {
+        await ctx.scheduler.runAfter(0, "emails:sendNewMessageEmail" as any, {
+          recipientEmail: toUser.email,
+          recipientName: toUser.name,
+          senderName: fromUser.name,
+          messagePreview: args.content,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to send message email:", error);
+      // Don't fail message if email fails
+    }
+
     return messageId;
   },
 });

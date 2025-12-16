@@ -19,6 +19,7 @@ import { Search, X, Clock, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getCountryFlagClass, getCountryOptions } from "@/data/countries";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { getCategories } from "../../data/catetories";
 
 interface AdvancedSearchProps {
   onResults?: (results: any[]) => void;
@@ -211,24 +212,17 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
         </div>
 
         {/* Category Select */}
-        <Select value={category} onValueChange={setCategory}>
+       <Select value={category} onValueChange={setCategory}>
           <SelectTrigger>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="All">All Categories</SelectItem>
-            <SelectItem value="Healthcare">Healthcare</SelectItem>
-            <SelectItem value="Engineering">Engineering</SelectItem>
-            <SelectItem value="IT">IT</SelectItem>
-            <SelectItem value="Business Finance">Business Finance</SelectItem>
-            <SelectItem value="Legal">Legal</SelectItem>
-            <SelectItem value="Trades Construction">Trades Construction</SelectItem>
-            <SelectItem value="Creative Media">Creative Media</SelectItem>
-            <SelectItem value="Sales Marketing">Sales Marketing</SelectItem>
-            <SelectItem value="Hospitality Tourism">Hospitality Tourism</SelectItem>
-            <SelectItem value="Nonprofit Social work">Nonprofit Social work</SelectItem>
-            <SelectItem value="Public Service">Public Service</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
+            {getCategories().map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 

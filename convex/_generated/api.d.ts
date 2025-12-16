@@ -11,6 +11,7 @@
 import type * as adminBootstrap from "../adminBootstrap.js";
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
+import type * as email from "../email.js";
 import type * as files from "../files.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   adminBootstrap: typeof adminBootstrap;
   analytics: typeof analytics;
   auth: typeof auth;
+  email: typeof email;
   files: typeof files;
   messages: typeof messages;
   notifications: typeof notifications;

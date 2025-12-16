@@ -2,11 +2,34 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // Pending user registrations (not yet approved)
+  pendingUsers: defineTable({
+    email: v.string(),
+    phone: v.optional(v.string()),
+    passwordHash: v.string(),
+    name: v.string(),
+    // Denomination and Branch info
+    denomination: v.string(),
+    denominationName: v.string(),
+    branch: v.string(),
+    branchName: v.string(),
+    branchLocation: v.string(),
+    pastor: v.string(),
+    pastorEmail: v.string(),
+    // Approval token for pastor email link
+    approvalToken: v.string(),
+    // Registration metadata
+    createdAt: v.number(),
+    rejectionReason: v.optional(v.string()),
+  })
+    .index("by_email", ["email"])
+    .index("by_token", ["approvalToken"]),
+
   users: defineTable({
     email: v.string(),
     phone: v.optional(v.string()),
     passwordHash: v.string(),
-    role: v.union(v.literal("admin"),  v.literal("member")),
+    role: v.union(v.literal("admin"), v.literal("member")),
     name: v.string(),
     emailVerified: v.boolean(),
     createdAt: v.number(),
@@ -20,14 +43,11 @@ export default defineSchema({
     branchLocation: v.string(),
     pastor: v.string(),
     pastorEmail: v.string(),
-    // Account approval status
-    accountApproved: v.boolean(),
-    accountApprovedBy: v.optional(v.id("users")),
-    accountApprovedAt: v.optional(v.number()),
-    accountRejectionReason: v.optional(v.string()),
+    // Account approval metadata (always approved once in users table)
+    accountApprovedBy: v.optional(v.union(v.id("users"), v.string())), // userId or "pastor"
+    accountApprovedAt: v.number(),
   })
     .index("by_email", ["email"])
-    .index("by_account_approval", ["accountApproved"])
     .index("by_denomination", ["denomination"])
     .index("by_branch", ["branch"]),
 

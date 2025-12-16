@@ -51,14 +51,14 @@ export const createInitialAdmin = mutation({
       role: "admin",
       emailVerified: true,
       createdAt: Date.now(),
-      pastor: "",
       denomination: "",
       denominationName: "",
       branch: "",
       branchName: "",
       branchLocation: "",
+      pastor: "",
       pastorEmail: "",
-      accountApproved: false
+      accountApprovedAt: 0
     });
 
     console.log(`✅ Admin user created successfully: ${args.email}`);
@@ -138,12 +138,13 @@ export const checkAdminStatus = query({
   handler: async (ctx) => {
     const allUsers = await ctx.db.query("users").collect();
     const adminUsers = allUsers.filter((u) => u.role === "admin");
-  
+
     const memberUsers = allUsers.filter((u) => u.role === "member");
 
     return {
       totalUsers: allUsers.length,
       adminCount: adminUsers.length,
+
       memberCount: memberUsers.length,
       admins: adminUsers.map((u) => ({
         email: u.email,
