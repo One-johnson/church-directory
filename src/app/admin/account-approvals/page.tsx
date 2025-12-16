@@ -37,17 +37,16 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-
 const MotionCard = motion(Card);
 const MotionDiv = motion.div;
 
 export default function AccountApprovalsPage(): React.JSX.Element {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const [selectedUsers, setSelectedUsers] = React.useState<Set<Id<"users">>>(new Set());
+  const [selectedUsers, setSelectedUsers] = React.useState<Set<Id<"pendingUsers">>>(new Set());
   const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
   const [rejectReason, setRejectReason] = React.useState("");
-  const [rejectingUserId, setRejectingUserId] = React.useState<Id<"users"> | null>(null);
+  const [rejectingUserId, setRejectingUserId] = React.useState<Id<"pendingUsers"> | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
 
   const pendingApprovals = useQuery(api.userApprovals.getPendingApprovals);
@@ -58,12 +57,12 @@ export default function AccountApprovalsPage(): React.JSX.Element {
   const bulkReject = useMutation(api.userApprovals.bulkRejectUsers);
 
   React.useEffect(() => {
-    if (!authLoading && (!user || (user.role !== "admin" ))) {
+    if (!authLoading && (!user || user.role !== "admin")) {
       router.push("/dashboard");
     }
   }, [user, authLoading, router]);
 
-  const handleSelectUser = (userId: Id<"users">): void => {
+  const handleSelectUser = (userId: Id<"pendingUsers">): void => {
     const newSelected = new Set(selectedUsers);
     if (newSelected.has(userId)) {
       newSelected.delete(userId);
@@ -81,11 +80,11 @@ export default function AccountApprovalsPage(): React.JSX.Element {
     }
   };
 
-  const handleApproveUser = async (userId: Id<"users">): Promise<void> => {
+  const handleApproveUser = async (pendingUserId: Id<"pendingUsers">): Promise<void> => {
     if (!user) return;
     setIsProcessing(true);
     try {
-      await approveUser({ userId, approverId: user._id });
+      await approveUser({ pendingUserId, approverId: user._id, approverType: "admin" });
       toast.success("User account approved successfully!");
       setSelectedUsers(new Set());
     } catch (error) {
@@ -100,7 +99,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
     setIsProcessing(true);
     try {
       await rejectUser({
-        userId: rejectingUserId,
+        pendingUserId: rejectingUserId,
         approverId: user._id,
         reason: rejectReason,
       });
@@ -121,7 +120,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
     setIsProcessing(true);
     try {
       const result = await bulkApprove({
-        userIds: Array.from(selectedUsers),
+        pendingUserIds: Array.from(selectedUsers),
         approverId: user._id,
       });
       toast.success(`Approved ${result.count} user accounts!`);
@@ -138,7 +137,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
     setIsProcessing(true);
     try {
       const result = await bulkReject({
-        userIds: Array.from(selectedUsers),
+        pendingUserIds: Array.from(selectedUsers),
         approverId: user._id,
         reason: rejectReason,
       });
@@ -153,7 +152,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
     }
   };
 
-  if (authLoading || !user || (user.role !== "admin" )) {
+  if (authLoading || !user || user.role !== "admin") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -187,8 +186,6 @@ export default function AccountApprovalsPage(): React.JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-   
       <MotionDiv
         initial="hidden"
         animate="visible"
@@ -550,6 +547,5 @@ export default function AccountApprovalsPage(): React.JSX.Element {
           </DialogContent>
         </Dialog>
       </MotionDiv>
-    </div>
   );
 }
