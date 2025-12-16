@@ -62,7 +62,12 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
   const createProfile = useMutation(api.profiles.createProfile);
   const updateProfile = useMutation(api.profiles.updateProfile);
 
-  // Pre-populate denomination and branch from user registration data
+  // Pre-populate name, denomination and branch from user registration data
+  const userName = React.useMemo(() => {
+    if (!currentUser) return "";
+    return currentUser.name || "";
+  }, [currentUser]);
+
   const userDenominationName = React.useMemo(() => {
     if (!currentUser) return "";
     const denom = getDenominationById(currentUser.denomination);
@@ -88,6 +93,7 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
       category: defaultValues?.category || "",
       profilePicture: defaultValues?.profilePicture || "",
       country: defaultValues?.country || "",
+      name: defaultValues?.name || userName,
       denomination: defaultValues?.denomination || userDenominationName,
       church: defaultValues?.church || userBranchName,
       ...defaultValues,
@@ -96,13 +102,16 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
 
   // Update form values when user data is loaded
   React.useEffect(() => {
+    if (currentUser && !defaultValues?.name) {
+      setValue("name", userName);
+    }
     if (currentUser && !defaultValues?.denomination) {
       setValue("denomination", userDenominationName);
     }
     if (currentUser && !defaultValues?.church) {
       setValue("church", userBranchName);
     }
-  }, [currentUser, userDenominationName, userBranchName, defaultValues, setValue]);
+  }, [currentUser, userName, userDenominationName, userBranchName, defaultValues, setValue]);
 
   const category = watch("category");
   const profilePicture = watch("profilePicture");
@@ -161,7 +170,14 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
             placeholder="John Doe"
             {...register("name")}
             disabled={isLoading}
+            readOnly
+            className="bg-muted"
           />
+          {currentUser && userName && (
+            <p className="text-xs text-muted-foreground">
+              Pre-filled from registration: {userName}
+            </p>
+          )}
           {errors.name && (
             <p className="text-sm text-destructive">{errors.name.message}</p>
           )}
@@ -294,6 +310,8 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
             placeholder={userBranchName || "e.g., Grace Community Church"}
             {...register("church")}
             disabled={isLoading}
+            readOnly
+            className="bg-muted"
           />
           {currentUser && userBranchName && (
             <p className="text-xs text-muted-foreground">
@@ -312,6 +330,8 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
             placeholder={userDenominationName || "e.g., Baptist, Methodist, etc."}
             {...register("denomination")}
             disabled={isLoading}
+            readOnly
+            className="bg-muted"
           />
           {currentUser && userDenominationName && (
             <p className="text-xs text-muted-foreground">
