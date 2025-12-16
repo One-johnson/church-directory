@@ -4,7 +4,6 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-
 import { ProfileForm } from "@/components/profile/profile-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, UserCircle } from "lucide-react";
@@ -19,10 +18,6 @@ export default function CreateProfilePage(): React.JSX.Element {
     if (!isLoading && !user) {
       router.push("/");
     }
-    // Check if user's account is approved
-    if (!isLoading && user && !(user as any).accountApproved) {
-      router.push("/dashboard");
-    }
   }, [user, isLoading, router]);
 
   if (isLoading || !user) {
@@ -34,8 +29,6 @@ export default function CreateProfilePage(): React.JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      
       <motion.main
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -66,7 +59,7 @@ export default function CreateProfilePage(): React.JSX.Element {
                 <CardTitle className="text-2xl">Create Professional Profile</CardTitle>
               </div>
               <CardDescription>
-                Fill out your professional information to be featured in the UD Professional Directory.
+                Fill out your professional information to be featured in the church directory.
                 Your profile will be reviewed before being published.
               </CardDescription>
             </motion.div>
@@ -85,6 +78,5 @@ export default function CreateProfilePage(): React.JSX.Element {
           </CardContent>
         </MotionCard>
       </motion.main>
-    </div>
   );
 }
