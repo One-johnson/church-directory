@@ -1,21 +1,26 @@
 /**
  * Email Actions - SendGrid Integration
- * 
+ *
  * Sends emails directly using SendGrid API from Convex actions
  * API key is stored in Convex environment variables
  */
 
-import { action } from './_generated/server';
-import { v } from 'convex/values';
+import { action } from "./_generated/server";
+import { v } from "convex/values";
 
 // Get SendGrid configuration from environment variables
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '';
-const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'admin@churchmms.com';
-const FROM_NAME = process.env.SENDGRID_FROM_NAME || 'UD Professionals Directory';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || "";
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || "admin@churchmms.com";
+const FROM_NAME =
+  process.env.SENDGRID_FROM_NAME || "UD Professionals Directory";
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  "https://church-directory-ebon.vercel.app/";
 
 if (!APP_URL) {
-  throw new Error("NEXT_PUBLIC_APP_URL is not set in Convex environment variables");
+  throw new Error(
+    "NEXT_PUBLIC_APP_URL is not set in Convex environment variables"
+  );
 }
 
 interface EmailPayload {
@@ -46,8 +51,13 @@ interface SendGridPayload {
  */
 async function sendEmailViaSendGrid(payload: EmailPayload): Promise<boolean> {
   try {
-    if (!SENDGRID_API_KEY || SENDGRID_API_KEY === 'YOUR_SENDGRID_API_KEY_HERE') {
-      console.error('SendGrid API key not configured. Please set SENDGRID_API_KEY in Convex environment variables.');
+    if (
+      !SENDGRID_API_KEY ||
+      SENDGRID_API_KEY === "YOUR_SENDGRID_API_KEY_HERE"
+    ) {
+      console.error(
+        "SendGrid API key not configured. Please set SENDGRID_API_KEY in Convex environment variables."
+      );
       return false;
     }
 
@@ -69,7 +79,7 @@ async function sendEmailViaSendGrid(payload: EmailPayload): Promise<boolean> {
       },
       content: [
         {
-          type: 'text/plain',
+          type: "text/plain",
           value: payload.text,
         },
       ],
@@ -78,29 +88,29 @@ async function sendEmailViaSendGrid(payload: EmailPayload): Promise<boolean> {
     // Add HTML content if provided
     if (payload.html) {
       sendGridPayload.content.push({
-        type: 'text/html',
+        type: "text/html",
         value: payload.html,
       });
     }
 
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
+    const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${SENDGRID_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(sendGridPayload),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('SendGrid API Error:', errorText);
+      console.error("SendGrid API Error:", errorText);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Email sending error:', error);
+    console.error("Email sending error:", error);
     return false;
   }
 }
@@ -137,15 +147,15 @@ A new Professional has registered and requires your approval:
 Professional's Details:
 - Name: ${args.userName}
 - Email: ${args.userEmail}
-${args.userPhone ? `- Phone: ${args.userPhone}` : ''}
+${args.userPhone ? `- Phone: ${args.userPhone}` : ""}
 - Denomination: ${args.denominationName}
 - Branch: ${args.branchName} (${args.branchLocation})
 
 Please approve this registration by clicking the link below:
 ${pastorApprovalLink}
 
-Alternatively, your admin can approve at:
-${adminApprovalLink}
+// Alternatively, your admin can approve at:
+// ${adminApprovalLink}
 
 Best regards,
 UD Professionals Directory Team
@@ -173,17 +183,17 @@ UD Professionals Directory Team
     </div>
     <div class="content">
       <p>Dear ${args.pastorName},</p>
-      <p>A new member has registered at <strong>UD Professionals Directory</strong> and requires your approval:</p>
+      <p>A new professional has registered at <strong>UD Professionals Directory</strong> and requires your approval:</p>
       
       <div class="details">
-        <h3>Member Details</h3>
+        <h3>Professional's Details</h3>
         <div class="detail-row">
           <span class="detail-label">Name:</span> ${args.userName}
         </div>
         <div class="detail-row">
           <span class="detail-label">Email:</span> ${args.userEmail}
         </div>
-        ${args.userPhone ? `<div class="detail-row"><span class="detail-label">Phone:</span> ${args.userPhone}</div>` : ''}
+       
         <div class="detail-row">
           <span class="detail-label">Denomination:</span> ${args.denominationName}
         </div>
@@ -196,9 +206,9 @@ UD Professionals Directory Team
         <a href="${pastorApprovalLink}" class="button">✅ Approve Registration</a>
       </p>
       
-      <p style="text-align: center; margin-top: 10px;">
-        <a href="${adminApprovalLink}" style="color: #6b7280; text-decoration: underline; font-size: 14px;">Or view in admin panel</a>
-      </p>
+      // <p style="text-align: center; margin-top: 10px;">
+      //   <a href="${adminApprovalLink}" style="color: #6b7280; text-decoration: underline; font-size: 14px;">Or view in admin panel</a>
+      // </p>
 
       <p class="footer">
         Best regards,<br>
@@ -231,7 +241,7 @@ export const sendAccountApprovedEmail = action({
     const email: EmailPayload = {
       to: args.userEmail,
       toName: args.userName,
-      subject: '🎉 Your Account Has Been Approved!',
+      subject: "🎉 Your Account Has Been Approved!",
       text: `
 Dear ${args.userName},
 
@@ -335,9 +345,10 @@ export const sendNewMessageEmail = action({
     const messagesLink = `${APP_URL}/messages`;
 
     // Truncate message preview to 100 characters
-    const preview = args.messagePreview.length > 100 
-      ? args.messagePreview.substring(0, 100) + '...' 
-      : args.messagePreview;
+    const preview =
+      args.messagePreview.length > 100
+        ? args.messagePreview.substring(0, 100) + "..."
+        : args.messagePreview;
 
     const email: EmailPayload = {
       to: args.recipientEmail,
@@ -428,18 +439,17 @@ export const sendAdminRegistrationNotificationEmail = action({
       text: `
 Dear ${args.adminName},
 
-A new member has registered and requires approval:
+A new professional has registered and requires approval:
 
-Member Details:
+Professional's Details:
 - Name: ${args.userName}
 - Email: ${args.userEmail}
-${args.userPhone ? `- Phone: ${args.userPhone}` : ''}
+${args.userPhone ? `- Phone: ${args.userPhone}` : ""}
 - Denomination: ${args.denominationName}
 - Branch: ${args.branchName} (${args.branchLocation})
 - Assigned Pastor: ${args.pastorName}
 
-Pastor ${args.pastorName} has been notified for approval. You can also review and approve this registration in the admin panel:
-${adminApprovalLink}
+Pastor ${args.pastorName} has been notified for approval. 
 
 Best regards,
 UD Professionals Directory Team
@@ -468,17 +478,17 @@ UD Professionals Directory Team
     </div>
     <div class="content">
       <p>Dear ${args.adminName},</p>
-      <p>A new member has registered at <strong>UD Professionals Directory</strong> and requires approval:</p>
+      <p>A new professional has registered at <strong>UD Professionals Directory</strong> and requires approval:</p>
       
       <div class="details">
-        <h3>Member Details</h3>
+        <h3>Professional's Details</h3>
         <div class="detail-row">
           <span class="detail-label">Name:</span> ${args.userName}
         </div>
         <div class="detail-row">
           <span class="detail-label">Email:</span> ${args.userEmail}
         </div>
-        ${args.userPhone ? `<div class="detail-row"><span class="detail-label">Phone:</span> ${args.userPhone}</div>` : ''}
+        ${args.userPhone ? `<div class="detail-row"><span class="detail-label">Phone:</span> ${args.userPhone}</div>` : ""}
         <div class="detail-row">
           <span class="detail-label">Denomination:</span> ${args.denominationName}
         </div>
@@ -491,12 +501,12 @@ UD Professionals Directory Team
       </div>
 
       <div class="info-box">
-        <strong>Note:</strong> Pastor ${args.pastorName} has been notified and can approve directly via email. You can also review and approve this registration in the admin panel.
+        <strong>Note:</strong> Pastor ${args.pastorName} has been notified and can approve directly via email. 
       </div>
 
-      <p style="text-align: center;">
-        <a href="${adminApprovalLink}" class="button">Review in Admin Panel</a>
-      </p>
+      // <p style="text-align: center;">
+      //   <a href="${adminApprovalLink}" class="button">Review in Admin Panel</a>
+      // </p>
 
       <p class="footer">
         Best regards,<br>
@@ -521,7 +531,7 @@ export const sendProfileSubmissionEmail = action({
   args: {
     recipientEmail: v.string(),
     recipientName: v.string(),
-    recipientRole: v.union(v.literal('admin'), v.literal('pastor')),
+    recipientRole: v.union(v.literal("admin"), v.literal("pastor")),
     userName: v.string(),
     userEmail: v.string(),
     profession: v.string(),
