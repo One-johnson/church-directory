@@ -40,7 +40,7 @@ export default function RegisterPage(): React.JSX.Element {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background overflow-x-hidden relative">
       {/* Animated Background Elements */}
       <motion.div
         animate={{
@@ -67,7 +67,7 @@ export default function RegisterPage(): React.JSX.Element {
         className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"
       />
 
-      <main className="relative z-10 min-h-screen flex items-center justify-center p-4">
+      <main className="relative z-10 min-h-screen w-full flex items-center justify-center p-4">
         <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Side - Branding */}
           <motion.div
