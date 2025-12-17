@@ -196,20 +196,9 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         {/* Verified Checkbox */}
-        <div className="flex items-center space-x-2 border rounded-md px-3 py-2">
-          <input
-            type="checkbox"
-            id="verified"
-            checked={verifiedOnly}
-            onChange={(e) => setVerifiedOnly(e.target.checked)}
-            className="rounded"
-          />
-          <label htmlFor="verified" className="text-sm cursor-pointer">
-            Verified Only
-          </label>
-        </div>
+      
 
         {/* Category Select */}
        <Select value={category} onValueChange={setCategory}>
@@ -229,13 +218,13 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
         {/* Location Select */}
         <SearchableSelect
           options={[
-            { value: "", label: "All Locations" },
+            { value: "", label: "All Branches" },
             ...(allLocations || []).map((loc) => ({ value: loc, label: loc })),
           ]}
           value={location}
           onValueChange={setLocation}
-          placeholder="Select Location"
-          searchPlaceholder="Search locations..."
+          placeholder="Select Branch"
+          searchPlaceholder="Search branches..."
         />
 
         {/* Country Select with Flags */}

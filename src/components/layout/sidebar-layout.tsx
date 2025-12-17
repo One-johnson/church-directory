@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { AppSidebarLayout } from "./app-sidebar";
 import { useAuth } from "@/hooks/use-auth";
+import { ProfileGuard } from "@/components/auth/profile-guard";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
@@ -19,8 +20,12 @@ export function SidebarLayout({ children }: SidebarLayoutProps): React.JSX.Eleme
     user && !noSidebarPages.includes(pathname) && !pathname.startsWith("/api");
 
   if (!shouldShowSidebar) {
-    return <>{children}</>;
+    return <ProfileGuard>{children}</ProfileGuard>;
   }
 
-  return <AppSidebarLayout>{children}</AppSidebarLayout>;
+  return (
+    <ProfileGuard>
+      <AppSidebarLayout>{children}</AppSidebarLayout>
+    </ProfileGuard>
+  );
 }
