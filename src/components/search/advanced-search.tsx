@@ -202,7 +202,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
 
         {/* Category Select */}
        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>

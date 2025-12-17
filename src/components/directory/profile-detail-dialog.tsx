@@ -86,14 +86,14 @@ export function ProfileDetailDialog({
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Contact & Location Info */}
+          {/* Location Info */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
               <MapPin className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
                 <p className="text-sm font-medium">Location</p>
                 <p className="text-sm text-muted-foreground">
-                  {profile.location}, {profile.country}
+                  {profile.country}
                 </p>
               </div>
             </div>
@@ -165,9 +165,7 @@ export function ProfileDetailDialog({
                       <div>
                         <p className="text-sm font-medium">Branch</p>
                         <p className="text-sm text-muted-foreground">{profile.user.branchName}</p>
-                        {profile.user.branchLocation && (
-                          <p className="text-xs text-muted-foreground mt-1">{profile.user.branchLocation}</p>
-                        )}
+                       
                       </div>
                     </div>
                   )}
