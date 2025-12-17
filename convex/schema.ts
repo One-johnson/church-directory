@@ -62,6 +62,7 @@ export default defineSchema({
     location: v.string(),
     profilePicture: v.optional(v.string()),
     country: v.string(),
+    board: v.optional(v.string()),
     church: v.optional(v.string()),
     denomination: v.optional(v.string()),
     status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),

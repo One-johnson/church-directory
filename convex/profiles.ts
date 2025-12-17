@@ -8,6 +8,7 @@ export const createProfile = mutation({
     name: v.string(),
     skills: v.string(),
     profession: v.string(),
+    board: v.string(),
     category: v.string(),
     experience: v.string(),
     servicesOffered: v.string(),
@@ -44,6 +45,7 @@ export const createProfile = mutation({
       updatedAt: Date.now(),
       church: args.church,
       denomination: args.denomination,
+      board: ""
     });
 
     // Notify admins and pastors
@@ -78,6 +80,7 @@ export const updateProfile = mutation({
     skills: v.string(),
     profession: v.string(),
     category: v.string(),
+    board: v.optional(v.string()),
     experience: v.string(),
     servicesOffered: v.string(),
     location: v.string(),

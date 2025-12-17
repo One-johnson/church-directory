@@ -25,6 +25,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { getCountryOptions } from "@/data/countries";
 import { getDenominationById, getBranchById } from "@/data/denominations";
 import { getCategories } from "../../data/catetories";
+import { getBoards } from "@/data/boards";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 const profileSchema = z.object({
@@ -34,9 +35,9 @@ const profileSchema = z.object({
   category: z.string().min(1, "Please select a category"),
   experience: z.string().min(10, "Please describe your experience"),
   servicesOffered: z.string().min(10, "Please describe services offered"),
-  location: z.string().min(2, "Location is required"),
   profilePicture: z.string().optional(),
   country: z.string().min(2, "Country is required"),
+  board: z.string().min(1, "Please select a board"),
   church: z.string().optional(),
   denomination: z.string().optional(),
 });
@@ -51,6 +52,7 @@ interface ProfileFormProps {
 }
 
 const categories = getCategories();
+const boards = getBoards();
 
 export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: ProfileFormProps): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState(false);
@@ -93,6 +95,7 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
       category: defaultValues?.category || "",
       profilePicture: defaultValues?.profilePicture || "",
       country: defaultValues?.country || "",
+      board: defaultValues?.board || "",
       name: defaultValues?.name || userName,
       denomination: defaultValues?.denomination || userDenominationName,
       church: defaultValues?.church || userBranchName,
@@ -116,6 +119,7 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
   const category = watch("category");
   const profilePicture = watch("profilePicture");
   const country = watch("country");
+  const board = watch("board");
 
   const onSubmit = async (data: ProfileFormData): Promise<void> => {
     setIsLoading(true);
@@ -126,12 +130,14 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
         await updateProfile({
           profileId,
           ...data,
+          location: ""
         });
         toast.success("Profile updated successfully! Waiting for approval.");
       } else {
         await createProfile({
           userId,
           ...data,
+          location: ""
         });
         toast.success("Profile submitted for approval!");
       }
@@ -220,6 +226,12 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
         )}
       </div>
 
+      <Alert className="bg-blue-50 border-blue-200">
+        <AlertDescription className="font-bold text-blue-900">
+          What you write in the Skills and Work Experience section will determine how many people would want to connect with you
+        </AlertDescription>
+      </Alert>
+
       <div className="space-y-2">
         <Label htmlFor="skills">Skills</Label>
         <Textarea
@@ -264,19 +276,6 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="location">Location/Branch</Label>
-          <Input
-            id="location"
-            placeholder="e.g., Downtown Campus"
-            {...register("location")}
-            disabled={isLoading}
-          />
-          {errors.location && (
-            <p className="text-sm text-destructive">{errors.location.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="country" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
             Country/Region
@@ -298,6 +297,30 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
           />
           {errors.country && (
             <p className="text-sm text-destructive">{errors.country.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="board">Which board are you a member of?</Label>
+          <Select
+          
+            value={board}
+            onValueChange={(value) => setValue("board", value)}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a board" />
+            </SelectTrigger>
+            <SelectContent>
+              {boards.map((brd) => (
+                <SelectItem key={brd} value={brd}>
+                  {brd}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.board && (
+            <p className="text-sm text-destructive">{errors.board.message}</p>
           )}
         </div>
       </div>

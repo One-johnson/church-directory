@@ -106,7 +106,7 @@ function AppSidebarContent(): React.JSX.Element {
       { href: "/messages", label: "Messages", icon: MessageSquare },
     ];
 
-    if (user?.role === "admin" ) {
+    if (user?.role === "admin") {
       items.push({
         href: "/admin/approvals",
         label: "Approvals",
@@ -141,7 +141,7 @@ function AppSidebarContent(): React.JSX.Element {
     <>
       <Sidebar collapsible="icon" variant="sidebar">
         {/* Header with Logo */}
-        <SidebarHeader>
+        <SidebarHeader className="mt-4 mb-5">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
@@ -150,8 +150,8 @@ function AppSidebarContent(): React.JSX.Element {
                     <span className="text-lg font-bold">UD</span>
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold">Professional </span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="font-semibold">UD Professionals</span>
+                    <span className="text-xs text-muted-foreground">
                       Directory
                     </span>
                   </div>
@@ -160,10 +160,10 @@ function AppSidebarContent(): React.JSX.Element {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-
+<hr></hr>
         {/* Main Navigation */}
         <SidebarContent>
-          <SidebarMenu className="space-y-2 mt-10">
+          <SidebarMenu className="space-y-4">
             {navItems.map((item: NavItem) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -185,91 +185,11 @@ function AppSidebarContent(): React.JSX.Element {
           </SidebarMenu>
         </SidebarContent>
 
-        {/* Footer with User Menu */}
+        {/* Footer - Empty for now */}
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton
-                    size="lg"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                  >
-                    <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage src={undefined} alt={user.name} />
-                      <AvatarFallback className="rounded-lg">
-                        {getInitials(user.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">{user.name}</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {user.email}
-                      </span>
-                    </div>
-                    <ChevronUp className="ml-auto size-4" />
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                  side="top"
-                  align="end"
-                  sideOffset={4}
-                >
-                  <DropdownMenuLabel className="p-0 font-normal">
-                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                      <Avatar className="h-8 w-8 rounded-lg">
-                        <AvatarImage src={undefined} alt={user.name} />
-                        <AvatarFallback className="rounded-lg">
-                          {getInitials(user.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="grid flex-1 text-left text-sm leading-tight">
-                        <span className="truncate font-semibold">{user.name}</span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {user.email}
-                        </span>
-                      </div>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Badge variant="outline" className="w-fit">
-                      {user.role}
-                    </Badge>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/profile/edit")}>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Sun className="mr-2 h-4 w-4" />
-                      Theme
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem onClick={() => setTheme("light")}>
-                        <Sun className="mr-2 h-4 w-4" />
-                        Light
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setTheme("dark")}>
-                        <Moon className="mr-2 h-4 w-4" />
-                        Dark
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setTheme("system")}>
-                        <Laptop className="mr-2 h-4 w-4" />
-                        System
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* User menu moved to header */}
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
@@ -316,6 +236,41 @@ export function AppSidebarLayout({
   children: React.ReactNode;
 }): React.JSX.Element {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const { setTheme } = useTheme();
+  const [showLogoutDialog, setShowLogoutDialog] = React.useState<boolean>(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState<boolean>(false);
+
+  const handleLogout = (): void => {
+    setShowLogoutDialog(true);
+  };
+
+  const confirmLogout = async (): Promise<void> => {
+    setIsLoggingOut(true);
+    toast.loading("Logging out...", { id: "logout-toast" });
+    
+    try {
+      await new Promise((resolve: (value: unknown) => void) => setTimeout(resolve, 800));
+      logout();
+      toast.success("Successfully logged out!", { id: "logout-toast" });
+      router.push("/");
+    } catch (error) {
+      toast.error("Failed to logout. Please try again.", { id: "logout-toast" });
+      setIsLoggingOut(false);
+      setShowLogoutDialog(false);
+    }
+  };
+
+  const getInitials = (name: string): string => {
+    return name
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   const navItems: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/directory", label: "Directory", icon: Users },
@@ -345,6 +300,80 @@ export function AppSidebarLayout({
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2">
+            {/* User Profile Dropdown */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-full hover:opacity-80 transition-opacity">
+                    <Avatar className="h-8 w-8 rounded-full">
+                      <AvatarImage src={undefined} alt={user.name} />
+                      <AvatarFallback className="rounded-full text-xs">
+                        {getInitials(user.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-64 rounded-lg"
+                  align="end"
+                  sideOffset={8}
+                >
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-3 px-2 py-2 text-left">
+                      <Avatar className="h-10 w-10 rounded-full">
+                        <AvatarImage src={undefined} alt={user.name} />
+                        <AvatarFallback className="rounded-full">
+                          {getInitials(user.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="grid flex-1 text-left leading-tight">
+                        <span className="truncate font-semibold text-sm">{user.name}</span>
+                        <span className="truncate text-xs text-muted-foreground">
+                          {user.email}
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Badge variant="outline" className="w-fit">
+                      {user.role}
+                    </Badge>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push("/profile/edit")}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Sun className="mr-2 h-4 w-4" />
+                      Theme
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => setTheme("light")}>
+                        <Sun className="mr-2 h-4 w-4" />
+                        Light
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTheme("dark")}>
+                        <Moon className="mr-2 h-4 w-4" />
+                        Dark
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTheme("system")}>
+                        <Laptop className="mr-2 h-4 w-4" />
+                        System
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            
             <NotificationPopover />
           </div>
         </header>
@@ -359,6 +388,38 @@ export function AppSidebarLayout({
           {children}
         </motion.div>
       </SidebarInset>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to log out? You will need to sign in again to access your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoggingOut}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmLogout}
+              disabled={isLoggingOut}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoggingOut ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 }

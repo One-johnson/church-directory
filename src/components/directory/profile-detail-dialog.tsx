@@ -20,7 +20,8 @@ import {
   Building2, 
   Church as ChurchIcon,
   User,
-  UserCheck
+  UserCheck,
+  Users
 } from "lucide-react";
 import { VerificationBadges } from "@/components/profile/verification-badges";
 
@@ -116,7 +117,19 @@ export function ProfileDetailDialog({
                 </div>
               </div>
             )}
+ {profile.board && (
+              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                <Users className="h-5 w-5 text-emerald-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">Board Membership</p>
+                  <p className="text-sm text-muted-foreground">{profile.board}</p>
+                </div>
+              </div>
+            )}
+            
           </div>
+
+        
 
           {/* Pastor Details */}
           {profile.user && (profile.user.pastor || profile.user.pastorEmail) && (
