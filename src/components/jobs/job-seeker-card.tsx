@@ -33,7 +33,7 @@ interface JobSeekerCardProps {
   seeker: JobSeeker;
 }
 
-export function JobSeekerCard({ seeker }: JobSeekerCardProps): JSX.Element {
+export function JobSeekerCard({ seeker }: JobSeekerCardProps): React.JSX.Element {
   const [detailDialogOpen, setDetailDialogOpen] = React.useState<boolean>(false);
 
   const formatDate = (timestamp: number): string => {
