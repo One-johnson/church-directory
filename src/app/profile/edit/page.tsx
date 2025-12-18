@@ -128,7 +128,7 @@ export default function EditProfilePage(): React.JSX.Element {
                   category: profile.category,
                   experience: profile.experience,
                   servicesOffered: profile.servicesOffered,
-                  location: profile.location,
+                 
                   profilePicture: profile.profilePicture,
                   country: profile.country,
                   church: profile.church,
