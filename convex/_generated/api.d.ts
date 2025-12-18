@@ -13,6 +13,8 @@ import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as emails from "../emails.js";
 import type * as files from "../files.js";
+import type * as jobOpportunities from "../jobOpportunities.js";
+import type * as jobSeekerRequests from "../jobSeekerRequests.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as presence from "../presence.js";
@@ -34,6 +36,8 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   emails: typeof emails;
   files: typeof files;
+  jobOpportunities: typeof jobOpportunities;
+  jobSeekerRequests: typeof jobSeekerRequests;
   messages: typeof messages;
   notifications: typeof notifications;
   presence: typeof presence;

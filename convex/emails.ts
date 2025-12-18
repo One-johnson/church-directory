@@ -227,6 +227,129 @@ UD Professionals Directory Team
 });
 
 /**
+ * Send job opportunity submission notification email to admins
+ */
+export const sendJobOpportunitySubmissionEmail = action({
+  args: {
+    adminEmail: v.string(),
+    adminName: v.string(),
+    posterName: v.string(),
+    posterEmail: v.string(),
+    professionalNeeded: v.string(),
+    subject: v.string(),
+    description: v.string(),
+    contactEmail: v.string(),
+    contactPhone: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const approvalsLink = `${APP_URL}/admin/approvals`;
+
+    // Truncate description to 200 characters for email preview
+    const descriptionPreview = args.description.length > 200 
+      ? args.description.substring(0, 200) + '...' 
+      : args.description;
+
+    const email: EmailPayload = {
+      to: args.adminEmail,
+      toName: args.adminName,
+      subject: `🆕 New Job Opportunity Posted - ${args.professionalNeeded}`,
+      text: `
+Dear ${args.adminName},
+
+${args.posterName} has posted a new job opportunity that requires your approval:
+
+Job Details:
+- Looking for: ${args.professionalNeeded}
+- Subject: ${args.subject}
+- Description: ${descriptionPreview}
+- Contact: ${args.contactEmail}${args.contactPhone ? ` | ${args.contactPhone}` : ''}
+- Posted by: ${args.posterName} (${args.posterEmail})
+
+Please review and approve this job opportunity at:
+${approvalsLink}
+
+Best regards,
+UD Professionals Directory Team
+      `.trim(),
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .detail-row { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+    .detail-label { font-weight: bold; color: #f59e0b; }
+    .description-box { background: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; border-radius: 4px; margin: 15px 0; }
+    .button { background: #f59e0b; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; font-weight: bold; font-size: 16px; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px; }
+    .badge { display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 14px; margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🆕 New Job Opportunity</h1>
+    </div>
+    <div class="content">
+      <p>Dear ${args.adminName},</p>
+      <p><strong>${args.posterName}</strong> has posted a new job opportunity that requires your approval:</p>
+      
+      <div class="details">
+        <h3>Job Opportunity Details</h3>
+        <div class="detail-row">
+          <span class="detail-label">Looking for:</span> <span class="badge">${args.professionalNeeded}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Subject:</span> ${args.subject}
+        </div>
+        <div class="description-box">
+          <strong>Description:</strong><br>
+          ${descriptionPreview}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Contact Email:</span> ${args.contactEmail}
+        </div>
+        ${args.contactPhone ? `<div class="detail-row"><span class="detail-label">Contact Phone:</span> ${args.contactPhone}</div>` : ''}
+        <div class="detail-row">
+          <span class="detail-label">Posted by:</span> ${args.posterName} (${args.posterEmail})
+        </div>
+      </div>
+
+      <p style="text-align: center;">
+        <a href="${approvalsLink}" class="button">Review & Approve Job</a>
+      </p>
+
+      <p class="footer">
+        Best regards,<br>
+        UD Professionals Directory Team
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+      `.trim(),
+    };
+
+    const success = await sendEmailViaSendGrid(email);
+    return { success };
+  },
+});
+
+
+
+
+
+
+
+
+
+
+
+/**
  * Send account approved email to user
  */
 export const sendAccountApprovedEmail = action({
@@ -523,6 +646,116 @@ UD Professionals Directory Team
     return { success };
   },
 });
+
+/**
+ * Send job seeker submission notification email to admins
+ */
+export const sendJobSeekerSubmissionEmail = action({
+  args: {
+    adminEmail: v.string(),
+    adminName: v.string(),
+    seekerName: v.string(),
+    seekerEmail: v.string(),
+    subject: v.string(),
+    description: v.string(),
+    contactEmail: v.string(),
+    contactPhone: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const approvalsLink = `${APP_URL}/admin/approvals`;
+
+    // Truncate description to 200 characters for email preview
+    const descriptionPreview = args.description.length > 200 
+      ? args.description.substring(0, 200) + '...' 
+      : args.description;
+
+    const email: EmailPayload = {
+      to: args.adminEmail,
+      toName: args.adminName,
+      subject: `🔎 New Job Seeker Request - ${args.subject}`,
+      text: `
+Dear ${args.adminName},
+
+${args.seekerName} has posted a job seeking request that requires your approval:
+
+Job Seeker Details:
+- Subject: ${args.subject}
+- Description: ${descriptionPreview}
+- Contact: ${args.contactEmail}${args.contactPhone ? ` | ${args.contactPhone}` : ''}
+- Posted by: ${args.seekerName} (${args.seekerEmail})
+
+Please review and approve this job seeker request at:
+${approvalsLink}
+
+Best regards,
+UD Professionals Directory Team
+      `.trim(),
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+    .detail-row { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+    .detail-label { font-weight: bold; color: #0ea5e9; }
+    .description-box { background: #dbeafe; padding: 15px; border-left: 4px solid #0ea5e9; border-radius: 4px; margin: 15px 0; }
+    .button { background: #0ea5e9; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; font-weight: bold; font-size: 16px; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px; }
+    .badge { display: inline-block; background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 14px; margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔎 New Job Seeker Request</h1>
+    </div>
+    <div class="content">
+      <p>Dear ${args.adminName},</p>
+      <p><strong>${args.seekerName}</strong> has posted a job seeking request that requires your approval:</p>
+      
+      <div class="details">
+        <h3>Job Seeker Details</h3>
+        <div class="detail-row">
+          <span class="detail-label">Subject:</span> <span class="badge">${args.subject}</span>
+        </div>
+        <div class="description-box">
+          <strong>Description:</strong><br>
+          ${descriptionPreview}
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Contact Email:</span> ${args.contactEmail}
+        </div>
+        ${args.contactPhone ? `<div class="detail-row"><span class="detail-label">Contact Phone:</span> ${args.contactPhone}</div>` : ''}
+        <div class="detail-row">
+          <span class="detail-label">Posted by:</span> ${args.seekerName} (${args.seekerEmail})
+        </div>
+      </div>
+
+      <p style="text-align: center;">
+        <a href="${approvalsLink}" class="button">Review & Approve Request</a>
+      </p>
+
+      <p class="footer">
+        Best regards,<br>
+        UD Professionals Directory Team
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+      `.trim(),
+    };
+
+    const success = await sendEmailViaSendGrid(email);
+    return { success };
+  },
+});
+
+
 
 /**
  * Send profile submission notification email to pastor and admins

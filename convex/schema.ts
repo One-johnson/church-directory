@@ -143,4 +143,53 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_timestamp", ["timestamp"]),
+
+     jobOpportunities: defineTable({
+    userId: v.id("users"),
+    posterName: v.string(),
+    posterEmail: v.string(),
+    professionalNeeded: v.string(),
+    subject: v.string(),
+    description: v.string(),
+    contactEmail: v.string(),
+    contactPhone: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected")
+    ),
+    rejectionReason: v.optional(v.string()),
+    approvedBy: v.optional(v.id("users")),
+    approvedAt: v.optional(v.number()),
+    views: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_created", ["createdAt"]),
+
+  jobSeekerRequests: defineTable({
+    userId: v.id("users"),
+    seekerName: v.string(),
+    seekerEmail: v.string(),
+    subject: v.string(),
+    description: v.string(),
+    contactEmail: v.string(),
+    contactPhone: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected")
+    ),
+    rejectionReason: v.optional(v.string()),
+    approvedBy: v.optional(v.id("users")),
+    approvedAt: v.optional(v.number()),
+    views: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_created", ["createdAt"]),
 });

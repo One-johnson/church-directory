@@ -176,7 +176,7 @@ export default function DirectoryPage(): React.JSX.Element {
 
         <MotionDiv
           variants={containerVariants}
-          className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
         >
           {searchResults.map((profile, index) => (
             <motion.div

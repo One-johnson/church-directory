@@ -18,6 +18,7 @@ import {
   Bell,
   Shield,
   Loader2,
+  Briefcase,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/use-auth";
@@ -103,6 +104,7 @@ function AppSidebarContent(): React.JSX.Element {
     const items: NavItem[] = [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/directory", label: "Directory", icon: Users },
+      { href: "/jobs", label: "Jobs", icon: Briefcase },
       { href: "/messages", label: "Messages", icon: MessageSquare },
     ];
 
@@ -141,7 +143,7 @@ function AppSidebarContent(): React.JSX.Element {
     <>
       <Sidebar collapsible="icon" variant="sidebar">
         {/* Header with Logo */}
-        <SidebarHeader className="mt-4 mb-5">
+        <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
@@ -160,10 +162,13 @@ function AppSidebarContent(): React.JSX.Element {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-<hr></hr>
+
+        {/* Separator between header and navigation */}
+        <SidebarSeparator />
+
         {/* Main Navigation */}
         <SidebarContent>
-          <SidebarMenu className="space-y-4">
+          <SidebarMenu className="gap-2">
             {navItems.map((item: NavItem) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -176,7 +181,7 @@ function AppSidebarContent(): React.JSX.Element {
                   >
                     <Link href={item.href}>
                       <Icon className={isActive ? "text-primary" : ""} />
-                      <span>{item.label}</span>
+                      <span className="font-semibold">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -274,6 +279,7 @@ export function AppSidebarLayout({
   const navItems: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/directory", label: "Directory", icon: Users },
+    { href: "/jobs", label: "Jobs", icon: Briefcase },
     { href: "/messages", label: "Messages", icon: MessageSquare },
     { href: "/admin/approvals", label: "Approvals", icon: CheckSquare },
     { href: "/admin/account-approvals", label: "Accounts", icon: Shield },
