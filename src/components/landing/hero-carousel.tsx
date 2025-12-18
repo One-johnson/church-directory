@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
@@ -40,27 +41,45 @@ export function HeroCarousel(): React.JSX.Element {
   const slides = [
     {
       title: "Find Trusted Professionals",
-      description: "Connect and Partner with verified professional in the UD and Lay World Movement",
-      image: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1200&h=600&fit=crop",
+      description: "Connect with verified UD Professionals offering professional services",
+      image: "/images/photo1.png",
       gradient: "from-blue-500/20 to-purple-500/20",
     },
     {
       title: "Pastor-Approved Profiles",
-      description: "Every professional is reviewed by church leadership for your peace of mind",
-      image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1200&h=600&fit=crop",
+      description: "Every professional is reviewed by pastor or admin for your peace of mind",
+      image: "/images/photo2.png",
       gradient: "from-purple-500/20 to-pink-500/20",
     },
     {
       title: "Real-Time Communication",
       description: "Message professionals instantly with our built-in messaging system",
-      image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&h=600&fit=crop",
+      image: "/images/photo3.png",
       gradient: "from-green-500/20 to-emerald-500/20",
     },
     {
       title: "Verified & Trustworthy",
       description: "Email, phone, and background check verification badges for added security",
-      image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&h=600&fit=crop",
+      image: "/images/photo4.png",
       gradient: "from-amber-500/20 to-orange-500/20",
+    },
+    {
+      title: "Community Building",
+      description: "Strengthen connections within the UD Professional Directory through professional networking",
+      image: "/images/photo5.png",
+      gradient: "from-rose-500/20 to-red-500/20",
+    },
+    {
+      title: "Career Opportunities",
+      description: "Discover and share job opportunities within the Directory",
+      image: "/images/photo6.png",
+      gradient: "from-indigo-500/20 to-blue-500/20",
+    },
+    {
+      title: "Growing Together",
+      description: "Join a thriving network of professionals dedicated to serving one another",
+      image: "/images/photo7.png",
+      gradient: "from-cyan-500/20 to-teal-500/20",
     },
   ];
 
@@ -78,12 +97,14 @@ export function HeroCarousel(): React.JSX.Element {
                   transition={{ duration: 0.7 }}
                   className="absolute inset-0"
                 >
-                  <img
+                  <Image
                     src={slide.image}
                     alt={slide.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-contain bg-black"
+                    priority={index === 0}
                   />
-                  <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient} backdrop-blur-sm`} />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient}`} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                 </motion.div>
 
