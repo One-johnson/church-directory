@@ -26,6 +26,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -248,7 +254,7 @@ export function UsersTable({
     onSelectionChange(selectedIds);
   }, [rowSelection, table, onSelectionChange]);
 
-  // Mobile Card View Component
+  // Mobile Card View Component with Accordion
   const MobileUserCard = ({ user }: { user: UserWithProfile }): React.JSX.Element => {
     const isCurrentUser = user._id === currentUserId;
     const status = user.profileStatus;
@@ -259,87 +265,104 @@ export function UsersTable({
     };
 
     return (
-      <Card className="mb-4">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <Checkbox
-                checked={
-                  (() => {
-                    const row = table.getRowModel().rows.find(r => r.original._id === user._id);
-                    return row?.getIsSelected() || false;
-                  })()
-                }
-                onCheckedChange={(value) => {
-                  const row = table.getRowModel().rows.find(r => r.original._id === user._id);
-                  if (row) row.toggleSelected(!!value);
-                }}
-                disabled={isCurrentUser}
-                aria-label="Select user"
-              />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base truncate">{user.name}</h3>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
-                  <Mail className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate">{user.email}</span>
+      <Card className="mb-3">
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="details" className="border-none">
+            <div className="px-4 pt-4 pb-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <Checkbox
+                    checked={
+                      (() => {
+                        const row = table.getRowModel().rows.find(r => r.original._id === user._id);
+                        return row?.getIsSelected() || false;
+                      })()
+                    }
+                    onCheckedChange={(value) => {
+                      const row = table.getRowModel().rows.find(r => r.original._id === user._id);
+                      if (row) row.toggleSelected(!!value);
+                    }}
+                    disabled={isCurrentUser}
+                    aria-label="Select user"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base truncate">{user.name}</h3>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
+                      <Mail className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{user.email}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {!isCurrentUser && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteUser(user._id);
+                      }}
+                      disabled={loading}
+                      className="flex-shrink-0 h-8 w-8"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
                 </div>
               </div>
+              
+              <AccordionTrigger className="py-2 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                <span className="text-xs text-muted-foreground">View Details</span>
+              </AccordionTrigger>
             </div>
-            {!isCurrentUser && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDeleteUser(user._id)}
-                disabled={loading}
-                className="flex-shrink-0"
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3 pt-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              <User className="h-3 w-3 mr-1" />
-              {user.role}
-            </Badge>
-            {status ? (
-              <Badge 
-                variant={statusVariants[status as keyof typeof statusVariants] || "outline"} 
-                className={status === "approved" ? "bg-green-500 text-xs" : "text-xs"}
-              >
-                {status}
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="text-xs">No Profile</Badge>
-            )}
-            <Badge variant="secondary" className="text-xs">
-              <Calendar className="h-3 w-3 mr-1" />
-              {new Date(user.createdAt).toLocaleDateString()}
-            </Badge>
-          </div>
-          
-          {!isCurrentUser && (
-            <div className="pt-2">
-              <Select
-                value={user.role}
-                onValueChange={(value) =>
-                  onUpdateRole(user._id, value as "admin" | "member")
-                }
-                disabled={loading}
-              >
-                <SelectTrigger className="w-full h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="member">Member</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </CardContent>
+            
+            <AccordionContent className="px-4 pb-4">
+              <div className="space-y-3 pt-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    <User className="h-3 w-3 mr-1" />
+                    {user.role}
+                  </Badge>
+                  {status ? (
+                    <Badge 
+                      variant={statusVariants[status as keyof typeof statusVariants] || "outline"} 
+                      className={status === "approved" ? "bg-green-500 text-xs" : "text-xs"}
+                    >
+                      {status}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">No Profile</Badge>
+                  )}
+                  <Badge variant="secondary" className="text-xs">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </Badge>
+                </div>
+                
+                {!isCurrentUser && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">Change Role</label>
+                    <Select
+                      value={user.role}
+                      onValueChange={(value) =>
+                        onUpdateRole(user._id, value as "admin" | "member")
+                      }
+                      disabled={loading}
+                    >
+                      <SelectTrigger className="w-full h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="member">Member</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </Card>
     );
   };
