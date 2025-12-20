@@ -1,21 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Check, CheckCheck, Trash2, X } from "lucide-react";
+import { Bell, Check, CheckCheck, Trash2, X, ArrowLeft } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
+import { useRouter } from "next/navigation";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 interface Notification {
@@ -29,11 +23,9 @@ interface Notification {
   createdAt: number;
 }
 
-export function NotificationPopover(): React.JSX.Element {
+export default function NotificationsPage(): React.JSX.Element {
   const { user } = useAuth();
-  const isMobile = useIsMobile();
   const router = useRouter();
-  const [open, setOpen] = React.useState(false);
 
   const notifications = useQuery(
     api.notifications.getUserNotifications,
@@ -103,79 +95,63 @@ export function NotificationPopover(): React.JSX.Element {
     }
   };
 
-  if (!user) return <></>;
-
-  // On mobile, navigate to notifications page instead of showing popover
-  if (isMobile) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative bg-muted/50 hover:bg-muted"
-        onClick={() => router.push("/notifications")}
-      >
-        <Bell className="h-5 w-5" />
-        {unreadCount !== undefined && unreadCount > 0 && (
-          <Badge
-            variant="destructive"
-            className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-          >
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </Badge>
-        )}
-      </Button>
-    );
+  if (!user) {
+    router.push("/login");
+    return <></>;
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative bg-muted/50 hover:bg-muted">
-          <Bell className="h-5 w-5" />
-          {unreadCount !== undefined && unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+    <div className="min-h-screen bg-background pt-16">
+      <div className="container max-w-2xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
             >
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[380px] p-0">
-        <div className="flex items-center justify-between border-b p-4">
-          <h3 className="font-semibold">Notifications</h3>
-          <div className="flex gap-2">
-            {notifications && notifications.some((n) => !n.read) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleMarkAllAsRead}
-                className="h-8 text-xs"
-              >
-                <CheckCheck className="mr-1 h-3 w-3" />
-                Mark all read
-              </Button>
-            )}
-            {notifications && notifications.some((n) => n.read) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDeleteAllRead}
-                className="h-8 text-xs"
-              >
-                <Trash2 className="mr-1 h-3 w-3" />
-                Clear read
-              </Button>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold">Notifications</h1>
+            {unreadCount !== undefined && unreadCount > 0 && (
+              <Badge variant="destructive" className="rounded-full">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </Badge>
             )}
           </div>
         </div>
 
-        <ScrollArea className="h-[400px]">
+        {/* Action Buttons */}
+        <div className="flex gap-2 mb-4">
+          {notifications && notifications.some((n) => !n.read) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleMarkAllAsRead}
+            >
+              <CheckCheck className="mr-2 h-4 w-4" />
+              Mark all read
+            </Button>
+          )}
+          {notifications && notifications.some((n) => n.read) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeleteAllRead}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Clear read
+            </Button>
+          )}
+        </div>
+
+        {/* Notifications List */}
+        <div className="bg-card rounded-lg border">
           {!notifications || notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
-              <Bell className="h-12 w-12 mb-2 opacity-50" />
-              <p className="text-sm">No notifications yet</p>
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <Bell className="h-16 w-16 mb-4 opacity-50" />
+              <p className="text-base">No notifications yet</p>
             </div>
           ) : (
             <div className="divide-y">
@@ -202,23 +178,23 @@ export function NotificationPopover(): React.JSX.Element {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-6 w-6"
+                              className="h-8 w-8"
                               onClick={() => handleMarkAsRead(notification._id)}
                             >
-                              <Check className="h-3 w-3" />
+                              <Check className="h-4 w-4" />
                             </Button>
                           )}
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6"
+                            className="h-8 w-8"
                             onClick={() => handleDelete(notification._id)}
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-muted-foreground">
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -230,8 +206,8 @@ export function NotificationPopover(): React.JSX.Element {
               ))}
             </div>
           )}
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
+        </div>
+      </div>
+    </div>
   );
 }
