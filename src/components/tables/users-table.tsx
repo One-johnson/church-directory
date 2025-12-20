@@ -56,10 +56,7 @@ interface UserWithProfile {
 interface UsersTableProps {
   users: UserWithProfile[];
   currentUserId: Id<"users">;
-  onUpdateRole: (
-    userId: Id<"users">,
-    newRole: "admin" | "member"
-  ) => void;
+  onUpdateRole: (userId: Id<"users">, newRole: "admin" | "member") => void;
   onDeleteUser: (userId: Id<"users">) => void;
   onSelectionChange: (selectedIds: Id<"users">[]) => void;
   loading?: boolean;
@@ -74,11 +71,8 @@ export function UsersTable({
   loading = false,
 }: UsersTableProps): React.JSX.Element {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState("");
 
@@ -116,9 +110,7 @@ export function UsersTable({
           </Button>
         );
       },
-      cell: ({ row }) => (
-        <div className="font-medium">{row.getValue("name")}</div>
-      ),
+      cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
     },
     {
       accessorKey: "email",
@@ -133,9 +125,7 @@ export function UsersTable({
           </Button>
         );
       },
-      cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("email")}</div>
-      ),
+      cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
     },
     {
       accessorKey: "role",
@@ -155,6 +145,7 @@ export function UsersTable({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="admin">Admin</SelectItem>
+
               <SelectItem value="member">Member</SelectItem>
             </SelectContent>
           </Select>
@@ -167,21 +158,15 @@ export function UsersTable({
       cell: ({ row }) => {
         const status = row.original.profileStatus;
         if (!status) return <Badge variant="outline">No Profile</Badge>;
-
-        const variants: Record<
-          string,
-          "default" | "destructive" | "secondary"
-        > = {
+        
+        const variants: Record<string, "default" | "destructive" | "secondary"> = {
           approved: "default",
           rejected: "destructive",
           pending: "secondary",
         };
-
+        
         return (
-          <Badge
-            variant={variants[status as keyof typeof variants] || "outline"}
-            className={status === "approved" ? "bg-green-500" : ""}
-          >
+          <Badge variant={variants[status as keyof typeof variants] || "outline"} className={status === "approved" ? "bg-green-500" : ""}>
             {status}
           </Badge>
         );
@@ -211,7 +196,7 @@ export function UsersTable({
       cell: ({ row }) => {
         const user = row.original;
         if (user._id === currentUserId) return null;
-
+        
         return (
           <Button
             variant="ghost"
@@ -243,9 +228,7 @@ export function UsersTable({
       const name = row.original.name.toLowerCase();
       const email = row.original.email.toLowerCase();
       const role = row.original.role.toLowerCase();
-      return (
-        name.includes(search) || email.includes(search) || role.includes(search)
-      );
+      return name.includes(search) || email.includes(search) || role.includes(search);
     },
     state: {
       sorting,
@@ -264,7 +247,7 @@ export function UsersTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -290,9 +273,7 @@ export function UsersTable({
                     key={column.id}
                     className="capitalize"
                     checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
+                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
                   >
                     {column.id}
                   </DropdownMenuCheckboxItem>
@@ -302,8 +283,9 @@ export function UsersTable({
         </DropdownMenu>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="rounded-md border min-w-[800px]">
+          <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -350,17 +332,18 @@ export function UsersTable({
               </TableRow>
             )}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between px-2">
-        <div className="flex-1 text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-2">
+        <div className="flex-1 text-sm text-muted-foreground text-center sm:text-left">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
-        <div className="flex items-center space-x-6 lg:space-x-8">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-8">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium whitespace-nowrap">Rows per page</p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
               onValueChange={(value) => {
@@ -368,9 +351,7 @@ export function UsersTable({
               }}
             >
               <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue
-                  placeholder={table.getState().pagination.pageSize}
-                />
+                <SelectValue placeholder={table.getState().pagination.pageSize} />
               </SelectTrigger>
               <SelectContent side="top">
                 {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -381,18 +362,19 @@ export function UsersTable({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+          <div className="flex min-w-[100px] items-center justify-center text-sm font-medium whitespace-nowrap">
             Page {table.getState().pagination.pageIndex + 1} of{" "}
             {table.getPageCount()}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               className="h-8 w-8 p-0"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              <span className="sr-only">Go to previous page</span>←
+              <span className="sr-only">Go to previous page</span>
+              ←
             </Button>
             <Button
               variant="outline"
@@ -400,7 +382,8 @@ export function UsersTable({
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              <span className="sr-only">Go to next page</span>→
+              <span className="sr-only">Go to next page</span>
+              →
             </Button>
           </div>
         </div>

@@ -88,10 +88,10 @@ export default function JobsPage(): React.JSX.Element {
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="container mx-auto p-4 md:p-8 space-y-6"
+        className="container mx-auto p-4 md:p-8 pt-6 md:pt-8 space-y-6"
       >
         {/* Header Section */}
-        <MotionDiv variants={itemVariants} className="flex items-center justify-between flex-wrap gap-4">
+        <MotionDiv variants={itemVariants} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -111,16 +111,16 @@ export default function JobsPage(): React.JSX.Element {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="flex gap-2"
+            className="flex flex-wrap gap-2 w-full md:w-auto"
           >
             {user && activeTab === "opportunities" && (
-              <Button onClick={() => setCreateJobDialogOpen(true)} size="lg">
+              <Button onClick={() => setCreateJobDialogOpen(true)} size="lg" className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Post Job
               </Button>
             )}
             {user && activeTab === "seekers" && (
-              <Button onClick={() => setCreateSeekerDialogOpen(true)} size="lg" variant="secondary">
+              <Button onClick={() => setCreateSeekerDialogOpen(true)} size="lg" variant="secondary" className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Seek Job
               </Button>
@@ -307,7 +307,7 @@ export default function JobsPage(): React.JSX.Element {
 
       {/* Create Job Opportunity Dialog */}
       <Dialog open={createJobDialogOpen} onOpenChange={setCreateJobDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Post a Job Opportunity</DialogTitle>
           </DialogHeader>
@@ -320,7 +320,7 @@ export default function JobsPage(): React.JSX.Element {
 
       {/* Create Job Seeker Dialog */}
       <Dialog open={createSeekerDialogOpen} onOpenChange={setCreateSeekerDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Post Job Seeking Request</DialogTitle>
           </DialogHeader>

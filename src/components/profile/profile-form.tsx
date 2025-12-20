@@ -152,7 +152,7 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-1">
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -303,12 +303,11 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
         <div className="space-y-2">
           <Label htmlFor="board">Which board are you a member of?</Label>
           <Select
-          
             value={board}
             onValueChange={(value) => setValue("board", value)}
             disabled={isLoading}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger>
               <SelectValue placeholder="Select a board" />
             </SelectTrigger>
             <SelectContent>

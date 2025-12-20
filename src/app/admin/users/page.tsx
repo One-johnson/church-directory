@@ -161,9 +161,9 @@ export default function UsersPage(): React.JSX.Element {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="container mx-auto p-4 md:p-8 space-y-6"
+      className="container mx-auto p-4 md:p-8 pt-6 md:pt-8 space-y-6"
     >
-      <MotionDiv variants={itemVariants} className="flex items-center justify-between flex-wrap gap-4">
+      <MotionDiv variants={itemVariants} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -183,14 +183,15 @@ export default function UsersPage(): React.JSX.Element {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex gap-2"
+          className="flex flex-wrap gap-2 w-full md:w-auto"
         >
           {users && users.length > 0 && (
             <>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1 sm:flex-initial">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     exportTableData("csv", {
                       filename: `users-${new Date().toISOString().split("T")[0]}`,
@@ -211,10 +212,11 @@ export default function UsersPage(): React.JSX.Element {
                   CSV
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1 sm:flex-initial">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     exportTableData("pdf", {
                       filename: `users-${new Date().toISOString().split("T")[0]}`,
@@ -243,8 +245,9 @@ export default function UsersPage(): React.JSX.Element {
               animate={{ opacity: 1, scale: 1 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              className="w-full sm:w-auto"
             >
-              <Button onClick={() => setBulkRoleDialogOpen(true)} disabled={actionLoading}>
+              <Button onClick={() => setBulkRoleDialogOpen(true)} disabled={actionLoading} className="w-full sm:w-auto">
                 <Shield className="mr-2 h-4 w-4" />
                 Update Roles ({selectedUsers.length})
               </Button>
@@ -287,7 +290,10 @@ export default function UsersPage(): React.JSX.Element {
           </div>
         </MotionCard>
       )}
-    </MotionDiv><Dialog open={bulkRoleDialogOpen} onOpenChange={setBulkRoleDialogOpen}>
+      </MotionDiv>
+
+      {/* Bulk Role Update Dialog */}
+      <Dialog open={bulkRoleDialogOpen} onOpenChange={setBulkRoleDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Selected User Roles</DialogTitle>
