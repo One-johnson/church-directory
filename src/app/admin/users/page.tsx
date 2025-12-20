@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
-import { motion } from "framer-motion";
 import { api } from "../../../../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
@@ -16,6 +15,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -30,9 +39,6 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 import { UsersTable } from "@/components/tables/users-table";
 import { AdminAnalytics } from "@/components/analytics/admin-analytics";
 import { exportTableData } from "@/lib/export-utils";
-
-const MotionCard = motion(Card);
-const MotionDiv = motion.div;
 
 interface UserWithProfile {
   _id: Id<"users">;
@@ -53,6 +59,8 @@ export default function UsersPage(): React.JSX.Element {
   const [bulkRoleDialogOpen, setBulkRoleDialogOpen] = React.useState(false);
   const [selectedRole, setSelectedRole] = React.useState<"admin" | "member">("member");
   const [actionLoading, setActionLoading] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [userToDelete, setUserToDelete] = React.useState<Id<"users"> | null>(null);
 
   const users = useQuery(
     api.users.getAllUsers,
@@ -122,14 +130,20 @@ export default function UsersPage(): React.JSX.Element {
     }
   };
 
-  const handleDeleteUser = async (userId: Id<"users">): Promise<void> => {
-    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-      return;
-    }
+  const handleDeleteUserClick = (userId: Id<"users">): void => {
+    setUserToDelete(userId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (!userToDelete) return;
+    
     setActionLoading(true);
     try {
-      await deleteUser({ requesterId: user._id, targetUserId: userId });
+      await deleteUser({ requesterId: user._id, targetUserId: userToDelete });
       toast.success("User deleted successfully");
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete user");
     } finally {
@@ -137,39 +151,10 @@ export default function UsersPage(): React.JSX.Element {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 },
-    },
-  };
-
   return (
-      <><MotionDiv
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      className="container mx-auto p-4 md:p-8 pt-6 md:pt-8 space-y-6"
-    >
-      <MotionDiv variants={itemVariants} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-1"
-        >
+      <><><div className="container mx-auto p-4 md:p-8 pt-6 md:pt-8 space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Users className="h-8 w-8" />
             User Management
@@ -177,21 +162,16 @@ export default function UsersPage(): React.JSX.Element {
           <p className="text-muted-foreground">
             Manage users, roles, and permissions
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex flex-wrap gap-2 w-full md:w-auto"
-        >
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {users && users.length > 0 && (
             <>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1 sm:flex-initial">
+              <div className="flex-1 sm:flex-initial">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto transition-all hover:scale-105 active:scale-95"
                   onClick={() => {
                     exportTableData("csv", {
                       filename: `users-${new Date().toISOString().split("T")[0]}`,
@@ -211,12 +191,12 @@ export default function UsersPage(): React.JSX.Element {
                   <Download className="mr-2 h-4 w-4" />
                   CSV
                 </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1 sm:flex-initial">
+              </div>
+              <div className="flex-1 sm:flex-initial">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto transition-all hover:scale-105 active:scale-95"
                   onClick={() => {
                     exportTableData("pdf", {
                       filename: `users-${new Date().toISOString().split("T")[0]}`,
@@ -236,34 +216,28 @@ export default function UsersPage(): React.JSX.Element {
                   <Download className="mr-2 h-4 w-4" />
                   PDF
                 </Button>
-              </motion.div>
+              </div>
             </>
           )}
           {selectedUsers.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full sm:w-auto"
-            >
-              <Button onClick={() => setBulkRoleDialogOpen(true)} disabled={actionLoading} className="w-full sm:w-auto">
+            <div className="w-full sm:w-auto animate-in zoom-in-95 duration-300">
+              <Button onClick={() => setBulkRoleDialogOpen(true)} disabled={actionLoading} className="w-full sm:w-auto transition-all hover:scale-105 active:scale-95">
                 <Shield className="mr-2 h-4 w-4" />
                 Update Roles ({selectedUsers.length})
               </Button>
-            </motion.div>
+            </div>
           )}
-        </motion.div>
-      </MotionDiv>
+        </div>
+      </div>
 
       {/* Analytics Section */}
-      <MotionDiv variants={itemVariants} className="space-y-4">
+      <div className="space-y-4 animate-in slide-in-from-bottom-6 duration-700 delay-150">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5" />
           <h2 className="text-2xl font-bold">Platform Analytics</h2>
         </div>
         <AdminAnalytics userId={user._id} />
-      </MotionDiv>
+      </div>
 
       {/* Users Table */}
       {!users && (
@@ -273,27 +247,20 @@ export default function UsersPage(): React.JSX.Element {
       )}
 
       {users && (
-        <MotionCard
-          variants={itemVariants}
-          whileHover={{ scale: 1.005 }}
-          className="p-6"
-        >
+        <Card className="p-6 animate-in slide-in-from-bottom-8 duration-700 delay-300 transition-all hover:shadow-lg">
           <div className="space-y-4">
             <h3 className="text-xl font-bold">All Users</h3>
             <UsersTable
               users={users}
               currentUserId={user._id}
               onUpdateRole={handleUpdateRole}
-              onDeleteUser={handleDeleteUser}
+              onDeleteUser={handleDeleteUserClick}
               onSelectionChange={setSelectedUsers}
               loading={actionLoading} />
           </div>
-        </MotionCard>
+        </Card>
       )}
-      </MotionDiv>
-
-      {/* Bulk Role Update Dialog */}
-      <Dialog open={bulkRoleDialogOpen} onOpenChange={setBulkRoleDialogOpen}>
+    </div><Dialog open={bulkRoleDialogOpen} onOpenChange={setBulkRoleDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Selected User Roles</DialogTitle>
@@ -329,6 +296,33 @@ export default function UsersPage(): React.JSX.Element {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog></>
+      </Dialog></><AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user account
+              and remove all associated data from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={actionLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {actionLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete User"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog></>
   );
 }
