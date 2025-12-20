@@ -19,9 +19,11 @@ import {
   Shield,
   Loader2,
   Briefcase,
+  Menu,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Sidebar,
   SidebarContent,
@@ -37,6 +39,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -49,6 +57,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { NotificationPopover } from "@/components/notifications/notification-popover";
 import { motion } from "framer-motion";
 import {
@@ -62,11 +71,42 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ElementType;
+}
+
+interface SidebarNavigationProps {
+  navItems: NavItem[];
+  pathname: string;
+  onNavigate?: () => void;
+}
+
+function SidebarNavigation({ navItems, pathname, onNavigate }: SidebarNavigationProps): React.JSX.Element {
+  return (
+    <div className="space-y-2">
+      {navItems.map((item: NavItem) => {
+        const Icon = item.icon;
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-accent ${
+              isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+            }`}
+          >
+            <Icon className={`h-5 w-5 ${isActive ? "text-primary" : ""}`} />
+            <span className="font-semibold">{item.label}</span>
+          </Link>
+        );
+      })}
+    </div>
+  );
 }
 
 function AppSidebarContent(): React.JSX.Element {
@@ -190,11 +230,15 @@ function AppSidebarContent(): React.JSX.Element {
           </SidebarMenu>
         </SidebarContent>
 
-        {/* Footer - Empty for now */}
+        {/* Footer with Organization Info */}
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              {/* User menu moved to header */}
+              <div className="px-3 py-2 text-center">
+                <p className="text-xs text-muted-foreground">
+                  UDOLGC/UDLWM/DHMM
+                </p>
+              </div>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
@@ -244,8 +288,10 @@ export function AppSidebarLayout({
   const router = useRouter();
   const { user, logout } = useAuth();
   const { setTheme } = useTheme();
+  const isMobile = useIsMobile();
   const [showLogoutDialog, setShowLogoutDialog] = React.useState<boolean>(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState<boolean>(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState<boolean>(false);
 
   const handleLogout = (): void => {
     setShowLogoutDialog(true);
@@ -276,25 +322,87 @@ export function AppSidebarLayout({
       .slice(0, 2);
   };
 
-  const navItems: NavItem[] = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/directory", label: "Directory", icon: Users },
-    { href: "/jobs", label: "Jobs", icon: Briefcase },
-    { href: "/messages", label: "Messages", icon: MessageSquare },
-    { href: "/admin/approvals", label: "Approvals", icon: CheckSquare },
-    { href: "/admin/account-approvals", label: "Accounts", icon: Shield },
-    { href: "/admin/users", label: "Users", icon: UserCog },
-  ];
+  const navItems = React.useMemo((): NavItem[] => {
+    const items: NavItem[] = [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/directory", label: "Directory", icon: Users },
+      { href: "/jobs", label: "Jobs", icon: Briefcase },
+      { href: "/messages", label: "Messages", icon: MessageSquare },
+    ];
+
+    if (user?.role === "admin") {
+      items.push({
+        href: "/admin/approvals",
+        label: "Approvals",
+        icon: CheckSquare,
+      });
+      items.push({
+        href: "/admin/account-approvals",
+        label: "Accounts",
+        icon: Shield,
+      });
+      items.push({ href: "/admin/users", label: "Users", icon: UserCog });
+    }
+
+    return items;
+  }, [user?.role]);
+
+  // Mobile Sheet Sidebar
+  const renderMobileSidebar = (): React.JSX.Element => (
+    <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+      <SheetContent side="left" className="w-[280px] p-0">
+        <SheetHeader className="border-b p-4">
+          <SheetTitle>
+            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                <span className="text-lg font-bold">UD</span>
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none text-left">
+                <span className="font-semibold text-sm">UD Professionals</span>
+                <span className="text-xs text-muted-foreground">Directory</span>
+              </div>
+            </Link>
+          </SheetTitle>
+        </SheetHeader>
+        <ScrollArea className="flex-1 p-4">
+          <SidebarNavigation 
+            navItems={navItems} 
+            pathname={pathname} 
+            onNavigate={() => setMobileMenuOpen(false)}
+          />
+        </ScrollArea>
+        <div className="border-t p-4">
+          <p className="text-xs text-center text-muted-foreground">
+            UDOLGC/UDLWM/DHMM
+          </p>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <AppSidebarContent />
-      {/* Main Content Area */}
-      <SidebarInset>
-        {/* Top Header Bar */}
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
-          <SidebarTrigger className="-ml-1" />
-          <SidebarSeparator orientation="vertical" className="mr-2 h-4" />
+    <>
+      {isMobile && renderMobileSidebar()}
+      
+      <SidebarProvider defaultOpen={true}>
+        {!isMobile && <AppSidebarContent />}
+        {/* Main Content Area */}
+        <SidebarInset>
+          {/* Top Header Bar */}
+          <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+            {isMobile ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen(true)}
+                className="-ml-1"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            ) : (
+              <SidebarTrigger className="-ml-1" />
+            )}
+            <SidebarSeparator orientation="vertical" className="mr-2 h-4" />
 
           {/* Page Title/Breadcrumb */}
           <div className="flex flex-1 items-center gap-2">
@@ -394,10 +502,7 @@ export function AppSidebarLayout({
           {children}
         </motion.div>
       </SidebarInset>
-
-
-
-
+      </SidebarProvider>
 
       {/* Logout Confirmation Dialog */}
       <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
@@ -430,7 +535,7 @@ export function AppSidebarLayout({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </SidebarProvider>
+    </>
   );
 }
 
