@@ -103,7 +103,7 @@ export default function DirectoryPage(): React.JSX.Element {
         variants={containerVariants}
         className="container mx-auto p-4 md:p-8 space-y-6"
       >
-        <MotionDiv variants={itemVariants} className="flex items-start justify-between gap-4">
+        <MotionDiv variants={itemVariants} className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}

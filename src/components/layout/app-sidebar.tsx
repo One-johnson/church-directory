@@ -395,6 +395,10 @@ export function AppSidebarLayout({
         </motion.div>
       </SidebarInset>
 
+
+
+
+
       {/* Logout Confirmation Dialog */}
       <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
         <AlertDialogContent>
