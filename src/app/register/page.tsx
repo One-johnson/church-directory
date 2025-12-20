@@ -61,14 +61,14 @@ export default function RegisterPage(): React.JSX.Element {
               </Badge>
 
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-                Welcome to Our{" "}
+                Welcome to Our the UD
                 <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
-                  Community
+                  Professional Directory
                 </span>
               </h1>
 
               <p className="text-xl text-muted-foreground mb-8">
-                Create your professional profile and connect with trusted church members.
+                Create your professional profile and connect with trusted Professionals.
               </p>
             </div>
 
@@ -105,23 +105,11 @@ export default function RegisterPage(): React.JSX.Element {
               </Button>
             </div>
 
-            <div className="bg-card/80 backdrop-blur-sm border-2 rounded-2xl p-8 shadow-2xl">
-              <div className="text-center lg:text-left mb-8">
-                <div className="inline-block mb-4">
-                  <Church className="w-12 h-12 text-primary" />
-                </div>
-                <h2 className="text-3xl font-bold tracking-tight mb-2">
-                  Create Your Account
-                </h2>
-                <p className="text-muted-foreground">
-                  Join our community of trusted professionals
-                </p>
-              </div>
+         
 
               <EnhancedRegisterForm />
 
-              
-            </div>
+           
           </div>
         </div>
       </main>
