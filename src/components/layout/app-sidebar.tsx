@@ -414,11 +414,14 @@ export function AppSidebarLayout({
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2">
-            {/* User Profile Dropdown */}
+            {/* User Profile - Mobile: Navigate to /account, Desktop: Dropdown */}
             {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-full hover:opacity-80 transition-opacity">
+              <>
+                {isMobile ? (
+                  <button 
+                    className="flex items-center gap-2 rounded-full hover:opacity-80 transition-opacity"
+                    onClick={() => router.push("/account")}
+                  >
                     <Avatar className="h-8 w-8 rounded-full">
                       <AvatarImage src={undefined} alt={user.name} />
                       <AvatarFallback className="rounded-full text-xs">
@@ -426,66 +429,79 @@ export function AppSidebarLayout({
                       </AvatarFallback>
                     </Avatar>
                   </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-64 rounded-lg"
-                  align="end"
-                  sideOffset={8}
-                >
-                  <DropdownMenuLabel className="p-0 font-normal">
-                    <div className="flex items-center gap-3 px-2 py-2 text-left">
-                      <Avatar className="h-10 w-10 rounded-full">
-                        <AvatarImage src={undefined} alt={user.name} />
-                        <AvatarFallback className="rounded-full">
-                          {getInitials(user.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="grid flex-1 text-left leading-tight">
-                        <span className="truncate font-semibold text-sm">{user.name}</span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {user.email}
-                        </span>
-                      </div>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Badge variant="outline" className="w-fit">
-                      {user.role}
-                    </Badge>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/profile/edit")}>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Sun className="mr-2 h-4 w-4" />
-                      Theme
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem onClick={() => setTheme("light")}>
-                        <Sun className="mr-2 h-4 w-4" />
-                        Light
+                ) : (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 rounded-full hover:opacity-80 transition-opacity">
+                        <Avatar className="h-8 w-8 rounded-full">
+                          <AvatarImage src={undefined} alt={user.name} />
+                          <AvatarFallback className="rounded-full text-xs">
+                            {getInitials(user.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      className="w-64 rounded-lg"
+                      align="end"
+                      sideOffset={8}
+                    >
+                      <DropdownMenuLabel className="p-0 font-normal">
+                        <div className="flex items-center gap-3 px-2 py-2 text-left">
+                          <Avatar className="h-10 w-10 rounded-full">
+                            <AvatarImage src={undefined} alt={user.name} />
+                            <AvatarFallback className="rounded-full">
+                              {getInitials(user.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="grid flex-1 text-left leading-tight">
+                            <span className="truncate font-semibold text-sm">{user.name}</span>
+                            <span className="truncate text-xs text-muted-foreground">
+                              {user.email}
+                            </span>
+                          </div>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Badge variant="outline" className="w-fit">
+                          {user.role}
+                        </Badge>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setTheme("dark")}>
-                        <Moon className="mr-2 h-4 w-4" />
-                        Dark
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => router.push("/profile/edit")}>
+                        <User className="mr-2 h-4 w-4" />
+                        Profile
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setTheme("system")}>
-                        <Laptop className="mr-2 h-4 w-4" />
-                        System
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <Sun className="mr-2 h-4 w-4" />
+                          Theme
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          <DropdownMenuItem onClick={() => setTheme("light")}>
+                            <Sun className="mr-2 h-4 w-4" />
+                            Light
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setTheme("dark")}>
+                            <Moon className="mr-2 h-4 w-4" />
+                            Dark
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setTheme("system")}>
+                            <Laptop className="mr-2 h-4 w-4" />
+                            System
+                          </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log out
                       </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </>
             )}
             
             <NotificationPopover />
