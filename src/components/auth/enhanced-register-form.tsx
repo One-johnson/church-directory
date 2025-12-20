@@ -68,7 +68,7 @@ export function EnhancedRegisterForm(): React.JSX.Element {
     const branches = getBranchesForDenomination(selectedDenomination);
     return branches.map((branch) => ({
       value: branch.id,
-      label: `${branch.name} - ${branch.location}`,
+      label: `${branch.name}`,
     }));
   }, [selectedDenomination]);
 
@@ -144,7 +144,7 @@ export function EnhancedRegisterForm(): React.JSX.Element {
         <CardContent className="space-y-4">
           <Alert>
             <AlertDescription className="text-center">
-              Your account is pending approval from an admin or pastor. You will receive a notification once your account is approved and you can create your professional profile.
+              Your account is pending approval from an admin or pastor. An email will be sent to you once your account is approved and you can create your professional profile.
             </AlertDescription>
           </Alert>
           <div className="space-y-2 pt-4">
@@ -165,7 +165,7 @@ export function EnhancedRegisterForm(): React.JSX.Element {
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
         <CardDescription>
-          Join the church professional directory
+          Join the UD professional directory
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -179,8 +179,8 @@ export function EnhancedRegisterForm(): React.JSX.Element {
           {/* Personal Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Personal Information</h3>
-            
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -215,6 +215,8 @@ export function EnhancedRegisterForm(): React.JSX.Element {
                 <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
             </div>
+            </div>
+           
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -280,13 +282,14 @@ export function EnhancedRegisterForm(): React.JSX.Element {
           </div>
 
           {/* Church Information */}
+             
           <div className="space-y-4 pt-4 border-t">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Church className="w-5 h-5" />
               Church Information
             </h3>
-            
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
               <Label htmlFor="denomination">Denomination</Label>
               <Controller
                 name="denomination"
@@ -328,7 +331,9 @@ export function EnhancedRegisterForm(): React.JSX.Element {
               {errors.branch && (
                 <p className="text-sm text-destructive">{errors.branch.message}</p>
               )}
-            </div>
+            </div> 
+             </div>
+           
 
             {/* Auto-populated Pastor Details */}
             {pastorDetails && (
@@ -360,7 +365,7 @@ export function EnhancedRegisterForm(): React.JSX.Element {
             )}
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
+        <CardFooter className="flex flex-col gap-4 mt-3">
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>
