@@ -185,7 +185,7 @@ export default function ApprovalsPage(): React.JSX.Element {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="container mx-auto p-4 md:p-8 space-y-6"
+      className="container mx-auto p-4 md:p-8 space-y-6 max-w-full overflow-x-hidden"
     >
       <MotionDiv variants={itemVariants} className="flex items-center justify-between flex-wrap gap-4">
         <motion.div
@@ -400,8 +400,8 @@ export default function ApprovalsPage(): React.JSX.Element {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4 pl-20">
-                <div className="grid gap-4 md:grid-cols-2">
+              <CardContent className="space-y-4 pl-4 md:pl-20">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="text-sm font-medium">Skills:</span>
                     <p className="text-sm text-muted-foreground">{profile.skills}</p>
@@ -422,12 +422,13 @@ export default function ApprovalsPage(): React.JSX.Element {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Button
                       variant="default"
                       onClick={() => handleApprove(profile._id)}
                       disabled={actionLoading}
+                      className="w-full sm:w-auto"
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Approve
@@ -438,6 +439,7 @@ export default function ApprovalsPage(): React.JSX.Element {
                       variant="outline"
                       onClick={() => handleReject(profile._id)}
                       disabled={actionLoading}
+                      className="w-full sm:w-auto"
                     >
                       <XCircle className="mr-2 h-4 w-4" />
                       Reject
@@ -446,9 +448,10 @@ export default function ApprovalsPage(): React.JSX.Element {
                   <VerificationManager
                     profile={profile}
                     requesterId={user._id}
-                    trigger={<Button variant="outline" size="sm">
+                    trigger={<Button variant="outline" size="sm" className="w-full sm:w-auto">
                       <Shield className="mr-2 h-4 w-4" />
-                      Manage Badges
+                      <span className="hidden sm:inline">Manage Badges</span>
+                      <span className="sm:hidden">Badges</span>
                     </Button>} />
                 </div>
               </CardContent>
