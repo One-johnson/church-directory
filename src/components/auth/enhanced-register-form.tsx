@@ -355,11 +355,7 @@ export function EnhancedRegisterForm(): React.JSX.Element {
                     <span className="font-medium">{pastorDetails.pastor}</span>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Email:</span>
-                    <span className="font-medium">{pastorDetails.pastorEmail}</span>
-                  </div>
+                 
                 </div>
               </div>
             )}
