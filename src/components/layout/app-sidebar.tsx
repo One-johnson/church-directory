@@ -113,8 +113,8 @@ function AppSidebarContent(): React.JSX.Element {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { setTheme, theme } = useTheme();
-  const { state } = useSidebar();
+  useTheme();
+  useSidebar();
   const [showLogoutDialog, setShowLogoutDialog] = React.useState<boolean>(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState<boolean>(false);
 
@@ -168,14 +168,6 @@ function AppSidebarContent(): React.JSX.Element {
     return items;
   }, [user?.role]);
 
-  const getInitials = (name: string): string => {
-    return name
-      .split(" ")
-      .map((n: string) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   if (!user) return <></>;
 
@@ -371,11 +363,7 @@ export function AppSidebarLayout({
             onNavigate={() => setMobileMenuOpen(false)}
           />
         </ScrollArea>
-        <div className="border-t p-4">
-          <p className="text-xs text-center text-muted-foreground">
-            UDOLGC/UDLWM/DHMM
-          </p>
-        </div>
+       
       </SheetContent>
     </Sheet>
   );
