@@ -120,6 +120,12 @@ export function LoginForm(): React.JSX.Element {
   {errors.password && (
     <p className="text-sm text-destructive">{errors.password.message}</p>
   )}
+
+  <p className="text-sm text-right">
+    <Link href="/forgot-password" className="text-primary hover:underline">
+      Forgot password?
+    </Link>
+  </p>
 </div>
 
         </CardContent>

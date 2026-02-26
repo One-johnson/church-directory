@@ -77,6 +77,68 @@ export const upgradePasswordHash = internalMutation({
   },
 });
 
+/** Internal: get approved user by email (for password reset only) */
+export const getUserIdAndEmailByEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+    if (!user) return null;
+    return { userId: user._id, email: user.email, name: user.name };
+  },
+});
+
+/** Internal: create a password reset token */
+export const createPasswordResetToken = internalMutation({
+  args: {
+    userId: v.id("users"),
+    token: v.string(),
+    expiresAt: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    await ctx.db.insert("passwordResetTokens", {
+      userId: args.userId,
+      token: args.token,
+      expiresAt: args.expiresAt,
+      createdAt: now,
+    });
+  },
+});
+
+/** Internal: get password reset token record (for validation) */
+export const getPasswordResetToken = internalQuery({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const record = await ctx.db
+      .query("passwordResetTokens")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+    if (!record) return null;
+    return { userId: record.userId, expiresAt: record.expiresAt, _id: record._id };
+  },
+});
+
+/** Internal: set new password and delete reset token (one-time use) */
+export const setPasswordAndConsumeResetToken = internalMutation({
+  args: { token: v.string(), newPasswordHash: v.string() },
+  handler: async (ctx, args) => {
+    const record = await ctx.db
+      .query("passwordResetTokens")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+    if (!record) throw new Error("Invalid or expired reset link. Please request a new one.");
+    if (record.expiresAt < Date.now()) {
+      await ctx.db.delete(record._id);
+      throw new Error("Invalid or expired reset link. Please request a new one.");
+    }
+    await ctx.db.patch(record.userId, { passwordHash: args.newPasswordHash });
+    await ctx.db.delete(record._id);
+  },
+});
+
 // Register a new user (legacy - for backward compatibility)
 export const register = mutation({
   args: {

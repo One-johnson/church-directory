@@ -183,7 +183,7 @@ export default function DashboardPage(): React.JSX.Element {
                 <FileText className="h-4 w-4" />
                 <AlertDescription>
                   Create your professional profile to be visible in the directory and connect with
-                  other UD Professionals.
+                  other professionals in the directory.
                 </AlertDescription>
               </Alert>
             ) : profile.status === "pending" ? (

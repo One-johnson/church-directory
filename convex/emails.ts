@@ -865,3 +865,73 @@ UD Professionals Directory Team
     return { success };
   },
 });
+
+/**
+ * Send password reset email with secure link
+ */
+export const sendPasswordResetEmail = action({
+  args: {
+    recipientEmail: v.string(),
+    recipientName: v.string(),
+    resetLink: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const email: EmailPayload = {
+      to: args.recipientEmail,
+      toName: args.recipientName,
+      subject: "Reset your password – UD Professionals Directory",
+      text: `
+Dear ${args.recipientName},
+
+You requested a password reset for your UD Professionals Directory account.
+
+Click the link below to set a new password (valid for 1 hour):
+
+${args.resetLink}
+
+If you didn't request this, you can safely ignore this email. Your password will not be changed.
+
+Best regards,
+UD Professionals Directory Team
+      `.trim(),
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+    .button { background: #4F46E5; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; font-weight: bold; }
+    .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px; }
+    .muted { color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Reset your password</h1>
+    </div>
+    <div class="content">
+      <p>Dear ${args.recipientName},</p>
+      <p>You requested a password reset for your <strong>UD Professionals Directory</strong> account.</p>
+      <p style="text-align: center;">
+        <a href="${args.resetLink}" class="button">Set new password</a>
+      </p>
+      <p class="muted">This link is valid for 1 hour. If you didn't request this, you can safely ignore this email.</p>
+      <p class="footer">
+        Best regards,<br>
+        UD Professionals Directory Team
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+      `.trim(),
+    };
+
+    const success = await sendEmailViaSendGrid(email);
+    return { success };
+  },
+});

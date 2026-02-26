@@ -56,7 +56,7 @@ export default function DirectoryPage(): React.JSX.Element {
   const handleExport = (format: "csv" | "pdf") => {
     exportTableData(format, {
       filename: `church-directory-${new Date().toISOString().split("T")[0]}`,
-      title: "Church Professional Directory",
+      title: "UD Professionals Directory",
       columns: [
         { header: "Name", key: "name" },
         { header: "Profession", key: "profession" },
@@ -115,7 +115,7 @@ export default function DirectoryPage(): React.JSX.Element {
               Professional Directory
             </h1>
             <p className="text-muted-foreground">
-              Browse and connect with verified UD Professionals in our church community
+              Browse and connect with verified professionals in the UD Professionals Directory
             </p>
           </motion.div>
 
@@ -176,7 +176,7 @@ export default function DirectoryPage(): React.JSX.Element {
 
         <MotionDiv
           variants={containerVariants}
-          className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-6"
         >
           {searchResults.map((profile, index) => (
             <motion.div

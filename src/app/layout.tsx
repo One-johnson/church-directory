@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "UD Professional Directory",
+  title: "UD Professionals Directory",
   description:
     "Connect UD Professional with other approved professional directory. Features user profiles, pastoral approval, in-app messaging, and role-based access. Built with Next.js and Tailwind.",
 };

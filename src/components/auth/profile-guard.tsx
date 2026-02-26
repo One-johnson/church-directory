@@ -24,7 +24,7 @@ export function ProfileGuard({ children }: ProfileGuardProps): React.JSX.Element
   );
 
   // Pages that don't require a profile
-  const publicPages = ["/", "/login", "/register", "/offline"];
+  const publicPages = ["/", "/login", "/register", "/offline", "/forgot-password", "/reset-password"];
   const profileCreationPage = "/profile/create";
   const isPublicPage = publicPages.includes(pathname);
   const isProfileCreationPage = pathname === profileCreationPage;

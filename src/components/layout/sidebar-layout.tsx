@@ -15,7 +15,7 @@ export function SidebarLayout({ children }: SidebarLayoutProps): React.JSX.Eleme
   const pathname = usePathname();
 
   // Pages that should not have the sidebar
-  const noSidebarPages = ["/", "/login", "/register", "/offline"];
+  const noSidebarPages = ["/", "/login", "/register", "/offline", "/forgot-password", "/reset-password"];
   const shouldShowSidebar =
     user && !noSidebarPages.includes(pathname) && !pathname.startsWith("/api");
 

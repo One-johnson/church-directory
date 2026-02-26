@@ -1,6 +1,6 @@
 {
-  "name": "Church Professional Directory",
-  "short_name": "Church Pro",
+  "name": "UD Professionals Directory",
+  "short_name": "UD Pro Directory",
   "description": "Connect with professionals in your church community",
   "start_url": "/",
   "display": "standalone",
