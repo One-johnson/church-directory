@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { 
   Mail, 
   MapPin, 
@@ -40,10 +40,12 @@ export function EnhancedProfileCard({
         <CardHeader className="pb-3">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="relative">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={profile.profilePicture} alt={profile.name} />
-                <AvatarFallback className="text-xl">{initials}</AvatarFallback>
-              </Avatar>
+              <ProfileAvatar
+                profilePicture={profile.profilePicture}
+                alt={profile.name}
+                className="h-20 w-20"
+                fallback={<span className="text-xl">{initials}</span>}
+              />
               {userPresence && (
                 <div className="absolute bottom-0 right-0 h-4 w-4 bg-green-500 border-2 border-background rounded-full" />
               )}

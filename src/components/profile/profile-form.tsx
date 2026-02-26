@@ -27,6 +27,8 @@ import { getDenominationById, getBranchById } from "@/data/denominations";
 import { getCategories } from "../../data/catetories";
 import { getBoards } from "@/data/boards";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useAuth } from "@/hooks/use-auth";
+import { getProfileErrorMessage } from "@/lib/friendly-error";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -57,30 +59,34 @@ const boards = getBoards();
 export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: ProfileFormProps): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
+  const { sessionId } = useAuth();
 
-  // Fetch user data to pre-populate denomination and branch
-  const currentUser = useQuery(api.auth.getCurrentUser, { userId });
+  // Resolve current user via session for pre-population (full user shape with denomination, branch, etc.)
+  const currentUserResolved = useQuery(
+    api.auth.getCurrentUser,
+    sessionId ? { sessionId } : "skip"
+  );
 
   const createProfile = useMutation(api.profiles.createProfile);
   const updateProfile = useMutation(api.profiles.updateProfile);
 
   // Pre-populate name, denomination and branch from user registration data
   const userName = React.useMemo(() => {
-    if (!currentUser) return "";
-    return currentUser.name || "";
-  }, [currentUser]);
+    if (!currentUserResolved) return "";
+    return currentUserResolved.name || "";
+  }, [currentUserResolved]);
 
   const userDenominationName = React.useMemo(() => {
-    if (!currentUser) return "";
-    const denom = getDenominationById(currentUser.denomination);
-    return denom?.name || currentUser.denominationName || "";
-  }, [currentUser]);
+    if (!currentUserResolved) return "";
+    const denom = getDenominationById(currentUserResolved.denomination);
+    return denom?.name || currentUserResolved.denominationName || "";
+  }, [currentUserResolved]);
 
   const userBranchName = React.useMemo(() => {
-    if (!currentUser) return "";
-    const branch = getBranchById(currentUser.branch);
-    return branch?.name || currentUser.branchName || "";
-  }, [currentUser]);
+    if (!currentUserResolved) return "";
+    const branch = getBranchById(currentUserResolved.branch);
+    return branch?.name || currentUserResolved.branchName || "";
+  }, [currentUserResolved]);
 
   const {
     register,
@@ -105,16 +111,16 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
 
   // Update form values when user data is loaded
   React.useEffect(() => {
-    if (currentUser && !defaultValues?.name) {
+    if (currentUserResolved && !defaultValues?.name) {
       setValue("name", userName);
     }
-    if (currentUser && !defaultValues?.denomination) {
+    if (currentUserResolved && !defaultValues?.denomination) {
       setValue("denomination", userDenominationName);
     }
-    if (currentUser && !defaultValues?.church) {
+    if (currentUserResolved && !defaultValues?.church) {
       setValue("church", userBranchName);
     }
-  }, [currentUser, userName, userDenominationName, userBranchName, defaultValues, setValue]);
+  }, [currentUserResolved, userName, userDenominationName, userBranchName, defaultValues, setValue]);
 
   const category = watch("category");
   const profilePicture = watch("profilePicture");
@@ -143,7 +149,7 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
       }
       onSuccess?.();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to save profile";
+      const errorMessage = getProfileErrorMessage(err);
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -179,7 +185,7 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
             readOnly
             className="bg-muted"
           />
-          {currentUser && userName && (
+          {currentUserResolved && userName && (
             <p className="text-xs text-muted-foreground">
               Pre-filled from registration: {userName}
             </p>
@@ -335,7 +341,7 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
             readOnly
             className="bg-muted"
           />
-          {currentUser && userBranchName && (
+          {currentUserResolved && userBranchName && (
             <p className="text-xs text-muted-foreground">
               Pre-filled from registration: {userBranchName}
             </p>
@@ -355,7 +361,7 @@ export function ProfileForm({ userId, profileId, defaultValues, onSuccess }: Pro
             readOnly
             className="bg-muted"
           />
-          {currentUser && userDenominationName && (
+          {currentUserResolved && userDenominationName && (
             <p className="text-xs text-muted-foreground">
               Pre-filled from registration: {userDenominationName}
             </p>

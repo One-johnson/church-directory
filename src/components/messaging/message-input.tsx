@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Paperclip, X, Loader2 } from "lucide-react";
@@ -32,6 +33,7 @@ export function MessageInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { sessionId } = useAuth();
   const sendMessage = useMutation(api.messages.send);
   const editMessage = useMutation(api.messages.editMessage);
   const setTyping = useMutation(api.messages.setTyping);
@@ -129,7 +131,7 @@ export function MessageInput({
         setIsUploading(true);
         
         // Upload to Convex storage
-        const uploadUrl = await generateUploadUrl();
+        const uploadUrl = await generateUploadUrl({ sessionId });
         const result = await fetch(uploadUrl, {
           method: "POST",
           headers: { "Content-Type": attachment.type },

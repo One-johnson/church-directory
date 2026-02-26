@@ -11,8 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Church, MapPin, Mail, User as UserIcon, Lock, Eye, EyeOff } from "lucide-react";
-import { useMutation } from "convex/react";
+import { useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useAuth } from "@/hooks/use-auth";
+import { getRegisterErrorMessage } from "@/lib/friendly-error";
+import { toast } from "sonner";
 import Link from "next/link";
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select";
 import {
@@ -38,7 +41,8 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function EnhancedRegisterForm(): React.JSX.Element {
   const router = useRouter();
-  const registerMutation = useMutation(api.auth.registerWithDenomination);
+  const { login: authLogin } = useAuth();
+  const registerAction = useAction(api.authActions.registerWithDenomination);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState(false);
@@ -108,7 +112,7 @@ export function EnhancedRegisterForm(): React.JSX.Element {
         throw new Error("Invalid branch selection");
       }
 
-      await registerMutation({
+      const result = await registerAction({
         email: data.email,
         password: data.password,
         name: data.name,
@@ -121,9 +125,18 @@ export function EnhancedRegisterForm(): React.JSX.Element {
         pastorEmail: branch.pastorEmail,
       });
 
+      // First user is auto-approved and gets userId; log them in and redirect
+      if ("userId" in result && result.userId) {
+        await authLogin(data.email, data.password);
+        router.push("/dashboard");
+        return;
+      }
+
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      const friendly = getRegisterErrorMessage(err);
+      setError(friendly);
+      toast.error(friendly);
     } finally {
       setIsLoading(false);
     }

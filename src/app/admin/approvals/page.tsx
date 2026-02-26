@@ -23,10 +23,12 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, XCircle, Clock, Loader2, AlertCircle, BarChart3, Download, Shield } from "lucide-react";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { VerificationManager } from "@/components/admin/verification-manager";
 import { VerificationBadges } from "@/components/profile/verification-badges";
 import { VerificationAnalytics } from "@/components/analytics/verification-analytics";
 import { toast } from "sonner";
+import { getAdminErrorMessage } from "@/lib/friendly-error";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { ProfileAnalytics } from "@/components/analytics/profile-analytics";
 import { exportTableData } from "@/lib/export-utils";
@@ -104,7 +106,7 @@ export default function ApprovalsPage(): React.JSX.Element {
       await approveProfile({ requesterId: user._id, profileId });
       toast.success("Profile approved successfully");
     } catch (error) {
-      toast.error("Failed to approve profile");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setActionLoading(false);
     }
@@ -116,7 +118,7 @@ export default function ApprovalsPage(): React.JSX.Element {
       await rejectProfile({ requesterId: user._id, profileId, reason });
       toast.success("Profile rejected");
     } catch (error) {
-      toast.error("Failed to reject profile");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setActionLoading(false);
     }
@@ -134,7 +136,7 @@ export default function ApprovalsPage(): React.JSX.Element {
       toast.success(`Approved ${successCount} profile(s)`);
       setSelectedProfiles(new Set());
     } catch (error) {
-      toast.error("Failed to approve profiles");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setActionLoading(false);
     }
@@ -155,7 +157,7 @@ export default function ApprovalsPage(): React.JSX.Element {
       setRejectDialogOpen(false);
       setRejectReason("");
     } catch (error) {
-      toast.error("Failed to reject profiles");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setActionLoading(false);
     }
@@ -366,17 +368,19 @@ export default function ApprovalsPage(): React.JSX.Element {
                   <Checkbox
                     checked={selectedProfiles.has(profile._id)}
                     onCheckedChange={() => handleToggleProfile(profile._id)} />
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={profile.profilePicture} alt={profile.name} />
-                    <AvatarFallback>
-                      {profile.name
+                  <ProfileAvatar
+                    profilePicture={profile.profilePicture}
+                    alt={profile.name}
+                    className="h-16 w-16"
+                    fallback={
+                      profile.name
                         .split(" ")
                         .map((n) => n[0])
                         .join("")
                         .toUpperCase()
-                        .slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
+                        .slice(0, 2)
+                    }
+                  />
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-xl">{profile.name}</CardTitle>

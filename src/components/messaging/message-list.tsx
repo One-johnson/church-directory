@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -124,12 +124,12 @@ export function MessageList({ currentUserId, otherUserId, otherUser, onEditMessa
                 )}
               >
                 {!isCurrentUser && (
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={otherUser?.profilePicture} />
-                    <AvatarFallback>
-                      {otherUser?.name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ProfileAvatar
+                    profilePicture={otherUser?.profilePicture}
+                    alt={otherUser?.name}
+                    className="h-8 w-8"
+                    fallback={otherUser?.name?.charAt(0) || "U"}
+                  />
                 )}
 
                 <div className={cn("flex flex-col gap-1", isCurrentUser ? "items-end" : "items-start")}>
@@ -269,12 +269,12 @@ export function MessageList({ currentUserId, otherUserId, otherUser, onEditMessa
 
         {isTyping && (
           <div className="flex gap-2 items-center text-sm text-muted-foreground">
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={otherUser?.profilePicture} />
-              <AvatarFallback>
-                {otherUser?.name?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
+            <ProfileAvatar
+              profilePicture={otherUser?.profilePicture}
+              alt={otherUser?.name}
+              className="h-6 w-6"
+              fallback={otherUser?.name?.charAt(0) || "U"}
+            />
             <span>{otherUser?.name} is typing...</span>
           </div>
         )}

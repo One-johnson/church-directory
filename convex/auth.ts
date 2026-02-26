@@ -1,22 +1,81 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
+import { getUserIdFromSession, getUserIdFromSessionOrThrow } from "./session";
 
-// Helper function to hash password using SHA-256
-async function hashPassword(password: string): Promise<string> {
+// Legacy: SHA-256 for verifying old hashes during migration (do not use for new passwords)
+async function sha256Hash(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 // Generate secure approval token
 function generateApprovalToken(): string {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
+
+// Generate secure session ID
+function generateSessionId(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+/** Internal: get user credentials for login (used by login action only) */
+export const getCredentialsByEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+    if (!user) return null;
+    return { userId: user._id, passwordHash: user.passwordHash };
+  },
+});
+
+/** Internal: check if email is in pending (used by login action only) */
+export const getPendingUserByEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const pending = await ctx.db
+      .query("pendingUsers")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+    return pending !== null;
+  },
+});
+
+/** Internal: create a session for the user (used by login action only) */
+export const createSession = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const sessionId = generateSessionId();
+    const now = Date.now();
+    await ctx.db.insert("sessions", {
+      userId: args.userId,
+      sessionId,
+      expiresAt: now + SESSION_DURATION_MS,
+      createdAt: now,
+    });
+    return sessionId;
+  },
+});
+
+/** Internal: upgrade legacy SHA-256 hash to bcrypt after first login */
+export const upgradePasswordHash = internalMutation({
+  args: { userId: v.id("users"), newPasswordHash: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, { passwordHash: args.newPasswordHash });
+  },
+});
 
 // Register a new user (legacy - for backward compatibility)
 export const register = mutation({
@@ -31,12 +90,12 @@ export const register = mutation({
   },
 });
 
-// Register with denomination and branch
+// Register with denomination and branch (password must be hashed by caller - use authActions.registerWithDenomination)
 export const registerWithDenomination = mutation({
   args: {
     email: v.string(),
     phone: v.optional(v.string()),
-    password: v.string(),
+    passwordHash: v.string(),
     name: v.string(),
     denomination: v.string(),
     denominationName: v.string(),
@@ -67,8 +126,7 @@ export const registerWithDenomination = mutation({
       throw new Error("Registration already pending approval for this email");
     }
 
-    // Hash password
-    const passwordHash = await hashPassword(args.password);
+    const passwordHash = args.passwordHash;
 
     // Check if this is the first user (auto-admin and auto-approved)
     const userCount = await ctx.db.query("users").collect();
@@ -169,58 +227,27 @@ export const registerWithDenomination = mutation({
   },
 });
 
-// Login user
-export const login = mutation({
-  args: {
-    email: v.string(),
-    password: v.string(),
-  },
-  handler: async (ctx, args) => {
-    // Find user in users table (must be approved to login)
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .first();
-
-    if (!user) {
-      // Check if user is in pending state
-      const pendingUser = await ctx.db
-        .query("pendingUsers")
-        .withIndex("by_email", (q) => q.eq("email", args.email))
-        .first();
-
-      if (pendingUser) {
-        throw new Error("Your account is pending approval. Please wait for confirmation email.");
-      }
-
-      throw new Error("Invalid email or password");
-    }
-
-    // Verify password
-    const inputHash = await hashPassword(args.password);
-    const isValid = inputHash === user.passwordHash;
-    if (!isValid) {
-      throw new Error("Invalid email or password");
-    }
-
-    return {
-      userId: user._id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    };
-  },
-});
-
-// Get current user by ID
+// Get current user by session (preferred) or legacy userId (for backward compatibility with cached clients)
 export const getCurrentUser = query({
-  args: { userId: v.id("users") },
+  args: {
+    sessionId: v.optional(v.union(v.string(), v.null())),
+    userId: v.optional(v.id("users")),
+  },
   handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
+    let userId: Id<"users"> | null = null;
+    if (args.sessionId) {
+      userId = await getUserIdFromSession(ctx, args.sessionId);
+    }
+    if (userId === null && args.userId) {
+      userId = args.userId;
+    }
+    if (userId === null) return null;
+    const user = await ctx.db.get(userId);
     if (!user) return null;
 
     return {
       _id: user._id,
+      userId: user._id,
       email: user.email,
       phone: user.phone,
       name: user.name,
@@ -240,21 +267,33 @@ export const getCurrentUser = query({
   },
 });
 
+// Logout: invalidate session (call with current sessionId)
+export const logout = mutation({
+  args: { sessionId: v.union(v.string(), v.null()) },
+  handler: async (ctx, args) => {
+    if (!args.sessionId) return;
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_sessionId", (q) => q.eq("sessionId", args.sessionId as string))
+      .first();
+    if (session) await ctx.db.delete(session._id);
+  },
+});
+
 // Update user role (Admin only)
 export const updateUserRole = mutation({
   args: {
-    userId: v.id("users"),
+    sessionId: v.union(v.string(), v.null()),
     targetUserId: v.id("users"),
     newRole: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
-    // Check if requester is admin
-    const requester = await ctx.db.get(args.userId);
+    const userId = await getUserIdFromSessionOrThrow(ctx, args.sessionId);
+    const requester = await ctx.db.get(userId);
     if (!requester || requester.role !== "admin") {
       throw new Error("Unauthorized: Admin access required");
     }
 
-    // Update target user role
     await ctx.db.patch(args.targetUserId, {
       role: args.newRole,
     });

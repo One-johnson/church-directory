@@ -19,6 +19,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { getAuthErrorMessage } from "@/lib/friendly-error";
+import { toast } from "sonner";
 import Link from "next/link";
 
 const loginSchema = z.object({
@@ -50,7 +52,9 @@ export function LoginForm(): React.JSX.Element {
       await login(data.email, data.password);
       // Router redirect handled by useAuth
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const friendly = getAuthErrorMessage(err);
+      setError(friendly);
+      toast.error(friendly);
     } finally {
       setIsLoading(false);
     }
