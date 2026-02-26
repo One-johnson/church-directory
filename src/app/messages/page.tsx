@@ -9,7 +9,7 @@ import { usePresence } from "@/hooks/use-presence";
 
 import { MessageList } from "@/components/messaging/message-list";
 import { MessageInput } from "@/components/messaging/message-input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Loader2, ArrowLeft } from "lucide-react";
@@ -134,23 +134,25 @@ function MessagesContent(): React.JSX.Element {
                 >
                   <div className="flex gap-3">
                     <div className="relative">
-                      <Avatar>
-                        <AvatarImage
-                          src={
-                            conv.otherUser &&
-                            "profilePicture" in conv.otherUser
-                              ? (conv.otherUser.profilePicture as string)
-                              : undefined
-                          }
-                        />
-                        <AvatarFallback>
-                          {conv.otherUser &&
+                      <ProfileAvatar
+                        profilePicture={
+                          conv.otherUser && "profilePicture" in conv.otherUser
+                            ? (conv.otherUser.profilePicture as string)
+                            : undefined
+                        }
+                        alt={
+                          conv.otherUser && "name" in conv.otherUser
+                            ? String(conv.otherUser.name)
+                            : "User"
+                        }
+                        fallback={
+                          conv.otherUser &&
                           "name" in conv.otherUser &&
                           typeof conv.otherUser.name === "string"
                             ? conv.otherUser.name.charAt(0)
-                            : "U"}
-                        </AvatarFallback>
-                      </Avatar>
+                            : "U"
+                        }
+                      />
                       {isOnline && (
                         <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-background rounded-full" />
                       )}
@@ -223,25 +225,28 @@ function MessagesContent(): React.JSX.Element {
                 </Button>
 
                 <div className="relative">
-                  <Avatar>
-                    <AvatarImage
-                      src={
-                        selectedUser &&
-                        typeof selectedUser === "object" &&
-                        "profilePicture" in selectedUser
-                          ? selectedUser.profilePicture
-                          : undefined
-                      }
-                    />
-                    <AvatarFallback>
-                      {selectedUser &&
+                  <ProfileAvatar
+                    profilePicture={
+                      selectedUser &&
+                      typeof selectedUser === "object" &&
+                      "profilePicture" in selectedUser
+                        ? selectedUser.profilePicture
+                        : undefined
+                    }
+                    alt={
+                      selectedUser && "name" in selectedUser
+                        ? String(selectedUser.name)
+                        : "User"
+                    }
+                    fallback={
+                      selectedUser &&
                       typeof selectedUser === "object" &&
                       "name" in selectedUser &&
                       typeof selectedUser.name === "string"
                         ? selectedUser.name.charAt(0)
-                        : "U"}
-                    </AvatarFallback>
-                  </Avatar>
+                        : "U"
+                    }
+                  />
 
                   {selectedUser &&
                     (selectedUser as any).isOnline && (

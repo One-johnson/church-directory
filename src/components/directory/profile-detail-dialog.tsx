@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -54,10 +54,12 @@ export function ProfileDetailDialog({
         <DialogContent className="max-w-3xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start gap-4 mb-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={profile.profilePicture} alt={profile.name} />
-              <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-            </Avatar>
+            <ProfileAvatar
+              profilePicture={profile.profilePicture}
+              alt={profile.name}
+              className="h-20 w-20"
+              fallback={<span className="text-lg">{initials}</span>}
+            />
             <div className="flex-1 space-y-2">
               <DialogTitle className="text-2xl">{profile.name}</DialogTitle>
               <DialogDescription className="text-base font-medium">

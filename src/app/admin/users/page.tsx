@@ -35,6 +35,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Users, Loader2, AlertCircle, Shield, BarChart3, Download } from "lucide-react";
 import { toast } from "sonner";
+import { getAdminErrorMessage } from "@/lib/friendly-error";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { UsersTable } from "@/components/tables/users-table";
 import { AdminAnalytics } from "@/components/analytics/admin-analytics";
@@ -104,7 +105,7 @@ export default function UsersPage(): React.JSX.Element {
       await updateUserRole({ requesterId: user._id, targetUserId: userId, newRole });
       toast.success("User role updated successfully");
     } catch (error) {
-      toast.error("Failed to update user role");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setActionLoading(false);
     }
@@ -124,7 +125,7 @@ export default function UsersPage(): React.JSX.Element {
       setSelectedUsers([]);
       setBulkRoleDialogOpen(false);
     } catch (error) {
-      toast.error("Failed to update user roles");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setActionLoading(false);
     }
@@ -145,7 +146,7 @@ export default function UsersPage(): React.JSX.Element {
       setDeleteDialogOpen(false);
       setUserToDelete(null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete user");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setActionLoading(false);
     }

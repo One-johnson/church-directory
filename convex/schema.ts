@@ -169,6 +169,16 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_created", ["createdAt"]),
 
+  sessions: defineTable({
+    userId: v.id("users"),
+    sessionId: v.string(),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_sessionId", ["sessionId"])
+    .index("by_userId", ["userId"])
+    .index("by_expiresAt", ["expiresAt"]),
+
   jobSeekerRequests: defineTable({
     userId: v.id("users"),
     seekerName: v.string(),

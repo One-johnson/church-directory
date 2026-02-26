@@ -36,6 +36,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getAdminErrorMessage } from "@/lib/friendly-error";
 
 const MotionCard = motion(Card);
 const MotionDiv = motion.div;
@@ -88,7 +89,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
       toast.success("User account approved successfully!");
       setSelectedUsers(new Set());
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to approve user");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setIsProcessing(false);
     }
@@ -109,7 +110,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
       setRejectingUserId(null);
       setSelectedUsers(new Set());
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to reject user");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setIsProcessing(false);
     }
@@ -126,7 +127,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
       toast.success(`Approved ${result.count} user accounts!`);
       setSelectedUsers(new Set());
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to approve users");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setIsProcessing(false);
     }
@@ -146,7 +147,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
       setRejectReason("");
       setSelectedUsers(new Set());
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to reject users");
+      toast.error(getAdminErrorMessage(error));
     } finally {
       setIsProcessing(false);
     }

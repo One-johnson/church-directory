@@ -11,6 +11,7 @@
 import type * as adminBootstrap from "../adminBootstrap.js";
 import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
+import type * as authActions from "../authActions.js";
 import type * as emails from "../emails.js";
 import type * as files from "../files.js";
 import type * as jobOpportunities from "../jobOpportunities.js";
@@ -20,6 +21,7 @@ import type * as notifications from "../notifications.js";
 import type * as presence from "../presence.js";
 import type * as profiles from "../profiles.js";
 import type * as search from "../search.js";
+import type * as session from "../session.js";
 import type * as userApprovals from "../userApprovals.js";
 import type * as users from "../users.js";
 import type * as verifications from "../verifications.js";
@@ -34,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   adminBootstrap: typeof adminBootstrap;
   analytics: typeof analytics;
   auth: typeof auth;
+  authActions: typeof authActions;
   emails: typeof emails;
   files: typeof files;
   jobOpportunities: typeof jobOpportunities;
@@ -43,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   presence: typeof presence;
   profiles: typeof profiles;
   search: typeof search;
+  session: typeof session;
   userApprovals: typeof userApprovals;
   users: typeof users;
   verifications: typeof verifications;

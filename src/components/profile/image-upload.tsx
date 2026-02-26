@@ -5,33 +5,41 @@ import { Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ImageUploadProps {
+  /** Convex storage ID or legacy URL (http...) */
   value?: string;
-  onChange: (url: string) => void;
+  onChange: (value: string) => void;
   disabled?: boolean;
 }
 
 export function ImageUpload({ value, onChange, disabled }: ImageUploadProps): React.JSX.Element {
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  
+  const { sessionId } = useAuth();
+
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
-  const getUrl = useMutation(api.files.getUrl);
+  const displayUrl = useQuery(
+    api.files.getDisplayUrl,
+    value && !value.startsWith("http") ? { storageId: value } : "skip"
+  );
+  const avatarSrc = value?.startsWith("http") ? value : (displayUrl ?? undefined);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!sessionId) {
+      toast.error("You must be logged in to upload");
+      return;
+    }
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
-
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be less than 5MB");
       return;
@@ -39,36 +47,25 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps): Re
 
     setIsUploading(true);
     try {
-      // Get upload URL from Convex
-      const uploadUrl = await generateUploadUrl();
-      
-      // Upload file to Convex storage
+      const uploadUrl = await generateUploadUrl({ sessionId });
       const result = await fetch(uploadUrl, {
         method: "POST",
         headers: { "Content-Type": file.type },
         body: file,
       });
-      
       const { storageId } = await result.json();
-      
-      // Get the URL for the uploaded file
-      const fileUrl = await getUrl({ storageId });
-      
-      if (fileUrl) {
-        onChange(fileUrl);
+      if (storageId) {
+        onChange(storageId);
         toast.success("Image uploaded successfully");
       } else {
-        throw new Error("Failed to get file URL");
+        throw new Error("No storage ID returned");
       }
     } catch (error) {
       console.error("Upload failed:", error);
       toast.error("Failed to upload image. Please try again.");
     } finally {
       setIsUploading(false);
-      // Reset input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -83,7 +80,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps): Re
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <Avatar className="h-24 w-24">
-          <AvatarImage src={value || undefined} alt="Profile" />
+          <AvatarImage src={avatarSrc} alt="Profile" />
           <AvatarFallback>
             <Upload className="h-8 w-8 text-muted-foreground" />
           </AvatarFallback>

@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { getSessionCookie, setSessionCookie, clearSessionCookie } from "@/lib/session-cookie";
 
 interface User {
   userId: Id<"users">;
@@ -20,6 +21,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  sessionId: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (
     email: string,
@@ -38,35 +40,29 @@ export function AuthProvider({
   children: React.ReactNode;
 }): React.JSX.Element {
   const router = useRouter();
-  const [userId, setUserId] = React.useState<Id<"users"> | null>(null);
+  const [sessionId, setSessionId] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
-  const loginMutation = useMutation(api.auth.login);
-  const registerMutation = useMutation(api.auth.register);
+  const loginAction = useAction(api.authActions.loginAction);
+  const logoutMutation = useMutation(api.auth.logout);
 
   const user = useQuery(
     api.auth.getCurrentUser,
-    userId ? { userId } : "skip"
+    sessionId ? { sessionId } : "skip"
   ) as User | null | undefined;
 
-  // Load user from localStorage on mount
+  // Load session from cookie on mount (no localStorage)
   React.useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) {
-      setUserId(storedUserId as Id<"users">);
-    }
+    const sid = getSessionCookie();
+    setSessionId(sid);
     setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string): Promise<void> => {
-    try {
-      const result = await loginMutation({ email, password });
-      localStorage.setItem("userId", result.userId as string);
-      setUserId(result.userId);
-      router.push("/dashboard");
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : "Login failed");
-    }
+    const result = await loginAction({ email, password });
+    setSessionCookie(result.sessionId);
+    setSessionId(result.sessionId);
+    router.push("/dashboard");
   };
 
   const register = async (
@@ -75,28 +71,27 @@ export function AuthProvider({
     name: string,
     phone?: string
   ): Promise<void> => {
-    try {
-      const result = await registerMutation({ email, password, name, phone });
-      // Auto-login after registration
-      await login(email, password);
-    } catch (error) {
-      throw new Error(
-        error instanceof Error ? error.message : "Registration failed"
-      );
-    }
+    // Registration with denomination is handled by EnhancedRegisterForm and authActions.registerWithDenomination
+    throw new Error(
+      "Use the enhanced registration form with denomination and branch selection"
+    );
   };
 
   const logout = (): void => {
-    localStorage.removeItem("userId");
-    setUserId(null);
+    if (sessionId) {
+      logoutMutation({ sessionId }).catch(() => {});
+    }
+    clearSessionCookie();
+    setSessionId(null);
     router.push("/");
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user: user || null,
-        isLoading: isLoading || (userId !== null && user === undefined),
+        user: user ?? null,
+        isLoading: isLoading || (sessionId !== null && user === undefined),
+        sessionId,
         login,
         register,
         logout,

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Mail, Phone, Shield, CheckCircle2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { getAdminErrorMessage } from "@/lib/friendly-error";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 interface VerificationManagerProps {
@@ -58,7 +59,7 @@ export function VerificationManager({
       setOpen(false);
       onSuccess?.();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update verifications");
+      toast.error(getAdminErrorMessage(error));
     }
   };
 
