@@ -92,7 +92,7 @@ export default function LoginPage(): React.JSX.Element {
           </motion.div>
           <h1 className="text-4xl font-bold tracking-tight">Welcome Back</h1>
           <p className="text-muted-foreground text-lg">
-            Login to your UD Professional Directory Account
+            Login to your UD Professionals Directory Account
           </p>
         </motion.div>
 

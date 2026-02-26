@@ -92,9 +92,11 @@ export default defineSchema({
     toUserId: v.id("users"),
     content: v.string(),
     read: v.boolean(),
+    readAt: v.optional(v.number()), // When recipient read the message
     createdAt: v.number(),
     attachmentUrl: v.optional(v.string()),
     attachmentType: v.optional(v.string()),
+    replyToMessageId: v.optional(v.id("messages")),
     reactions: v.optional(v.array(v.object({
       userId: v.id("users"),
       emoji: v.string(),
@@ -106,6 +108,14 @@ export default defineSchema({
     .index("by_from", ["fromUserId"])
     .index("by_to", ["toUserId"])
     .index("by_participants", ["fromUserId", "toUserId"]),
+
+  conversationSettings: defineTable({
+    userId: v.id("users"),
+    otherUserId: v.id("users"),
+    muted: v.boolean(),
+    archived: v.boolean(),
+    updatedAt: v.number(),
+  }).index("by_user_and_other", ["userId", "otherUserId"]),
 
   typingIndicators: defineTable({
     userId: v.id("users"),
@@ -177,6 +187,16 @@ export default defineSchema({
   })
     .index("by_sessionId", ["sessionId"])
     .index("by_userId", ["userId"])
+    .index("by_expiresAt", ["expiresAt"]),
+
+  passwordResetTokens: defineTable({
+    userId: v.id("users"),
+    token: v.string(),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_user", ["userId"])
     .index("by_expiresAt", ["expiresAt"]),
 
   jobSeekerRequests: defineTable({

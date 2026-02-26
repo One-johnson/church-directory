@@ -8,11 +8,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePresence } from "@/hooks/use-presence";
 
 import { MessageList } from "@/components/messaging/message-list";
-import { MessageInput } from "@/components/messaging/message-input";
+import { MessageInput, type ReplyingTo } from "@/components/messaging/message-input";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Loader2, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { MessageSquare, Loader2, ArrowLeft, Bell, BellOff, Archive, ArchiveRestore } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -29,21 +30,44 @@ function MessagesContent(): React.JSX.Element {
     id: Id<"messages">;
     content: string;
   } | null>(null);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [showArchived, setShowArchived] = React.useState(false);
+  const [replyingTo, setReplyingTo] = React.useState<ReplyingTo | null>(null);
 
   usePresence((user?._id as Id<"users">) || null);
 
   const conversations = useQuery(
     api.messages.getInbox,
-    user ? { userId: user._id as Id<"users"> } : "skip"
+    user ? { userId: user._id as Id<"users">, includeArchived: showArchived } : "skip"
   );
 
-  const selectedUser = React.useMemo(() => {
+  const filteredConversations = React.useMemo(() => {
+    if (!conversations) return [];
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return conversations;
+
+    return conversations.filter((conv) => {
+      const name =
+        conv.otherUser &&
+        "name" in conv.otherUser &&
+        typeof conv.otherUser.name === "string"
+          ? (conv.otherUser.name as string).toLowerCase()
+          : "";
+      return name.includes(term);
+    });
+  }, [conversations, searchTerm]);
+
+  const selectedConversation = React.useMemo(() => {
     if (!selectedUserId || !conversations) return null;
-    const conv = conversations.find(
+    return conversations.find(
       (c) => (c.otherUser as { _id?: string })._id === selectedUserId
-    );
-    return conv && "otherUser" in conv ? conv.otherUser : null;
+    ) ?? null;
   }, [selectedUserId, conversations]);
+
+  const selectedUser = React.useMemo(
+    () => (selectedConversation && "otherUser" in selectedConversation ? selectedConversation.otherUser : null),
+    [selectedConversation]
+  );
 
   const markAsRead = useMutation(api.messages.markConversationAsRead);
 
@@ -62,6 +86,15 @@ function MessagesContent(): React.JSX.Element {
     }
   }, [selectedUserId, user, markAsRead]);
 
+  React.useEffect(() => {
+    if (selectedUserId && conversations && !showArchived) {
+      const stillInList = conversations.some(
+        (c) => (c.otherUser as { _id?: string })?._id === selectedUserId
+      );
+      if (!stillInList) setSelectedUserId(null);
+    }
+  }, [conversations, selectedUserId, showArchived]);
+
   const handleEditMessage = (messageId: Id<"messages">, content: string) => {
     setEditingMessage({ id: messageId, content });
   };
@@ -69,6 +102,50 @@ function MessagesContent(): React.JSX.Element {
   const handleCancelEdit = () => {
     setEditingMessage(null);
   };
+
+  const handleReplyMessage = (
+    messageId: Id<"messages">,
+    content: string,
+    fromUserId: Id<"users">
+  ) => {
+    const fromName =
+      fromUserId === (user?._id as Id<"users">)
+        ? "You"
+        : selectedUser && typeof selectedUser === "object" && "name" in selectedUser
+          ? String(selectedUser.name)
+          : "Unknown";
+    setReplyingTo({ id: messageId, content, fromUserId, fromUserName: fromName });
+  };
+
+  const handleClearReply = () => setReplyingTo(null);
+
+  const setConversationMuted = useMutation(api.messages.setConversationMuted);
+  const setConversationArchived = useMutation(api.messages.setConversationArchived);
+
+  const isMuted = selectedConversation?.muted ?? false;
+  const isArchived = selectedConversation?.archived ?? false;
+
+  const presenceLabel = React.useMemo(() => {
+    if (!selectedUser || typeof selectedUser !== "object") return "";
+
+    const userObj = selectedUser as any;
+
+    if (userObj.isOnline) {
+      return "Online";
+    }
+
+    if (userObj.lastSeen) {
+      try {
+        return `Last seen ${formatDistanceToNow(new Date(userObj.lastSeen), {
+          addSuffix: true,
+        })}`;
+      } catch {
+        return "Offline";
+      }
+    }
+
+    return "Offline";
+  }, [selectedUser]);
 
   if (authLoading || !user) {
     return (
@@ -79,9 +156,8 @@ function MessagesContent(): React.JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      
-      <div className="flex-1 flex overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Conversations List */}
         <div
           className={cn(
@@ -91,15 +167,37 @@ function MessagesContent(): React.JSX.Element {
         >
           <div className="p-4 border-b bg-background flex-shrink-0">
             <h2 className="text-xl font-bold flex items-center gap-2">
-              <MessageSquare className="h-6 w-6" />
+              <MessageSquare className="h-6 w-6" aria-hidden="true" />
               Messages
             </h2>
+          </div>
+
+          <div className="p-3 border-b bg-background flex-shrink-0 space-y-2">
+            <Input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-9 text-sm"
+            />
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                className="rounded border-input"
+              />
+              Show archived
+            </label>
           </div>
 
           <div className="flex-1 overflow-y-auto">
             {!conversations && (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2
+                  className="h-8 w-8 animate-spin text-primary"
+                  aria-hidden="true"
+                />
               </div>
             )}
 
@@ -111,7 +209,15 @@ function MessagesContent(): React.JSX.Element {
               </div>
             )}
 
-            {conversations?.map((conv) => {
+            {conversations &&
+              conversations.length > 0 &&
+              filteredConversations.length === 0 && (
+                <div className="p-4 text-center text-muted-foreground">
+                  No conversations match your search
+                </div>
+              )}
+
+            {filteredConversations.map((conv) => {
               const otherUserId =
                 conv.otherUser && "_id" in conv.otherUser
                   ? (conv.otherUser as { _id: string })._id
@@ -199,7 +305,7 @@ function MessagesContent(): React.JSX.Element {
         {/* Conversation View */}
         <div
           className={cn(
-            "flex-1 flex flex-col",
+            "flex-1 flex flex-col min-h-0",
             !selectedUserId && "hidden md:flex"
           )}
         >
@@ -213,13 +319,14 @@ function MessagesContent(): React.JSX.Element {
             </div>
           ) : (
             <>
-              {/* Header */}
-              <div className="border-b p-4 flex items-center gap-3 bg-background flex-shrink-0">
+              {/* Header - sticky so it stays visible when message list scrolls */}
+              <div className="sticky top-0 z-10 border-b p-4 flex items-center gap-3 bg-background flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="icon"
                   className="md:hidden"
                   onClick={() => setSelectedUserId(null)}
+                  aria-label="Back to conversations"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
@@ -254,35 +361,86 @@ function MessagesContent(): React.JSX.Element {
                     )}
                 </div>
 
-                <div>
-                 <h3 className="font-semibold"> {selectedUser && typeof selectedUser === "object" && "name" in selectedUser && typeof selectedUser.name === "string" ? selectedUser.name : "Unknown"} </h3>
-                  <p className="text-xs text-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold">
                     {selectedUser &&
                     typeof selectedUser === "object" &&
-                    "isOnline" in selectedUser
-                      ? (selectedUser as any).isOnline
-                        ? "Online"
-                        : "Offline"
-                      : ""}
+                    "name" in selectedUser &&
+                    typeof selectedUser.name === "string"
+                      ? selectedUser.name
+                      : "Unknown"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {presenceLabel}
                   </p>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() =>
+                      setConversationMuted({
+                        userId: user._id as Id<"users">,
+                        otherUserId: selectedUserId as Id<"users">,
+                        muted: !isMuted,
+                      })
+                    }
+                    aria-label={isMuted ? "Unmute conversation" : "Mute conversation"}
+                    title={isMuted ? "Unmute" : "Mute"}
+                  >
+                    {isMuted ? (
+                      <BellOff className="h-4 w-4" />
+                    ) : (
+                      <Bell className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() =>
+                      setConversationArchived({
+                        userId: user._id as Id<"users">,
+                        otherUserId: selectedUserId as Id<"users">,
+                        archived: !isArchived,
+                      })
+                    }
+                    aria-label={isArchived ? "Unarchive conversation" : "Archive conversation"}
+                    title={isArchived ? "Unarchive" : "Archive"}
+                  >
+                    {isArchived ? (
+                      <ArchiveRestore className="h-4 w-4" />
+                    ) : (
+                      <Archive className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               </div>
 
-              {/* Messages */}
-              <MessageList
-                currentUserId={user._id as Id<"users">}
-                otherUserId={selectedUserId as Id<"users">}
-                otherUser={selectedUser}
-                onEditMessage={handleEditMessage}
-              />
+              {/* Message list - fixed height with its own scroll */}
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <MessageList
+                  currentUserId={user._id as Id<"users">}
+                  otherUserId={selectedUserId as Id<"users">}
+                  otherUser={selectedUser}
+                  onEditMessage={handleEditMessage}
+                  onReplyMessage={handleReplyMessage}
+                />
+              </div>
 
-              {/* Input */}
-              <MessageInput
+              {/* Input - fixed at bottom */}
+              <div className="flex-shrink-0">
+                <MessageInput
                 fromUserId={user._id as Id<"users">}
                 toUserId={selectedUserId as Id<"users">}
                 editingMessage={editingMessage}
                 onCancelEdit={handleCancelEdit}
+                replyingTo={replyingTo}
+                onClearReply={handleClearReply}
               />
+              </div>
             </>
           )}
         </div>

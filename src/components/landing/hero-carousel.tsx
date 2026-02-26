@@ -41,7 +41,7 @@ export function HeroCarousel(): React.JSX.Element {
   const slides = [
     {
       title: "Find Trusted Professionals",
-      description: "Connect with verified UD Professionals offering professional services",
+      description: "Connect with verified professionals in the UD Professionals Directory",
       image: "/images/photo1.png",
       gradient: "from-blue-500/20 to-purple-500/20",
     },
@@ -65,7 +65,7 @@ export function HeroCarousel(): React.JSX.Element {
     },
     {
       title: "Community Building",
-      description: "Strengthen connections within the UD Professional Directory through professional networking",
+      description: "Strengthen connections within the UD Professionals Directory through professional networking",
       image: "/images/photo5.png",
       gradient: "from-rose-500/20 to-red-500/20",
     },

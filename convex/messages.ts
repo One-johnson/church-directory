@@ -8,6 +8,7 @@ export const send = mutation({
     content: v.string(),
     attachmentUrl: v.optional(v.string()),
     attachmentType: v.optional(v.string()),
+    replyToMessageId: v.optional(v.id("messages")),
   },
   handler: async (ctx, args) => {
     const messageId = await ctx.db.insert("messages", {
@@ -18,6 +19,7 @@ export const send = mutation({
       createdAt: Date.now(),
       attachmentUrl: args.attachmentUrl,
       attachmentType: args.attachmentType,
+      replyToMessageId: args.replyToMessageId,
       reactions: [],
       deletedFor: [],
       deletedForEveryone: false,
@@ -227,8 +229,13 @@ export const getConversation = query({
 });
 
 export const getInbox = query({
-  args: { userId: v.id("users") },
+  args: {
+    userId: v.id("users"),
+    includeArchived: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
+    const includeArchived = args.includeArchived ?? false;
+
     const received = await ctx.db
       .query("messages")
       .withIndex("by_to", (q) => q.eq("toUserId", args.userId))
@@ -274,6 +281,17 @@ export const getInbox = query({
           .withIndex("by_user", (q) => q.eq("userId", otherUserId as any))
           .first();
 
+        // Get conversation settings (mute, archive)
+        const settings = await ctx.db
+          .query("conversationSettings")
+          .withIndex("by_user_and_other", (q) =>
+            q.eq("userId", args.userId).eq("otherUserId", otherUserId as any)
+          )
+          .first();
+
+        const archived = settings?.archived ?? false;
+        const muted = settings?.muted ?? false;
+
         return {
           otherUser: {
             ...otherUser,
@@ -282,13 +300,18 @@ export const getInbox = query({
           lastMessage,
           unreadCount,
           messages: sortedMsgs,
+          muted,
+          archived,
         };
       })
     );
 
-    return conversations.sort(
+    const sorted = conversations.sort(
       (a, b) => b.lastMessage.createdAt - a.lastMessage.createdAt
     );
+
+    if (includeArchived) return sorted;
+    return sorted.filter((c) => !c.archived);
   },
 });
 
@@ -314,10 +337,72 @@ export const markConversationAsRead = mutation({
       )
       .collect();
 
+    const now = Date.now();
     await Promise.all(
       messages
         .filter((m) => !m.read)
-        .map((m) => ctx.db.patch(m._id, { read: true }))
+        .map((m) => ctx.db.patch(m._id, { read: true, readAt: now }))
     );
+  },
+});
+
+export const setConversationMuted = mutation({
+  args: {
+    userId: v.id("users"),
+    otherUserId: v.id("users"),
+    muted: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("conversationSettings")
+      .withIndex("by_user_and_other", (q) =>
+        q.eq("userId", args.userId).eq("otherUserId", args.otherUserId)
+      )
+      .first();
+
+    const now = Date.now();
+    if (existing) {
+      await ctx.db.patch(existing._id, { muted: args.muted, updatedAt: now });
+    } else {
+      await ctx.db.insert("conversationSettings", {
+        userId: args.userId,
+        otherUserId: args.otherUserId,
+        muted: args.muted,
+        archived: false,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+export const setConversationArchived = mutation({
+  args: {
+    userId: v.id("users"),
+    otherUserId: v.id("users"),
+    archived: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("conversationSettings")
+      .withIndex("by_user_and_other", (q) =>
+        q.eq("userId", args.userId).eq("otherUserId", args.otherUserId)
+      )
+      .first();
+
+    const now = Date.now();
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        archived: args.archived,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("conversationSettings", {
+        userId: args.userId,
+        otherUserId: args.otherUserId,
+        muted: false,
+        archived: args.archived,
+        updatedAt: now,
+      });
+    }
   },
 });

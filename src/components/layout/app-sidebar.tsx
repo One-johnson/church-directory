@@ -184,7 +184,7 @@ function AppSidebarContent(): React.JSX.Element {
                     <span className="text-lg font-bold">UD</span>
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold">UD Professionals</span>
+                    <span className="font-semibold">UD Professionals Directory</span>
                     <span className="text-xs text-muted-foreground">
                       Directory
                     </span>
@@ -222,18 +222,7 @@ function AppSidebarContent(): React.JSX.Element {
           </SidebarMenu>
         </SidebarContent>
 
-        {/* Footer with Organization Info */}
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <div className="px-3 py-2 text-center">
-                <p className="text-xs text-muted-foreground">
-                  UDOLGC/UDLWM/DHMM
-                </p>
-              </div>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
+      
       </Sidebar>
 
       {/* Logout Confirmation Dialog */}
@@ -339,10 +328,10 @@ export function AppSidebarLayout({
     return items;
   }, [user?.role]);
 
-  // Mobile Sheet Sidebar
+  // Mobile: hamburger opens Sheet (sidebar drawer)
   const renderMobileSidebar = (): React.JSX.Element => (
     <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-      <SheetContent side="left" className="w-[280px] p-0">
+      <SheetContent side="left" className="w-[280px] p-0" aria-label="Navigation menu">
         <SheetHeader className="border-b p-4">
           <SheetTitle>
             <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
@@ -350,7 +339,7 @@ export function AppSidebarLayout({
                 <span className="text-lg font-bold">UD</span>
               </div>
               <div className="flex flex-col gap-0.5 leading-none text-left">
-                <span className="font-semibold text-sm">UD Professionals</span>
+                <span className="font-semibold text-sm">UD Professionals Directory</span>
                 <span className="text-xs text-muted-foreground">Directory</span>
               </div>
             </Link>
@@ -384,6 +373,7 @@ export function AppSidebarLayout({
                 size="icon"
                 onClick={() => setMobileMenuOpen(true)}
                 className="-ml-1"
+                aria-label="Open menu"
               >
                 <Menu className="h-5 w-5" />
               </Button>

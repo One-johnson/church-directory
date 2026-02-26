@@ -36,8 +36,8 @@ export const loginAction = action({
     let valid = false;
 
     if (isLegacyHash(passwordHash)) {
-      // Migrate: verify with SHA-256 then upgrade to bcrypt
-      const bcrypt = await import("bcrypt");
+      // Migrate: verify with SHA-256 then upgrade to bcrypt (bcryptjs = pure JS, works on Convex ARM64)
+      const bcrypt = await import("bcryptjs");
       const inputSha = await sha256Hash(args.password);
       valid = inputSha === passwordHash;
       if (valid) {
@@ -48,7 +48,7 @@ export const loginAction = action({
         });
       }
     } else {
-      const bcrypt = await import("bcrypt");
+      const bcrypt = await import("bcryptjs");
       valid = await bcrypt.compare(args.password, passwordHash);
     }
 
@@ -81,7 +81,7 @@ export const registerWithDenomination = action({
     pastorEmail: v.string(),
   },
   handler: async (ctx, args): Promise<{ pendingUserId?: unknown; userId?: unknown; message: string }> => {
-    const bcrypt = await import("bcrypt");
+    const bcrypt = await import("bcryptjs");
     const passwordHash = await bcrypt.hash(args.password, 10);
 
     const registerMutation = api.auth.registerWithDenomination as FunctionReference<"mutation", "public">;
@@ -100,6 +100,89 @@ export const registerWithDenomination = action({
     });
 
     return result;
+  },
+});
+
+/**
+ * Request password reset: if email is registered, create token and send reset link.
+ * Always returns the same message to avoid email enumeration.
+ */
+export const requestPasswordReset = action({
+  args: { email: v.string() },
+  handler: async (ctx, args): Promise<{ message: string }> => {
+    const user = await ctx.runQuery(internal.auth.getUserIdAndEmailByEmail, {
+      email: args.email.trim().toLowerCase(),
+    });
+
+    const message =
+      "If that email is registered, you'll receive a reset link shortly. Check your inbox and spam folder.";
+
+    if (!user) return { message };
+
+    const tokenBytes = new Uint8Array(32);
+    crypto.getRandomValues(tokenBytes);
+    const token = Array.from(tokenBytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+
+    await ctx.runMutation(internal.auth.createPasswordResetToken, {
+      userId: user.userId,
+      token,
+      expiresAt,
+    });
+
+    const APP_URL =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://church-directory-ebon.vercel.app";
+    const resetLink = `${APP_URL}/reset-password?token=${encodeURIComponent(token)}`;
+
+    try {
+      await ctx.runAction(api.emails.sendPasswordResetEmail, {
+        recipientEmail: user.email,
+        recipientName: user.name,
+        resetLink,
+      });
+    } catch (e) {
+      console.error("Failed to send password reset email:", e);
+      // Don't reveal failure; user might retry
+    }
+
+    return { message };
+  },
+});
+
+/**
+ * Reset password using token from email link. Token is consumed (one-time use).
+ */
+export const resetPassword = action({
+  args: {
+    token: v.string(),
+    newPassword: v.string(),
+  },
+  handler: async (ctx, args): Promise<{ message: string }> => {
+    const trimmedToken = args.token.trim();
+    if (!trimmedToken) {
+      throw new Error("Invalid or expired reset link. Please request a new one.");
+    }
+    if (args.newPassword.length < 6) {
+      throw new Error("Password must be at least 6 characters.");
+    }
+
+    const record = await ctx.runQuery(internal.auth.getPasswordResetToken, {
+      token: trimmedToken,
+    });
+    if (!record || record.expiresAt < Date.now()) {
+      throw new Error("Invalid or expired reset link. Please request a new one.");
+    }
+
+    const bcrypt = await import("bcryptjs");
+    const newPasswordHash = await bcrypt.hash(args.newPassword, 10);
+
+    await ctx.runMutation(internal.auth.setPasswordAndConsumeResetToken, {
+      token: trimmedToken,
+      newPasswordHash,
+    });
+
+    return { message: "Password updated. You can sign in with your new password." };
   },
 });
 
