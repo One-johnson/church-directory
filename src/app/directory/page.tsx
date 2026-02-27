@@ -12,7 +12,7 @@ import { AdvancedSearch } from "@/components/search/advanced-search";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Users, Download } from "lucide-react";
-import { EnhancedProfileCard } from "@/components/directory/enhanced-profile-card";
+import { EnhancedProfileCard, ProfileCardSkeleton } from "@/components/directory/enhanced-profile-card";
 import { exportTableData } from "@/lib/export-utils";
 import { toast } from "sonner";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -152,12 +152,6 @@ export default function DirectoryPage(): React.JSX.Element {
           <AdvancedSearch onResults={setSearchResults} />
         </MotionDiv>
 
-        {!allProfiles && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        )}
-
         {allProfiles && searchResults.length === 0 && (
           <MotionCard
             initial={{ opacity: 0, scale: 0.95 }}
@@ -178,20 +172,31 @@ export default function DirectoryPage(): React.JSX.Element {
           variants={containerVariants}
           className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-6"
         >
-          {searchResults.map((profile, index) => (
-            <motion.div
-              key={profile._id}
-              variants={itemVariants}
-              whileHover={{ y: -5 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <EnhancedProfileCard
-                profile={profile}
-                onMessage={handleMessage}
-                currentUserId={user._id}
-              />
-            </motion.div>
-          ))}
+          {!allProfiles
+            ? Array.from({ length: 10 }).map((_, i) => (
+                <motion.div
+                  key={`skeleton-${i}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                >
+                  <ProfileCardSkeleton />
+                </motion.div>
+              ))
+            : searchResults.map((profile) => (
+                <motion.div
+                  key={profile._id}
+                  variants={itemVariants}
+                  whileHover={{ y: -5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <EnhancedProfileCard
+                    profile={profile}
+                    onMessage={handleMessage}
+                    currentUserId={user._id}
+                  />
+                </motion.div>
+              ))}
         </MotionDiv>
       </MotionDiv>
     </div>

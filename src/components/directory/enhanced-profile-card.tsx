@@ -3,9 +3,33 @@
 import * as React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { Mail, Info } from "lucide-react";
 import { ProfileDetailDialog } from "./profile-detail-dialog";
+
+/** Skeleton placeholder matching EnhancedProfileCard layout for loading state */
+export function ProfileCardSkeleton(): React.JSX.Element {
+  return (
+    <Card className="flex flex-col h-full">
+      <CardHeader className="pb-1 pt-2 px-3 md:pb-2 md:pt-4 md:px-4">
+        <div className="flex flex-col items-center gap-1.5 text-center md:gap-2">
+          <Skeleton className="h-10 w-10 rounded-full md:h-14 md:w-14" />
+          <div className="w-full space-y-1.5">
+            <Skeleton className="h-3.5 w-3/4 mx-auto rounded md:h-4" />
+            <Skeleton className="h-3 w-1/2 mx-auto rounded md:h-3.5" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-1.5 px-3 pb-2 pt-0 md:px-4 md:pb-4 md:pt-0">
+        <div className="flex flex-col gap-1 md:gap-1.5">
+          <Skeleton className="h-7 w-full rounded md:h-8" />
+          <Skeleton className="h-7 w-full rounded md:h-8" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 interface EnhancedProfileCardProps {
   profile: any;
