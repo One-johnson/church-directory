@@ -10,11 +10,8 @@ import { usePresence } from "@/hooks/use-presence";
 
 import { AdvancedSearch } from "@/components/search/advanced-search";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Loader2, Users, Download } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import { EnhancedProfileCard, ProfileCardSkeleton } from "@/components/directory/enhanced-profile-card";
-import { exportTableData } from "@/lib/export-utils";
-import { toast } from "sonner";
 import type { Id } from "../../../convex/_generated/dataModel";
 
 const MotionDiv = motion.div;
@@ -48,28 +45,6 @@ export default function DirectoryPage(): React.JSX.Element {
     router.push(`/messages?to=${profileUserId}`);
   };
 
-  const handleExport = (format: "csv" | "pdf") => {
-    exportTableData(format, {
-      filename: `church-directory-${new Date().toISOString().split("T")[0]}`,
-      title: "UD Professionals Directory",
-      columns: [
-        { header: "Name", key: "name" },
-        { header: "Profession", key: "profession" },
-        { header: "Category", key: "category" },
-        { header: "Skills", key: "skills" },
-        { header: "Location", key: "location" },
-        { header: "Country", key: "country" },
-        { header: "Experience", key: "experience" },
-      ],
-      data: searchResults.map(p => ({
-        ...p,
-        church: p.church || "N/A",
-        denomination: p.denomination || "N/A",
-      })),
-    });
-    toast.success(`Exported ${searchResults.length} profiles to ${format.toUpperCase()}`);
-  };
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -98,49 +73,14 @@ export default function DirectoryPage(): React.JSX.Element {
         variants={containerVariants}
         className="container mx-auto p-4 md:p-8 space-y-6"
       >
-        <MotionDiv variants={itemVariants} className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-2"
-          >
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Users className="h-8 w-8" />
-              Professional Directory
-            </h1>
-            <p className="text-muted-foreground">
-              Browse and connect with verified professionals in the UD Professionals Directory
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="flex gap-2"
-          >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleExport("csv")}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                CSV
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleExport("pdf")}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                PDF
-              </Button>
-            </motion.div>
-          </motion.div>
+        <MotionDiv variants={itemVariants}>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Users className="h-8 w-8" />
+            Professional Directory
+          </h1>
+          <p className="text-muted-foreground">
+            Browse and connect with verified professionals in the UD Professionals Directory
+          </p>
         </MotionDiv>
 
         <MotionDiv variants={itemVariants}>

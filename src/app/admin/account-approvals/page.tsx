@@ -133,6 +133,23 @@ export default function AccountApprovalsPage(): React.JSX.Element {
     }
   };
 
+  const handleApproveAll = async (): Promise<void> => {
+    if (!user || !pendingApprovals?.length) return;
+    setIsProcessing(true);
+    try {
+      const result = await bulkApprove({
+        pendingUserIds: pendingApprovals.map((u) => u._id),
+        approverId: user._id,
+      });
+      toast.success(`Approved ${result.count} user accounts!`);
+      setSelectedUsers(new Set());
+    } catch (error) {
+      toast.error(getAdminErrorMessage(error));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleBulkReject = async (): Promise<void> => {
     if (!user || selectedUsers.size === 0 || !rejectReason.trim()) return;
     setIsProcessing(true);
@@ -365,25 +382,33 @@ export default function AccountApprovalsPage(): React.JSX.Element {
         </AnimatePresence>
 
         {/* Pending Approvals List */}
-        <MotionCard variants={itemVariants} whileHover={{ scale: 1.002 }}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
+        <MotionCard variants={itemVariants} whileHover={{ scale: 1.002 }} className="overflow-hidden">
+          <CardHeader className="min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 min-w-0">
+              <div className="min-w-0">
                 <CardTitle>Pending Approvals</CardTitle>
                 <CardDescription>
                   {pendingApprovals?.length || 0} user(s) waiting for approval
                 </CardDescription>
               </div>
               {pendingApprovals && pendingApprovals.length > 0 && (
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                    {selectedUsers.size === pendingApprovals.length ? "Deselect All" : "Select All"}
-                  </Button>
-                </motion.div>
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button variant="default" size="sm" onClick={handleApproveAll} disabled={isProcessing}>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Approve all ({pendingApprovals.length})
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                      {selectedUsers.size === pendingApprovals.length ? "Deselect All" : "Select All"}
+                    </Button>
+                  </motion.div>
+                </div>
               )}
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0 overflow-hidden">
             {!pendingApprovals ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -411,57 +436,58 @@ export default function AccountApprovalsPage(): React.JSX.Element {
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ delay: index * 0.05 }}
                       whileHover={{ scale: 1.01, x: 5 }}
-                      className="border rounded-lg p-4 space-y-4"
+                      className="border rounded-lg p-4 space-y-4 min-w-0 overflow-hidden"
                     >
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-4 min-w-0">
                         <Checkbox
                           checked={selectedUsers.has(userAccount._id)}
                           onCheckedChange={() => handleSelectUser(userAccount._id)}
+                          className="shrink-0"
                         />
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold text-lg">{userAccount.name}</h3>
+                        <div className="flex-1 min-w-0 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 min-w-0">
+                            <div className="min-w-0">
+                              <h3 className="font-semibold text-lg truncate">{userAccount.name}</h3>
                               <div className="flex flex-wrap gap-2 mt-1">
-                                <Badge variant="outline">
-                                  <Mail className="w-3 h-3 mr-1" />
-                                  {userAccount.email}
+                                <Badge variant="outline" className="max-w-full truncate">
+                                  <Mail className="w-3 h-3 mr-1 shrink-0" />
+                                  <span className="truncate">{userAccount.email}</span>
                                 </Badge>
                                 {userAccount.phone && (
-                                  <Badge variant="outline">
-                                    <Phone className="w-3 h-3 mr-1" />
-                                    {userAccount.phone}
+                                  <Badge variant="outline" className="truncate">
+                                    <Phone className="w-3 h-3 mr-1 shrink-0" />
+                                    <span className="truncate">{userAccount.phone}</span>
                                   </Badge>
                                 )}
                               </div>
                             </div>
-                            <Badge variant="secondary">
+                            <Badge variant="secondary" className="shrink-0">
                               <Clock className="w-3 h-3 mr-1" />
                               {new Date(userAccount.createdAt).toLocaleDateString()}
                             </Badge>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-muted/50 rounded-lg">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm">
-                                <Church className="w-4 h-4 text-muted-foreground" />
-                                <span className="font-medium">{userAccount.denominationName}</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-muted/50 rounded-lg min-w-0">
+                            <div className="space-y-2 min-w-0">
+                              <div className="flex items-center gap-2 text-sm min-w-0">
+                                <Church className="w-4 h-4 text-muted-foreground shrink-0" />
+                                <span className="font-medium truncate">{userAccount.denominationName}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-sm">
-                                <MapPin className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-muted-foreground">
+                              <div className="flex items-center gap-2 text-sm min-w-0">
+                                <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
+                                <span className="text-muted-foreground truncate">
                                   {userAccount.branchName} - {userAccount.branchLocation}
                                 </span>
                               </div>
                             </div>
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm">
-                                <UserIcon className="w-4 h-4 text-muted-foreground" />
-                                <span className="font-medium">{userAccount.pastor}</span>
+                            <div className="space-y-2 min-w-0">
+                              <div className="flex items-center gap-2 text-sm min-w-0">
+                                <UserIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                                <span className="font-medium truncate">{userAccount.pastor}</span>
                               </div>
-                              <div className="flex items-center gap-2 text-sm">
-                                <Mail className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-muted-foreground">{userAccount.pastorEmail}</span>
+                              <div className="flex items-center gap-2 text-sm min-w-0">
+                                <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                                <span className="text-muted-foreground truncate">{userAccount.pastorEmail}</span>
                               </div>
                             </div>
                           </div>
