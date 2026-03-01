@@ -7,6 +7,7 @@ export const searchProfiles = query({
     query: v.optional(v.string()),
     category: v.optional(v.string()),
     location: v.optional(v.string()),
+    branch: v.optional(v.string()),
     country: v.optional(v.string()),
     verifiedOnly: v.optional(v.boolean()),
   },
@@ -16,28 +17,39 @@ export const searchProfiles = query({
       .filter((q) => q.eq(q.field("everApproved"), true))
       .collect();
 
-    // Apply text search if query provided
-    if (args.query && args.query.length >= 2) {
-      const lowerQuery = args.query.toLowerCase();
+    // Apply text search only when query is provided and long enough
+    if (args.query && args.query.trim().length >= 2) {
+      const lowerQuery = args.query.trim().toLowerCase();
       profiles = profiles.filter((p) => {
-        const searchableText = `${p.name} ${p.profession} ${p.skills} ${p.category} ${p.experience}`.toLowerCase();
+        const searchableText = [
+          p.name,
+          p.profession,
+          p.skills,
+          p.category,
+          p.experience,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
         return searchableText.includes(lowerQuery);
       });
     }
 
-    // Apply filters
-    if (args.category) {
+    // Apply filters (category "All" or empty should not be sent; backend treats truthy category only)
+    if (args.category && args.category !== "All") {
       profiles = profiles.filter((p) => p.category === args.category);
     }
 
-    if (args.location) {
+    if (args.location && args.location.trim()) {
+      const locLower = args.location.trim().toLowerCase();
       profiles = profiles.filter((p) =>
-        p.location.toLowerCase().includes(args.location!.toLowerCase())
+        p.location && p.location.toLowerCase().includes(locLower)
       );
     }
 
-    if (args.country) {
-      profiles = profiles.filter((p) => p.country === args.country);
+    if (args.country && args.country.trim()) {
+      const countryTrim = args.country.trim();
+      profiles = profiles.filter((p) => p.country && p.country.trim() === countryTrim);
     }
 
     if (args.verifiedOnly) {
@@ -51,7 +63,7 @@ export const searchProfiles = query({
     }
 
     // Get user data for each profile (for online status)
-    const profilesWithUsers = await Promise.all(
+    let profilesWithUsers = await Promise.all(
       profiles.map(async (profile) => {
         const user = await ctx.db.get(profile.userId);
         return {
@@ -72,6 +84,16 @@ export const searchProfiles = query({
       })
     );
 
+    // Filter by user branch (branchName or branchLocation) when branch filter is set
+    if (args.branch && args.branch.trim()) {
+      const branchTrim = args.branch.trim().toLowerCase();
+      profilesWithUsers = profilesWithUsers.filter((p) => {
+        const name = p.user?.branchName?.trim().toLowerCase() ?? "";
+        const loc = p.user?.branchLocation?.trim().toLowerCase() ?? "";
+        return name === branchTrim || loc === branchTrim;
+      });
+    }
+
     return profilesWithUsers;
   },
 });
@@ -90,21 +112,22 @@ export const getSearchSuggestions = query({
     const suggestions = new Set<string>();
 
     profiles.forEach((p) => {
-      // Add profession if it matches
-      if (p.profession.toLowerCase().includes(lowerQuery)) {
+      const profession = (p.profession ?? "").trim();
+      const category = (p.category ?? "").trim();
+      const skillsStr = p.skills ?? "";
+
+      if (profession && profession.toLowerCase().includes(lowerQuery)) {
         suggestions.add(p.profession);
       }
 
-      // Add skills that match (split by comma)
-      const skills = p.skills.split(",").map((s) => s.trim());
+      const skills = skillsStr.split(",").map((s) => s.trim());
       skills.forEach((skill) => {
-        if (skill.toLowerCase().includes(lowerQuery) && skill.length > 2) {
+        if (skill && skill.toLowerCase().includes(lowerQuery) && skill.length > 2) {
           suggestions.add(skill);
         }
       });
 
-      // Add category if it matches
-      if (p.category.toLowerCase().includes(lowerQuery)) {
+      if (category && category.toLowerCase().includes(lowerQuery)) {
         suggestions.add(p.category);
       }
     });
@@ -188,7 +211,7 @@ export const clearSearchHistory = mutation({
   },
 });
 
-// Get all unique locations from approved profiles
+// Get all unique locations from approved profiles (profile.location = city/area)
 export const getAllLocations = query({
   handler: async (ctx) => {
     const profiles = await ctx.db
@@ -204,6 +227,24 @@ export const getAllLocations = query({
     });
 
     return Array.from(locations).sort();
+  },
+});
+
+// Get all unique branch names/locations from users who have an approved profile
+export const getAllBranches = query({
+  handler: async (ctx) => {
+    const profiles = await ctx.db
+      .query("profiles")
+      .filter((q) => q.eq(q.field("everApproved"), true))
+      .collect();
+
+    const branches = new Set<string>();
+    for (const p of profiles) {
+      const user = await ctx.db.get(p.userId);
+      if (user?.branchName?.trim()) branches.add(user.branchName.trim());
+      if (user?.branchLocation?.trim()) branches.add(user.branchLocation.trim());
+    }
+    return Array.from(branches).sort();
   },
 });
 

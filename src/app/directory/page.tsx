@@ -24,6 +24,7 @@ export default function DirectoryPage(): React.JSX.Element {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [searchResults, setSearchResults] = React.useState<any[]>([]);
+  const [isSearchActive, setIsSearchActive] = React.useState(false);
 
   usePresence(user?._id as Id<"users"> || null);
 
@@ -34,12 +35,6 @@ export default function DirectoryPage(): React.JSX.Element {
       router.push("/");
     }
   }, [user, authLoading, router]);
-
-  React.useEffect(() => {
-    if (allProfiles && searchResults.length === 0 && !authLoading) {
-      setSearchResults(allProfiles);
-    }
-  }, [allProfiles, searchResults.length, authLoading]);
 
   if (authLoading || !user) {
     return (
@@ -149,10 +144,14 @@ export default function DirectoryPage(): React.JSX.Element {
         </MotionDiv>
 
         <MotionDiv variants={itemVariants}>
-          <AdvancedSearch onResults={setSearchResults} />
+          <AdvancedSearch
+            onResults={setSearchResults}
+            allProfiles={allProfiles ?? undefined}
+            onSearchActiveChange={setIsSearchActive}
+          />
         </MotionDiv>
 
-        {allProfiles && searchResults.length === 0 && (
+        {isSearchActive && searchResults.length === 0 && (
           <MotionCard
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}

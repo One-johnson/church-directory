@@ -215,7 +215,7 @@ export default function AccountApprovalsPage(): React.JSX.Element {
         {/* Statistics */}
         <MotionDiv
           variants={containerVariants}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4"
+          className="grid grid-cols-2 gap-4 md:grid-cols-4"
         >
           <MotionCard variants={itemVariants} whileHover={{ scale: 1.02, y: -2 }}>
             <CardHeader className="pb-3">

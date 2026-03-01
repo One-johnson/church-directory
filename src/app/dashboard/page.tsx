@@ -232,7 +232,7 @@ export default function DashboardPage(): React.JSX.Element {
         {/* Quick Actions Grid */}
         <MotionDiv
           variants={containerVariants}
-          className="grid gap-4 md:grid-cols-2 lg:grid-cols-2"
+          className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-2"
         >
           
       

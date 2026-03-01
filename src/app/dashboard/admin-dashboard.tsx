@@ -55,7 +55,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Eleme
 
   if (!analytics) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="pb-2">
@@ -146,7 +146,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Eleme
           </p>
         </motion.div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat, index) => (
             <MotionCard
               key={index}
@@ -196,7 +196,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Eleme
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
           {roleCards.map((role, index) => (
             <MotionCard
               key={index}
@@ -248,7 +248,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Eleme
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {[
                   { label: "Email Verified", count: verificationStats.emailVerified, color: "bg-blue-500" },
                   { label: "Phone Verified", count: verificationStats.phoneVerified, color: "bg-green-500" },
@@ -278,7 +278,7 @@ export function AdminDashboard({ userId }: AdminDashboardProps): React.JSX.Eleme
 
       {/* Quick Status */}
       <motion.div variants={fadeInUp}>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-2">
           <Card className={analytics.pendingProfiles > 0 ? "border-amber-500/50" : "border-green-500/50"}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">

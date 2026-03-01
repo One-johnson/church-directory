@@ -17,36 +17,51 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, X, Clock, Filter } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { getCountryFlagClass, getCountryOptions } from "@/data/countries";
+import {
+  getCountryFlagClass,
+  getCountryByCode,
+  getCountryOptions,
+} from "@/data/countries";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { getCategories } from "../../data/catetories";
 
 interface AdvancedSearchProps {
   onResults?: (results: any[]) => void;
+  allProfiles?: any[] | null;
+  onSearchActiveChange?: (active: boolean) => void;
 }
 
-export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
+export function AdvancedSearch({ onResults, allProfiles, onSearchActiveChange }: AdvancedSearchProps) {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<string>("");
-  const [location, setLocation] = useState<string>("");
+  const [category, setCategory] = useState<string>("All");
+  const [branch, setBranch] = useState<string>("");
   const [country, setCountry] = useState<string>("");
   const [verifiedOnly, setVerifiedOnly] = useState<boolean>(false);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [showHistory, setShowHistory] = useState(false);
 
+  const hasActiveSearch =
+    debouncedQuery.trim().length >= 2 ||
+    (category !== "" && category !== "All") ||
+    (branch !== "") ||
+    (country !== "") ||
+    verifiedOnly;
+
   const searchResults = useQuery(
     api.search.searchProfiles,
-    debouncedQuery.length >= 2
+    hasActiveSearch
       ? {
-          query: debouncedQuery,
-          category: category || undefined,
-          location: location || undefined,
-          country: country || undefined,
+          query: debouncedQuery.trim().length >= 2 ? debouncedQuery.trim() : undefined,
+          category: category && category !== "All" ? category : undefined,
+          branch: branch.trim() || undefined,
+          country: country.trim() || undefined,
           verifiedOnly: verifiedOnly || undefined,
         }
       : "skip"
   );
+
+  const allCountries = useQuery(api.search.getAllCountries);
 
   const suggestions = useQuery(
     api.search.getSearchSuggestions,
@@ -58,7 +73,7 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
     user ? { userId: user._id as Id<"users">, limit: 5 } : "skip"
   );
 
-  const allLocations = useQuery(api.search.getAllLocations);
+  const allBranches = useQuery(api.search.getAllBranches);
 
   const saveSearch = useMutation(api.search.saveSearchHistory);
   const clearHistory = useMutation(api.search.clearSearchHistory);
@@ -71,24 +86,32 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
         saveSearch({
           userId: user._id as Id<"users">,
           query,
-          filters: { category, location, country },
+          filters: { category, branch, country },
         });
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [query, category, location, country, user, saveSearch]);
+  }, [query, category, location, branch, country, user, saveSearch]);
 
-  // Send results to parent
+  // Notify parent when search/filters become active or inactive
   useEffect(() => {
-    if (searchResults && onResults) {
+    onSearchActiveChange?.(hasActiveSearch);
+  }, [hasActiveSearch, onSearchActiveChange]);
+
+  // Send results to parent: full list when no active search, filtered results when searching
+  useEffect(() => {
+    if (!onResults) return;
+    if (!hasActiveSearch) {
+      onResults(allProfiles ?? []);
+    } else if (searchResults !== undefined) {
       onResults(searchResults);
     }
-  }, [searchResults, onResults]);
+  }, [hasActiveSearch, searchResults, allProfiles, onResults]);
 
   const handleClearFilters = () => {
-    setCategory("");
-    setLocation("");
+    setCategory("All");
+    setBranch("");
     setCountry("");
     setVerifiedOnly(false);
   };
@@ -99,7 +122,12 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
     }
   };
 
-  const activeFiltersCount = [category, location, country, verifiedOnly].filter(Boolean).length;
+  const activeFiltersCount = [
+    category && category !== "All" ? category : null,
+    branch ? branch : null,
+    country ? country : null,
+    verifiedOnly,
+  ].filter(Boolean).length;
 
   return (
     <div className="space-y-4">
@@ -196,12 +224,9 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-        {/* Verified Checkbox */}
-      
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {/* Category Select */}
-       <Select value={category} onValueChange={setCategory}>
+        <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
@@ -215,19 +240,19 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
           </SelectContent>
         </Select>
 
-        {/* Location Select */}
+        {/* Branch Select - user's church branch */}
         <SearchableSelect
           options={[
             { value: "", label: "All Branches" },
-            ...(allLocations || []).map((loc) => ({ value: loc, label: loc })),
+            ...(allBranches || []).map((b) => ({ value: b, label: b })),
           ]}
-          value={location}
-          onValueChange={setLocation}
+          value={branch}
+          onValueChange={setBranch}
           placeholder="Select Branch"
           searchPlaceholder="Search branches..."
         />
 
-        {/* Country Select with Flags */}
+        {/* Country Select - all countries with flags */}
         <SearchableSelect
           options={[
             { value: "", label: "All Countries" },
@@ -245,34 +270,33 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm text-muted-foreground">Active filters:</span>
 
-          {category && (
+          {category && category !== "All" && (
             <Badge variant="secondary" className="gap-1">
               {category}
               <X
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => setCategory("")}
+                onClick={() => setCategory("All")}
               />
             </Badge>
           )}
 
-          {location && (
+          {branch && (
             <Badge variant="secondary" className="gap-1">
-              {location}
+              {branch}
               <X
                 className="h-3 w-3 cursor-pointer"
-                onClick={() => setLocation("")}
+                onClick={() => setBranch("")}
               />
             </Badge>
           )}
 
           {country && (
             <Badge variant="secondary" className="gap-1 flex items-center">
-            <span
-  className={`${getCountryFlagClass(country)} inline-block`}
-  style={{ width: "1.25rem", height: "1rem" }}
-/>
-
-              {country}
+              <span
+                className={`${getCountryFlagClass(country)} inline-block`}
+                style={{ width: "1.25rem", height: "1rem" }}
+              />
+              {getCountryByCode(country)?.name ?? country}
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => setCountry("")}
@@ -301,8 +325,8 @@ export function AdvancedSearch({ onResults }: AdvancedSearchProps) {
         </div>
       )}
 
-      {/* Search Results Count */}
-      {searchResults && (
+      {/* Search Results Count - only when a search/filter is active */}
+      {hasActiveSearch && searchResults !== undefined && (
         <div className="text-sm text-muted-foreground">
           Found {searchResults.length} {searchResults.length === 1 ? "result" : "results"}
         </div>

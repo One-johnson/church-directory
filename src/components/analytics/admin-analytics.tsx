@@ -35,7 +35,7 @@ export function AdminAnalytics({ userId }: AdminAnalyticsProps): React.JSX.Eleme
 
   if (!analytics) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <Card key={i}>
             <CardHeader className="pb-2">
@@ -140,7 +140,7 @@ export function AdminAnalytics({ userId }: AdminAnalyticsProps): React.JSX.Eleme
   return (
     <>
       {/* Main Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -169,7 +169,7 @@ export function AdminAnalytics({ userId }: AdminAnalyticsProps): React.JSX.Eleme
           <CardDescription>User roles across the platform</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {roleStats.map((stat) => (
               <div key={stat.title} className="flex items-center gap-3">
                 <stat.icon className={`h-8 w-8 ${stat.color}`} />
