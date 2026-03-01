@@ -55,7 +55,7 @@ export function AccountStatusCard({ user }: AccountStatusCardProps): React.JSX.E
           <div className="flex items-center gap-2 text-sm">
             <MapPin className="w-4 h-4 text-muted-foreground" />
             <span className="text-muted-foreground">
-              {user.branchName} - {user.branchLocation}
+              {user.branchName} 
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm">

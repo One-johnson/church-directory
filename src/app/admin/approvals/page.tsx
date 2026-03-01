@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, XCircle, Clock, Loader2, AlertCircle, BarChart3, Download, Shield } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Loader2, AlertCircle, BarChart3, Shield } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { VerificationManager } from "@/components/admin/verification-manager";
 import { VerificationBadges } from "@/components/profile/verification-badges";
@@ -31,7 +31,6 @@ import { toast } from "sonner";
 import { getAdminErrorMessage } from "@/lib/friendly-error";
 import type { Id } from "../../../../convex/_generated/dataModel";
 import { ProfileAnalytics } from "@/components/analytics/profile-analytics";
-import { exportTableData } from "@/lib/export-utils";
 
 const MotionCard = motion(Card);
 const MotionDiv = motion.div;
@@ -142,6 +141,24 @@ export default function ApprovalsPage(): React.JSX.Element {
     }
   };
 
+  const handleApproveAll = async (): Promise<void> => {
+    if (!pendingProfiles || pendingProfiles.length === 0) return;
+    setActionLoading(true);
+    try {
+      const results = await bulkApprove({
+        requesterId: user._id,
+        profileIds: pendingProfiles.map((p) => p._id),
+      });
+      const successCount = results.filter((r) => r.success).length;
+      toast.success(`Approved ${successCount} profile(s)`);
+      setSelectedProfiles(new Set());
+    } catch (error) {
+      toast.error(getAdminErrorMessage(error));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleBulkReject = async (): Promise<void> => {
     if (selectedProfiles.size === 0) return;
     setActionLoading(true);
@@ -209,61 +226,20 @@ export default function ApprovalsPage(): React.JSX.Element {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex gap-2"
+          className="flex flex-wrap gap-2"
         >
           {pendingProfiles && pendingProfiles.length > 0 && (
-            <>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    exportTableData("csv", {
-                      filename: `pending-approvals-${new Date().toISOString().split("T")[0]}`,
-                      title: "Pending Approvals Report",
-                      columns: [
-                        { header: "Name", key: "name" },
-                        { header: "Profession", key: "profession" },
-                        { header: "Category", key: "category" },
-                        { header: "Location", key: "location" },
-                        { header: "Country", key: "country" },
-                        { header: "Email", key: "userEmail" },
-                      ],
-                      data: pendingProfiles,
-                    });
-                    toast.success(`Exported ${pendingProfiles.length} profiles to CSV`);
-                  } }
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  CSV
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    exportTableData("pdf", {
-                      filename: `pending-approvals-${new Date().toISOString().split("T")[0]}`,
-                      title: "Pending Approvals Report",
-                      columns: [
-                        { header: "Name", key: "name" },
-                        { header: "Profession", key: "profession" },
-                        { header: "Category", key: "category" },
-                        { header: "Location", key: "location" },
-                        { header: "Country", key: "country" },
-                        { header: "Email", key: "userEmail" },
-                      ],
-                      data: pendingProfiles,
-                    });
-                    toast.success(`Exported ${pendingProfiles.length} profiles to PDF`);
-                  } }
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  PDF
-                </Button>
-              </motion.div>
-            </>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleApproveAll}
+                disabled={actionLoading}
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Approve all ({pendingProfiles.length})
+              </Button>
+            </motion.div>
           )}
           <AnimatePresence>
             {selectedProfiles.size > 0 && (
@@ -362,16 +338,19 @@ export default function ApprovalsPage(): React.JSX.Element {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
               whileHover={{ scale: 1.01, y: -2 }}
+              className="overflow-hidden"
             >
-              <CardHeader>
-                <div className="flex items-start gap-4">
+              <CardHeader className="min-w-0">
+                <div className="flex items-start gap-4 min-w-0">
                   <Checkbox
                     checked={selectedProfiles.has(profile._id)}
-                    onCheckedChange={() => handleToggleProfile(profile._id)} />
+                    onCheckedChange={() => handleToggleProfile(profile._id)}
+                    className="shrink-0"
+                  />
                   <ProfileAvatar
                     profilePicture={profile.profilePicture}
                     alt={profile.name}
-                    className="h-16 w-16"
+                    className="h-16 w-16 shrink-0"
                     fallback={
                       profile.name
                         .split(" ")
@@ -381,18 +360,18 @@ export default function ApprovalsPage(): React.JSX.Element {
                         .slice(0, 2)
                     }
                   />
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl">{profile.name}</CardTitle>
-                      <Badge variant="secondary">
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <CardTitle className="text-xl truncate">{profile.name}</CardTitle>
+                      <Badge variant="secondary" className="shrink-0">
                         <Clock className="mr-1 h-3 w-3" />
                         Pending
                       </Badge>
                     </div>
-                    <CardDescription>
+                    <CardDescription className="truncate">
                       {profile.profession} • {profile.userEmail}
                     </CardDescription>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Badge variant="outline">{profile.category}</Badge>
                       <VerificationBadges
                         emailVerified={profile.emailVerified}
@@ -404,25 +383,25 @@ export default function ApprovalsPage(): React.JSX.Element {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4 pl-4 md:pl-20">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
+              <CardContent className="space-y-4 pl-4 md:pl-20 min-w-0 overflow-hidden">
+                <div className="grid gap-4 sm:grid-cols-2 min-w-0">
+                  <div className="min-w-0">
                     <span className="text-sm font-medium">Skills:</span>
-                    <p className="text-sm text-muted-foreground">{profile.skills}</p>
+                    <p className="text-sm text-muted-foreground break-words line-clamp-3">{profile.skills}</p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-sm font-medium">Location:</span>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground truncate">
                       {profile.location}, {profile.country}
                     </p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-sm font-medium">Experience:</span>
-                    <p className="text-sm text-muted-foreground">{profile.experience}</p>
+                    <p className="text-sm text-muted-foreground break-words line-clamp-2">{profile.experience}</p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-sm font-medium">Services:</span>
-                    <p className="text-sm text-muted-foreground">{profile.servicesOffered}</p>
+                    <p className="text-sm text-muted-foreground break-words line-clamp-2">{profile.servicesOffered}</p>
                   </div>
                 </div>
 
