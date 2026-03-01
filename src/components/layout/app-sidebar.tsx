@@ -72,6 +72,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { MobileBottomNav } from "./mobile-bottom-nav";
 
 interface NavItem {
   href: string;
@@ -328,8 +329,10 @@ export function AppSidebarLayout({
     return items;
   }, [user?.role]);
 
-  // Mobile: hamburger opens Sheet (sidebar drawer)
-  const renderMobileSidebar = (): React.JSX.Element => (
+  // Mobile: hamburger opens Sheet only for admin (Approvals, Accounts, Users)
+  const isAdmin = user?.role === "admin";
+  const renderMobileSidebar = (): React.JSX.Element | null =>
+    !isAdmin ? null : (
     <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
       <SheetContent side="left" className="w-[280px] p-0" aria-label="Navigation menu">
         <SheetHeader className="border-b p-4">
@@ -346,13 +349,12 @@ export function AppSidebarLayout({
           </SheetTitle>
         </SheetHeader>
         <ScrollArea className="flex-1 p-4">
-          <SidebarNavigation 
-            navItems={navItems} 
-            pathname={pathname} 
+          <SidebarNavigation
+            navItems={navItems}
+            pathname={pathname}
             onNavigate={() => setMobileMenuOpen(false)}
           />
         </ScrollArea>
-       
       </SheetContent>
     </Sheet>
   );
@@ -367,28 +369,41 @@ export function AppSidebarLayout({
         <SidebarInset>
           {/* Top Header Bar */}
           <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
-            {isMobile ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileMenuOpen(true)}
-                className="-ml-1"
-                aria-label="Open menu"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            ) : (
-              <SidebarTrigger className="-ml-1" />
+            {!isMobile && <SidebarTrigger className="-ml-1" />}
+            {isMobile && (
+              <>
+                {isAdmin && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setMobileMenuOpen(true)}
+                      className="-ml-1"
+                      aria-label="Open admin menu"
+                    >
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                    <SidebarSeparator orientation="vertical" className="mr-2 h-4" />
+                  </>
+                )}
+                <Link
+                  href="/dashboard"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground"
+                >
+                  <span className="text-lg font-bold">UD</span>
+                </Link>
+                <SidebarSeparator orientation="vertical" className="mr-2 h-4" />
+              </>
             )}
-            <SidebarSeparator orientation="vertical" className="mr-2 h-4" />
+            {!isMobile && <SidebarSeparator orientation="vertical" className="mr-2 h-4" />}
 
-          {/* Page Title/Breadcrumb */}
-          <div className="flex flex-1 items-center gap-2">
-            <span className="font-semibold text-lg">
-              {navItems.find((item: NavItem) => item.href === pathname)?.label ||
-                "UD Professionals Directory"}
-            </span>
-          </div>
+            {/* Page Title */}
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="truncate font-semibold text-lg">
+                {navItems.find((item: NavItem) => item.href === pathname)?.label ??
+                  (pathname?.startsWith("/admin") ? "Admin" : "UD Professionals Directory")}
+              </span>
+            </div>
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2">
@@ -486,17 +501,20 @@ export function AppSidebarLayout({
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page Content - extra padding on mobile for bottom nav */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="flex flex-1 flex-col overflow-auto"
+          className={`flex flex-1 flex-col overflow-auto ${isMobile ? "pb-20" : ""}`}
         >
           {children}
         </motion.div>
       </SidebarInset>
       </SidebarProvider>
+
+      {/* Mobile bottom nav - main sections only */}
+      {isMobile && user && <MobileBottomNav />}
 
       {/* Logout Confirmation Dialog */}
       <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
