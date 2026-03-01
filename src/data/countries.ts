@@ -244,6 +244,10 @@ export function getCountryByName(name: string): Country | undefined {
   return COUNTRIES.find((country) => country.name === name);
 }
 
+export function getCountryByCode(code: string): Country | undefined {
+  return COUNTRIES.find((country) => country.code === code);
+}
+
 /**
  * Helper function to get country flag URL by name
  */
