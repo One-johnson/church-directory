@@ -414,7 +414,7 @@ export function LandingPage(): React.JSX.Element {
               <span className="text-lg font-semibold">UD Professionals Directory</span>
             </div>
             <p className="text-muted-foreground">
-              Connecting professionals in the United Denominations Law World Movement (UDLWM).
+              Connecting professionals in the United Denominations Lay World Movement (UDLWM).
             </p>
             <p className="text-sm text-muted-foreground">
               © 2025 UD Professionals Directory. All rights reserved.
