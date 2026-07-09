@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { insertNotificationAndPush } from "./lib/notify";
 
 export const send = mutation({
   args: {
@@ -25,21 +26,24 @@ export const send = mutation({
       deletedForEveryone: false,
     });
 
-    await ctx.db.insert("notifications", {
+    const preview =
+      args.content.length > 80
+        ? `${args.content.slice(0, 80)}…`
+        : args.content;
+
+    await insertNotificationAndPush(ctx, {
       userId: args.toUserId,
       title: "New Message",
-      message: "You have received a new message",
+      message: preview || "You have received a new message",
       type: "new_message",
-      read: false,
       metadata: { messageId, fromUserId: args.fromUserId },
-      createdAt: Date.now(),
     });
 
     // Send email notification to recipient
     try {
       const fromUser = await ctx.db.get(args.fromUserId);
       const toUser = await ctx.db.get(args.toUserId);
-      
+
       if (fromUser && toUser) {
         await ctx.scheduler.runAfter(0, "emails:sendNewMessageEmail" as any, {
           recipientEmail: toUser.email,

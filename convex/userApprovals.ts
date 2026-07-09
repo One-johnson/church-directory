@@ -7,6 +7,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { insertNotificationAndPush } from "./lib/notify";
 
 /**
  * Get all pending user approvals
@@ -122,13 +123,12 @@ export const approveUserAccount = mutation({
     await ctx.db.delete(pendingUserId);
 
     // Create notification
-    await ctx.db.insert("notifications", {
+    await insertNotificationAndPush(ctx, {
       userId,
       title: "Account Approved!",
       message: `Your account has been approved. You can now login and create your professional profile.`,
       type: "system",
-      read: false,
-      createdAt: Date.now(),
+      url: "/dashboard",
     });
 
     // Send approval email to user
@@ -203,13 +203,12 @@ export const approveUserAccountByToken = mutation({
     await ctx.db.delete(pendingUser._id);
 
     // Create notification
-    await ctx.db.insert("notifications", {
+    await insertNotificationAndPush(ctx, {
       userId,
       title: "Account Approved!",
       message: `Your account has been approved by ${pendingUser.pastor}. You can now login and create your professional profile.`,
       type: "system",
-      read: false,
-      createdAt: Date.now(),
+      url: "/dashboard",
     });
 
     // Send approval email to user
@@ -305,13 +304,12 @@ export const bulkApproveUsers = mutation({
       await ctx.db.delete(pendingUserId);
 
       // Create notification
-      await ctx.db.insert("notifications", {
+      await insertNotificationAndPush(ctx, {
         userId,
         title: "Account Approved!",
         message: `Your account has been approved by ${approver.name}. You can now create your professional profile.`,
         type: "system",
-        read: false,
-        createdAt: Date.now(),
+        url: "/dashboard",
       });
 
       // Send approval email

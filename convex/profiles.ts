@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { insertNotificationAndPush } from "./lib/notify";
 
 // Create profile
 export const createProfile = mutation({
@@ -57,14 +58,13 @@ export const createProfile = mutation({
       .collect();
 
     for (const admin of adminsAndPastors) {
-      await ctx.db.insert("notifications", {
+      await insertNotificationAndPush(ctx, {
         userId: admin._id,
         title: "New Profile Pending Approval",
         message: `${args.name} has submitted a professional profile for review`,
         type: "pending_approval",
-        read: false,
         metadata: { profileId },
-        createdAt: Date.now(),
+        url: "/admin/approvals",
       });
     }
 
@@ -219,14 +219,12 @@ export const approveProfile = mutation({
     });
 
     // Notify user
-    await ctx.db.insert("notifications", {
+    await insertNotificationAndPush(ctx, {
       userId: profile.userId,
       title: "Profile Approved",
       message: "Your professional profile has been approved and is now visible in the directory",
       type: "profile_approved",
-      read: false,
       metadata: { profileId: args.profileId },
-      createdAt: Date.now(),
     });
 
     return { message: "Profile approved successfully" };
@@ -259,14 +257,12 @@ export const rejectProfile = mutation({
     });
 
     // Notify user
-    await ctx.db.insert("notifications", {
+    await insertNotificationAndPush(ctx, {
       userId: profile.userId,
       title: "Profile Rejected",
       message: args.reason || "Your professional profile was not approved",
       type: "profile_rejected",
-      read: false,
       metadata: { profileId: args.profileId },
-      createdAt: Date.now(),
     });
 
     return { message: "Profile rejected" };
@@ -300,14 +296,12 @@ export const bulkApproveProfiles = mutation({
           });
 
           // Notify user
-          await ctx.db.insert("notifications", {
+          await insertNotificationAndPush(ctx, {
             userId: profile.userId,
             title: "Profile Approved",
             message: "Your professional profile has been approved and is now visible in the directory",
             type: "profile_approved",
-            read: false,
             metadata: { profileId },
-            createdAt: Date.now(),
           });
 
           return { profileId, success: true };
@@ -348,14 +342,12 @@ export const bulkRejectProfiles = mutation({
           });
 
           // Notify user
-          await ctx.db.insert("notifications", {
+          await insertNotificationAndPush(ctx, {
             userId: profile.userId,
             title: "Profile Rejected",
             message: args.reason || "Your professional profile was not approved",
             type: "profile_rejected",
-            read: false,
             metadata: { profileId },
-            createdAt: Date.now(),
           });
 
           return { profileId, success: true };
