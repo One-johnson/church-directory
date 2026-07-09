@@ -1,20 +1,50 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 
-// Create a notification
+const notificationType = v.union(
+  v.literal("profile_approved"),
+  v.literal("profile_rejected"),
+  v.literal("new_message"),
+  v.literal("pending_approval"),
+  v.literal("role_changed"),
+  v.literal("system")
+);
+
+function urlForType(
+  type:
+    | "profile_approved"
+    | "profile_rejected"
+    | "new_message"
+    | "pending_approval"
+    | "role_changed"
+    | "system",
+  metadata?: any
+): string {
+  switch (type) {
+    case "new_message":
+      return metadata?.fromUserId
+        ? `/messages?to=${metadata.fromUserId}`
+        : "/messages";
+    case "profile_approved":
+    case "profile_rejected":
+      return "/dashboard";
+    case "pending_approval":
+      return "/admin/approvals";
+    case "role_changed":
+      return "/account";
+    default:
+      return "/dashboard";
+  }
+}
+
+// Create a notification (+ schedule Web Push)
 export const createNotification = mutation({
   args: {
     userId: v.id("users"),
     title: v.string(),
     message: v.string(),
-    type: v.union(
-      v.literal("profile_approved"),
-      v.literal("profile_rejected"),
-      v.literal("new_message"),
-      v.literal("pending_approval"),
-      v.literal("role_changed"),
-      v.literal("system")
-    ),
+    type: notificationType,
     metadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
@@ -28,7 +58,36 @@ export const createNotification = mutation({
       createdAt: Date.now(),
     });
 
+    try {
+      await ctx.scheduler.runAfter(0, internal.push.sendPushToUser, {
+        userId: args.userId,
+        title: args.title,
+        body: args.message,
+        url: urlForType(args.type, args.metadata),
+      });
+    } catch (error) {
+      console.error("Failed to schedule push notification:", error);
+    }
+
     return notificationId;
+  },
+});
+
+/** Helper used by other mutations that insert notifications directly. */
+export const schedulePushForUser = mutation({
+  args: {
+    userId: v.id("users"),
+    title: v.string(),
+    message: v.string(),
+    url: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.scheduler.runAfter(0, internal.push.sendPushToUser, {
+      userId: args.userId,
+      title: args.title,
+      body: args.message,
+      url: args.url || "/dashboard",
+    });
   },
 });
 

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/use-auth";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 import {
   ArrowLeft,
   User,
@@ -12,6 +13,8 @@ import {
   Laptop,
   LogOut,
   Loader2,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 export default function AccountPage(): React.JSX.Element {
   const router = useRouter();
@@ -36,6 +40,15 @@ export default function AccountPage(): React.JSX.Element {
   const { setTheme, theme } = useTheme();
   const [showLogoutDialog, setShowLogoutDialog] = React.useState<boolean>(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState<boolean>(false);
+
+  const {
+    isSupported: pushSupported,
+    isSubscribed,
+    isSubscribing,
+    subscribe,
+    unsubscribe,
+    sendTest,
+  } = usePushNotifications(user?._id as Id<"users"> | undefined);
 
   const getInitials = (name: string): string => {
     return name
@@ -53,13 +66,13 @@ export default function AccountPage(): React.JSX.Element {
   const confirmLogout = async (): Promise<void> => {
     setIsLoggingOut(true);
     toast.loading("Logging out...", { id: "logout-toast" });
-    
+
     try {
       await new Promise((resolve: (value: unknown) => void) => setTimeout(resolve, 800));
       logout();
       toast.success("Successfully logged out!", { id: "logout-toast" });
       router.push("/");
-    } catch (error) {
+    } catch {
       toast.error("Failed to logout. Please try again.", { id: "logout-toast" });
       setIsLoggingOut(false);
       setShowLogoutDialog(false);
@@ -73,7 +86,6 @@ export default function AccountPage(): React.JSX.Element {
   return (
     <div className="min-h-screen bg-background pt-4 md:pt-20 pb-20">
       <div className="container max-w-2xl mx-auto px-4">
-        {/* Back Button */}
         <Button
           variant="ghost"
           size="sm"
@@ -84,7 +96,6 @@ export default function AccountPage(): React.JSX.Element {
           Back
         </Button>
 
-        {/* User Profile Card */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Account</CardTitle>
@@ -109,7 +120,6 @@ export default function AccountPage(): React.JSX.Element {
           </CardContent>
         </Card>
 
-        {/* Profile Settings */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg">Profile Settings</CardTitle>
@@ -126,7 +136,71 @@ export default function AccountPage(): React.JSX.Element {
           </CardContent>
         </Card>
 
-        {/* Theme Settings */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Push Notifications
+            </CardTitle>
+            <CardDescription>
+              Get alerts for new messages and profile updates, even when the app is closed
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!pushSupported ? (
+              <p className="text-sm text-muted-foreground">
+                Push notifications are not supported in this browser.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      {isSubscribed ? "Enabled" : "Disabled"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {isSubscribed
+                        ? "You will receive push alerts on this device"
+                        : "Enable to receive push alerts on this device"}
+                    </p>
+                  </div>
+                  <Button
+                    variant={isSubscribed ? "outline" : "default"}
+                    size="sm"
+                    disabled={isSubscribing}
+                    onClick={() => (isSubscribed ? unsubscribe() : subscribe())}
+                    className="shrink-0"
+                  >
+                    {isSubscribing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : isSubscribed ? (
+                      <>
+                        <BellOff className="mr-2 h-4 w-4" />
+                        Disable
+                      </>
+                    ) : (
+                      <>
+                        <Bell className="mr-2 h-4 w-4" />
+                        Enable
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {isSubscribed && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => sendTest()}
+                  >
+                    Send test notification
+                  </Button>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg">Theme</CardTitle>
@@ -164,7 +238,6 @@ export default function AccountPage(): React.JSX.Element {
 
         <Separator className="my-6" />
 
-        {/* Logout Button */}
         <Button
           variant="destructive"
           className="w-full"
@@ -175,7 +248,6 @@ export default function AccountPage(): React.JSX.Element {
         </Button>
       </div>
 
-      {/* Logout Confirmation Dialog */}
       <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
