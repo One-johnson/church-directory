@@ -158,6 +158,16 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_endpoint", ["endpoint"]),
 
+  // Per-user push preference toggles (defaults = all enabled when missing)
+  notificationPreferences: defineTable({
+    userId: v.id("users"),
+    messages: v.boolean(),
+    approvals: v.boolean(),
+    roleChanges: v.boolean(),
+    system: v.boolean(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
   searchHistory: defineTable({
     userId: v.id("users"),
     query: v.string(),

@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { ServiceWorkerUpdateToast } from "@/components/pwa/sw-update-toast";
 import { PushAutoEnable } from "@/components/pwa/push-auto-enable";
+import { PushRuntime } from "@/components/pwa/push-runtime";
 import { SidebarLayout } from "../components/layout/sidebar-layout";
 import React from "react";
 
@@ -78,6 +79,7 @@ export default function RootLayout({
               <InstallPrompt />
               <ServiceWorkerUpdateToast />
               <PushAutoEnable />
+              <PushRuntime />
               <Toaster />
             </AuthProvider>
           </ConvexClientProvider>

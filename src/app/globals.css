@@ -121,3 +121,54 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Chat scroll helpers used by MessageScroller */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-gutter-stable {
+    scrollbar-gutter: stable;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll-fade-b {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 12px,
+      #000 calc(100% - 24px),
+      transparent 100%
+    );
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      currentColor 0%,
+      color-mix(in oklch, currentColor 40%, transparent) 50%,
+      currentColor 100%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

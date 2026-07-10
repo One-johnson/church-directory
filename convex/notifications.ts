@@ -1,5 +1,14 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  insertNotificationAndPush,
+  urlForNotificationType,
+  pushTagForType,
+  getNotificationPreferences,
+  isPushAllowedForType,
+  type NotificationType,
+} from "./lib/notify";
 import { internal } from "./_generated/api";
 
 const notificationType = v.union(
@@ -11,34 +20,59 @@ const notificationType = v.union(
   v.literal("system")
 );
 
-function urlForType(
-  type:
-    | "profile_approved"
-    | "profile_rejected"
-    | "new_message"
-    | "pending_approval"
-    | "role_changed"
-    | "system",
-  metadata?: any
-): string {
-  switch (type) {
-    case "new_message":
-      return metadata?.fromUserId
-        ? `/messages?to=${metadata.fromUserId}`
-        : "/messages";
-    case "profile_approved":
-    case "profile_rejected":
-      return "/dashboard";
-    case "pending_approval":
-      return "/admin/approvals";
-    case "role_changed":
-      return "/account";
-    default:
-      return "/dashboard";
-  }
-}
+export const getPreferences = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await getNotificationPreferences(ctx, args.userId);
+  },
+});
 
-// Create a notification (+ schedule Web Push)
+export const updatePreferences = mutation({
+  args: {
+    userId: v.id("users"),
+    messages: v.optional(v.boolean()),
+    approvals: v.optional(v.boolean()),
+    roleChanges: v.optional(v.boolean()),
+    system: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("notificationPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .first();
+
+    const next = {
+      messages:
+        args.messages ??
+        existing?.messages ??
+        DEFAULT_NOTIFICATION_PREFERENCES.messages,
+      approvals:
+        args.approvals ??
+        existing?.approvals ??
+        DEFAULT_NOTIFICATION_PREFERENCES.approvals,
+      roleChanges:
+        args.roleChanges ??
+        existing?.roleChanges ??
+        DEFAULT_NOTIFICATION_PREFERENCES.roleChanges,
+      system:
+        args.system ??
+        existing?.system ??
+        DEFAULT_NOTIFICATION_PREFERENCES.system,
+      updatedAt: Date.now(),
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, next);
+      return existing._id;
+    }
+
+    return await ctx.db.insert("notificationPreferences", {
+      userId: args.userId,
+      ...next,
+    });
+  },
+});
+
 export const createNotification = mutation({
   args: {
     userId: v.id("users"),
@@ -48,50 +82,43 @@ export const createNotification = mutation({
     metadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
-    const notificationId = await ctx.db.insert("notifications", {
+    return await insertNotificationAndPush(ctx, {
       userId: args.userId,
       title: args.title,
       message: args.message,
-      type: args.type,
-      read: false,
+      type: args.type as NotificationType,
       metadata: args.metadata,
-      createdAt: Date.now(),
     });
-
-    try {
-      await ctx.scheduler.runAfter(0, internal.push.sendPushToUser, {
-        userId: args.userId,
-        title: args.title,
-        body: args.message,
-        url: urlForType(args.type, args.metadata),
-      });
-    } catch (error) {
-      console.error("Failed to schedule push notification:", error);
-    }
-
-    return notificationId;
   },
 });
 
-/** Helper used by other mutations that insert notifications directly. */
 export const schedulePushForUser = mutation({
   args: {
     userId: v.id("users"),
     title: v.string(),
     message: v.string(),
     url: v.optional(v.string()),
+    type: v.optional(notificationType),
   },
   handler: async (ctx, args) => {
+    const type = (args.type || "system") as NotificationType;
+    const prefs = await getNotificationPreferences(ctx, args.userId);
+    if (!isPushAllowedForType(prefs, type)) {
+      return { scheduled: false };
+    }
+
     await ctx.scheduler.runAfter(0, internal.push.sendPushToUser, {
       userId: args.userId,
       title: args.title,
       body: args.message,
-      url: args.url || "/dashboard",
+      url: args.url || urlForNotificationType(type),
+      tag: pushTagForType(type),
+      notificationType: type,
     });
+    return { scheduled: true };
   },
 });
 
-// Get user notifications
 export const getUserNotifications = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -105,7 +132,6 @@ export const getUserNotifications = query({
   },
 });
 
-// Get unread notification count
 export const getUnreadCount = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -120,15 +146,15 @@ export const getUnreadCount = query({
   },
 });
 
-// Mark notification as read
 export const markAsRead = mutation({
   args: { notificationId: v.id("notifications") },
   handler: async (ctx, args) => {
+    const notification = await ctx.db.get(args.notificationId);
+    if (!notification) return;
     await ctx.db.patch(args.notificationId, { read: true });
   },
 });
 
-// Mark all notifications as read
 export const markAllAsRead = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -149,7 +175,6 @@ export const markAllAsRead = mutation({
   },
 });
 
-// Delete a notification
 export const deleteNotification = mutation({
   args: { notificationId: v.id("notifications") },
   handler: async (ctx, args) => {
@@ -157,7 +182,6 @@ export const deleteNotification = mutation({
   },
 });
 
-// Delete all read notifications
 export const deleteAllRead = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {

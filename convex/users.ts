@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { insertNotificationAndPush } from "./lib/notify";
 
 // Get all users (Admin only)
 export const getAllUsers = query({
@@ -62,15 +63,12 @@ export const updateUserRole = mutation({
       role: args.newRole,
     });
 
-    // Notify user of role change
-    await ctx.db.insert("notifications", {
+    await insertNotificationAndPush(ctx, {
       userId: args.targetUserId,
       title: "Role Updated",
       message: `Your role has been changed to ${args.newRole}`,
       type: "role_changed",
-      read: false,
       metadata: { oldRole: targetUser.role, newRole: args.newRole },
-      createdAt: Date.now(),
     });
 
     return { message: "User role updated successfully" };
@@ -107,15 +105,12 @@ export const bulkUpdateUserRoles = mutation({
             role: update.newRole,
           });
 
-          // Notify user
-          await ctx.db.insert("notifications", {
+          await insertNotificationAndPush(ctx, {
             userId: update.userId,
             title: "Role Updated",
             message: `Your role has been changed to ${update.newRole}`,
             type: "role_changed",
-            read: false,
             metadata: { oldRole: targetUser.role, newRole: update.newRole },
-            createdAt: Date.now(),
           });
 
           return { userId: update.userId, success: true };

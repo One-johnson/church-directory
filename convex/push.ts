@@ -32,6 +32,9 @@ async function deliverPush(
     title: string;
     body: string;
     url?: string;
+    tag?: string;
+    notificationId?: string;
+    notificationType?: string;
   }
 ): Promise<PushResult> {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
@@ -60,6 +63,10 @@ async function deliverPush(
     url: args.url || "/dashboard",
     icon: "/icons/icon-192x192.png",
     badge: "/icons/icon-96x96.png",
+    tag: args.tag || "ud-notification",
+    renotify: true,
+    notificationId: args.notificationId,
+    type: args.notificationType,
   });
 
   let sent = 0;
@@ -109,25 +116,46 @@ export const sendPushToUser = internalAction({
     title: v.string(),
     body: v.string(),
     url: v.optional(v.string()),
-  },
-  handler: async (ctx, args): Promise<PushResult> => {
-    return await deliverPush(ctx, args);
-  },
-});
-
-/** Public action for testing push from the client. */
-export const sendTestPush = action({
-  args: {
-    userId: v.id("users"),
-    title: v.optional(v.string()),
-    body: v.optional(v.string()),
+    tag: v.optional(v.string()),
+    notificationId: v.optional(v.id("notifications")),
+    notificationType: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<PushResult> => {
     return await deliverPush(ctx, {
       userId: args.userId,
+      title: args.title,
+      body: args.body,
+      url: args.url,
+      tag: args.tag,
+      notificationId: args.notificationId,
+      notificationType: args.notificationType,
+    });
+  },
+});
+
+/** Authenticated test push — only the session owner can test their own device. */
+export const sendTestPush = action({
+  args: {
+    sessionId: v.string(),
+    title: v.optional(v.string()),
+    body: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<PushResult> => {
+    const userId = (await ctx.runQuery(internal.pushSubscriptions.userIdFromSession, {
+      sessionId: args.sessionId,
+    })) as Id<"users"> | null;
+
+    if (!userId) {
+      throw new Error("Unauthorized: sign in to send a test notification");
+    }
+
+    return await deliverPush(ctx, {
+      userId,
       title: args.title || "Test notification",
       body: args.body || "Push notifications are working.",
       url: "/account",
+      tag: "test-push",
+      notificationType: "system",
     });
   },
 });
