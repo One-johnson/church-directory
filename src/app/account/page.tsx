@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useMutation, useQuery } from "convex/react";
 import { useAuth } from "@/hooks/use-auth";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { usePWA } from "@/hooks/use-pwa";
 import { api } from "../../../convex/_generated/api";
 import {
   ArrowLeft,
@@ -17,6 +19,10 @@ import {
   Loader2,
   Bell,
   BellOff,
+  KeyRound,
+  Download,
+  CheckCircle2,
+  Share,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -41,16 +47,53 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AccountStatusCard } from "@/components/dashboard/account-status-card";
+import { VerificationBadges } from "@/components/profile/verification-badges";
 import { toast } from "sonner";
 import type { Id } from "../../../convex/_generated/dataModel";
 
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function formatMemberSince(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export default function AccountPage(): React.JSX.Element {
   const router = useRouter();
-  const { user, sessionId, logout } = useAuth();
+  const { user, sessionId, isLoading: authLoading, logout } = useAuth();
   const { setTheme, theme } = useTheme();
+  const { isInstallable, isInstalled, promptInstall } = usePWA();
   const [showLogoutDialog, setShowLogoutDialog] =
     React.useState<boolean>(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState<boolean>(false);
+  const [isIOS, setIsIOS] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ua = navigator.userAgent;
+    setIsIOS(/iPad|iPhone|iPod/.test(ua) && !(window as Window & { MSStream?: unknown }).MSStream);
+  }, []);
+
+  React.useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, authLoading, router]);
+
+  const profile = useQuery(
+    api.profiles.getUserProfile,
+    user ? { userId: user._id } : "skip"
+  );
 
   const {
     isSupported: pushSupported,
@@ -67,15 +110,6 @@ export default function AccountPage(): React.JSX.Element {
     user ? { userId: user._id as Id<"users"> } : "skip"
   );
   const updatePreferences = useMutation(api.notifications.updatePreferences);
-
-  const getInitials = (name: string): string => {
-    return name
-      .split(" ")
-      .map((n: string) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   const handleLogout = (): void => {
     setShowLogoutDialog(true);
@@ -117,9 +151,22 @@ export default function AccountPage(): React.JSX.Element {
     }
   };
 
-  if (!user) {
-    return <></>;
+  const handleInstall = async () => {
+    const installed = await promptInstall();
+    if (installed) {
+      toast.success("App installed successfully");
+    }
+  };
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  const avatarSrc = profile?.profilePicture || undefined;
 
   return (
     <div className="min-h-screen bg-background pt-4 md:pt-20 pb-20">
@@ -140,27 +187,75 @@ export default function AccountPage(): React.JSX.Element {
             <CardDescription>Manage your account settings</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={undefined} alt={user.name} />
+                <AvatarImage src={avatarSrc} alt={user.name} />
                 <AvatarFallback className="text-lg">
                   {getInitials(user.name)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold">{user.name}</h2>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-                <Badge variant="outline" className="mt-2 w-fit">
-                  {user.role}
-                </Badge>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl font-semibold truncate">{user.name}</h2>
+                <p className="text-sm text-muted-foreground truncate">
+                  {user.email}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="w-fit capitalize">
+                    {user.role}
+                  </Badge>
+                  {user.emailVerified && (
+                    <Badge variant="secondary" className="gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Email verified
+                    </Badge>
+                  )}
+                </div>
+                {profile && (
+                  <div className="mt-2">
+                    <VerificationBadges
+                      emailVerified={profile.emailVerified}
+                      phoneVerified={profile.phoneVerified}
+                      pastorEndorsed={profile.pastorEndorsed}
+                      backgroundCheck={profile.backgroundCheck}
+                      size="sm"
+                    />
+                  </div>
+                )}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mb-6">
+          <AccountStatusCard user={user} />
+        </div>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Account Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {user.phone && (
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-muted-foreground">Phone</span>
+                <span className="font-medium">{user.phone}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground">Member since</span>
+              <span className="font-medium">
+                {formatMemberSince(user.createdAt)}
+              </span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-lg">Profile Settings</CardTitle>
+            <CardTitle className="text-lg">Profile</CardTitle>
+            <CardDescription>
+              Update your professional directory profile
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Button
@@ -170,6 +265,25 @@ export default function AccountPage(): React.JSX.Element {
             >
               <User className="mr-2 h-4 w-4" />
               Edit Profile
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Security</CardTitle>
+            <CardDescription>Manage your sign-in credentials</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              asChild
+            >
+              <Link href="/forgot-password">
+                <KeyRound className="mr-2 h-4 w-4" />
+                Change Password
+              </Link>
             </Button>
           </CardContent>
         </Card>
@@ -296,6 +410,39 @@ export default function AccountPage(): React.JSX.Element {
             )}
           </CardContent>
         </Card>
+
+        {(isInstallable || (isIOS && !isInstalled)) && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                {isIOS ? (
+                  <Share className="h-5 w-5" />
+                ) : (
+                  <Download className="h-5 w-5" />
+                )}
+                Install App
+              </CardTitle>
+              <CardDescription>
+                {isIOS
+                  ? "Add to your home screen for quick access and push notifications"
+                  : "Install for offline access and a full-screen experience"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isInstallable ? (
+                <Button className="w-full" onClick={handleInstall}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Install App
+                </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Tap the Share button in Safari, then choose &quot;Add to Home
+                  Screen&quot;.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-6">
           <CardHeader>

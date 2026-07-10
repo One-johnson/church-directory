@@ -16,6 +16,15 @@ interface User {
   role: "admin" | "member";
   emailVerified: boolean;
   createdAt: number;
+  denomination: string;
+  denominationName: string;
+  branch: string;
+  branchName: string;
+  branchLocation: string;
+  pastor: string;
+  pastorEmail: string;
+  accountApprovedBy?: string | Id<"users">;
+  accountApprovedAt: number;
 }
 
 interface AuthContextType {
