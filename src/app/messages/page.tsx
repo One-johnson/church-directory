@@ -191,7 +191,7 @@ function MessagesContent(): React.JSX.Element {
             </label>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-gutter-stable">
             {!conversations && (
               <div className="flex items-center justify-center py-12">
                 <Loader2

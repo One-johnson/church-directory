@@ -5,6 +5,7 @@ import {
   internalMutation,
 } from "./_generated/server";
 import { v } from "convex/values";
+import { getUserIdFromSession } from "./session";
 
 export const saveSubscription = mutation({
   args: {
@@ -109,5 +110,12 @@ export const removeByEndpoint = internalMutation({
     if (existing) {
       await ctx.db.delete(existing._id);
     }
+  },
+});
+
+export const userIdFromSession = internalQuery({
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    return await getUserIdFromSession(ctx, args.sessionId);
   },
 });

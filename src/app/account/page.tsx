@@ -3,8 +3,10 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useMutation, useQuery } from "convex/react";
 import { useAuth } from "@/hooks/use-auth";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { api } from "../../../convex/_generated/api";
 import {
   ArrowLeft,
   User,
@@ -18,9 +20,17 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,9 +46,10 @@ import type { Id } from "../../../convex/_generated/dataModel";
 
 export default function AccountPage(): React.JSX.Element {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, sessionId, logout } = useAuth();
   const { setTheme, theme } = useTheme();
-  const [showLogoutDialog, setShowLogoutDialog] = React.useState<boolean>(false);
+  const [showLogoutDialog, setShowLogoutDialog] =
+    React.useState<boolean>(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState<boolean>(false);
 
   const {
@@ -47,8 +58,15 @@ export default function AccountPage(): React.JSX.Element {
     isSubscribing,
     subscribe,
     unsubscribe,
+    clearAllSubscriptions,
     sendTest,
   } = usePushNotifications(user?._id as Id<"users"> | undefined);
+
+  const prefs = useQuery(
+    api.notifications.getPreferences,
+    user ? { userId: user._id as Id<"users"> } : "skip"
+  );
+  const updatePreferences = useMutation(api.notifications.updatePreferences);
 
   const getInitials = (name: string): string => {
     return name
@@ -68,14 +86,34 @@ export default function AccountPage(): React.JSX.Element {
     toast.loading("Logging out...", { id: "logout-toast" });
 
     try {
-      await new Promise((resolve: (value: unknown) => void) => setTimeout(resolve, 800));
+      await clearAllSubscriptions();
+      await new Promise((resolve: (value: unknown) => void) =>
+        setTimeout(resolve, 400)
+      );
       logout();
       toast.success("Successfully logged out!", { id: "logout-toast" });
       router.push("/");
     } catch {
-      toast.error("Failed to logout. Please try again.", { id: "logout-toast" });
+      toast.error("Failed to logout. Please try again.", {
+        id: "logout-toast",
+      });
       setIsLoggingOut(false);
       setShowLogoutDialog(false);
+    }
+  };
+
+  const togglePref = async (
+    key: "messages" | "approvals" | "roleChanges" | "system",
+    value: boolean
+  ) => {
+    if (!user) return;
+    try {
+      await updatePreferences({
+        userId: user._id as Id<"users">,
+        [key]: value,
+      });
+    } catch {
+      toast.error("Could not update notification preferences");
     }
   };
 
@@ -143,10 +181,11 @@ export default function AccountPage(): React.JSX.Element {
               Push Notifications
             </CardTitle>
             <CardDescription>
-              Get alerts for new messages and profile updates, even when the app is closed
+              Get alerts for new messages and profile updates, even when the app
+              is closed
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             {!pushSupported ? (
               <p className="text-sm text-muted-foreground">
                 Push notifications are not supported in this browser.
@@ -168,7 +207,9 @@ export default function AccountPage(): React.JSX.Element {
                     variant={isSubscribed ? "outline" : "default"}
                     size="sm"
                     disabled={isSubscribing}
-                    onClick={() => (isSubscribed ? unsubscribe() : subscribe())}
+                    onClick={() =>
+                      isSubscribed ? unsubscribe() : subscribe()
+                    }
                     className="shrink-0"
                   >
                     {isSubscribing ? (
@@ -186,12 +227,67 @@ export default function AccountPage(): React.JSX.Element {
                     )}
                   </Button>
                 </div>
+
+                {isSubscribed && prefs && (
+                  <div className="space-y-3 rounded-lg border p-3">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Alert types
+                    </p>
+                    {(
+                      [
+                        {
+                          key: "messages" as const,
+                          label: "Messages",
+                          description: "New chat messages",
+                        },
+                        {
+                          key: "approvals" as const,
+                          label: "Approvals",
+                          description: "Profile and approval status",
+                        },
+                        {
+                          key: "roleChanges" as const,
+                          label: "Role changes",
+                          description: "When your role is updated",
+                        },
+                        {
+                          key: "system" as const,
+                          label: "System",
+                          description: "Account and system notices",
+                        },
+                      ] as const
+                    ).map((item) => (
+                      <div
+                        key={item.key}
+                        className="flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <Label htmlFor={`pref-${item.key}`} className="text-sm">
+                            {item.label}
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            {item.description}
+                          </p>
+                        </div>
+                        <Switch
+                          id={`pref-${item.key}`}
+                          checked={prefs[item.key]}
+                          onCheckedChange={(checked) =>
+                            togglePref(item.key, checked)
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {isSubscribed && (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="w-full"
-                    onClick={() => sendTest()}
+                    onClick={() => sessionId && sendTest(sessionId)}
+                    disabled={!sessionId}
                   >
                     Send test notification
                   </Button>
@@ -253,7 +349,9 @@ export default function AccountPage(): React.JSX.Element {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to log out? You will need to sign in again to access your account.
+              Are you sure you want to log out? You will need to sign in again
+              to access your account. Push alerts for this device will be
+              cleared.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

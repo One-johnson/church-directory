@@ -31,6 +31,7 @@ export function usePushNotifications(userId: Id<"users"> | null | undefined) {
   const removeSubscription = useMutation(
     api.pushSubscriptions.removeSubscription
   );
+  const removeAllForUser = useMutation(api.pushSubscriptions.removeAllForUser);
   const sendTestPush = useAction(api.push.sendTestPush);
 
   useEffect(() => {
@@ -59,7 +60,6 @@ export function usePushNotifications(userId: Id<"users"> | null | undefined) {
 
       setIsSubscribing(true);
       try {
-        // Already granted — skip the prompt
         let permissionResult = Notification.permission;
         if (permissionResult === "default") {
           permissionResult = await Notification.requestPermission();
@@ -136,16 +136,40 @@ export function usePushNotifications(userId: Id<"users"> | null | undefined) {
     }
   }, [userId, isSupported, removeSubscription]);
 
-  const sendTest = useCallback(async () => {
+  const clearAllSubscriptions = useCallback(async (): Promise<void> => {
     if (!userId) return;
     try {
-      await sendTestPush({ userId });
-      toast.success("Test notification sent");
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          await subscription.unsubscribe();
+        }
+      }
+      await removeAllForUser({ userId });
+      if ("clearAppBadge" in navigator) {
+        await (navigator as Navigator & { clearAppBadge?: () => Promise<void> })
+          .clearAppBadge?.()
+          .catch(() => {});
+      }
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to send test notification");
+      console.error("Failed to clear push subscriptions on logout:", error);
     }
-  }, [userId, sendTestPush]);
+  }, [userId, removeAllForUser]);
+
+  const sendTest = useCallback(
+    async (sessionId: string) => {
+      if (!sessionId) return;
+      try {
+        await sendTestPush({ sessionId });
+        toast.success("Test notification sent");
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to send test notification");
+      }
+    },
+    [sendTestPush]
+  );
 
   return {
     isSupported,
@@ -154,6 +178,7 @@ export function usePushNotifications(userId: Id<"users"> | null | undefined) {
     isSubscribing,
     subscribe,
     unsubscribe,
+    clearAllSubscriptions,
     sendTest,
   };
 }
